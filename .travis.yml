@@ -1,25 +1,22 @@
 language: python
 python:
 - '2.7'
+cache: pip
 services:
 - postgresql
-env:
-- DATABASE_URL_development=postgresql://localhost/newacropolis_db
 install:
 - ./bootstrap.sh
 script:
 - ./run_tests.sh
-addons:
-  ssh_known_hosts: $deploy_host
 before_deploy:
 - openssl aes-256-cbc -K $encrypted_cc02c135ea1a_key -iv $encrypted_cc02c135ea1a_iv
-  -in deploy_rsa.enc -out /tmp/deploy_rsa -d
+  -in travis_rsa.enc -out travis_rsa -d
 - eval "$(ssh-agent -s)"
-- chmod 600 /tmp/deploy_rsa
-- ssh-add /tmp/deploy_rsa
+- chmod 600 travis_rsa
+- ssh-add travis_rsa
 deploy:
   provider: script
   skip_cleanup: true
-  script: rsync -ravzhe $TRAVIS_BUILD_DIR/ --exclude-from '$TRAVIS_BUILD_DIR/.exclude' $user@$deploy_host:path/to/files
+  script: ./deploy.sh 
   on:
     branch: master

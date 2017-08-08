@@ -3,3 +3,9 @@ tests
 *.log
 .git
 .cache
+*_rsa
+*.pub
+*.enc
+deploy.sh
+.exclude
+environment.sh
