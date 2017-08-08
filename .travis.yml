@@ -8,21 +8,21 @@ services:
 - postgresql
 env:
 - DATABASE_URL_development=postgresql://localhost/newacropolis_db
-- GAE_PYTHONPATH=${HOME}/.cache/google_appengine PATH=$PATH:${HOME}/google-cloud-sdk/bin
-  PYTHONPATH=${PYTHONPATH}:${GAE_PYTHONPATH} CLOUDSDK_CORE_DISABLE_PROMPTS=1
-before_install:
-- openssl aes-256-cbc -K $encrypted_cc02c135ea1a_key -iv $encrypted_cc02c135ea1a_iv
-  -in credentials.tar.gz.enc -out credentials.tar.gz -d
-- if [ ! -d "${GAE_PYTHONPATH}" ]; then python scripts/fetch_gae_sdk.py $(dirname
-  "${GAE_PYTHONPATH}"); fi
-- if [ ! -d ${HOME}/google-cloud-sdk ]; then curl https://sdk.cloud.google.com | bash;
-  fi
-- tar -xzf credentials.tar.gz
-- mkdir -p lib
-- gcloud auth activate-service-account --key-file client-secret.json
 install:
-- gcloud config set project eng-flux-176109
-- gcloud -q components update gae-python
 - ./bootstrap.sh
 script:
 - ./run_tests.sh
+addons:
+  ssh_known_hosts: $deploy-host
+before_deploy:
+- openssl aes-256-cbc -K $encrypted_cc02c135ea1a_key -iv $encrypted_cc02c135ea1a_iv
+  -in deploy_rsa.enc -out /tmp/deploy_rsa -d
+- eval "$(ssh-agent -s)"
+- chmod 600 /tmp/deploy_rsa
+- ssh-add /tmp/deploy_rsa
+deploy:
+  provider: script
+  skip_cleanup: true
+  script: rsync -r --exclude-from '.exclude' --quiet $TRAVIS_BUILD_DIR/ $user@$deploy-host:path/to/files
+  on:
+    branch: master

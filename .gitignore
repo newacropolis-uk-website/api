@@ -24,5 +24,7 @@ environment.sh
 .DS_Store
 
 # secrets
+*_rsa
+*.pub
 client-secret.json
 credentials.tar.gz

@@ -31,7 +31,7 @@ def create_app(**kwargs):
 
 def register_blueprint(application):
     from app.events.rest import events_blueprint
-    application.register_blueprint(events_blueprint, url_prefix='/event')
+    application.register_blueprint(events_blueprint, url_prefix='/events')
 
 
 def get_env():
