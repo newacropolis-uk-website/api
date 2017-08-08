@@ -1,9 +1,6 @@
 language: python
 python:
 - '2.7'
-cache:
-  directories:
-  - $HOME/google-cloud-sdk/
 services:
 - postgresql
 env:
