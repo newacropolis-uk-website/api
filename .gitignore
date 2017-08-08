@@ -22,3 +22,7 @@ environment.sh
 
 # mac os
 .DS_Store
+
+# secrets
+client-secret.json
+credentials.tar.gz
