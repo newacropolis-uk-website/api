@@ -20,6 +20,6 @@ before_deploy:
 deploy:
   provider: script
   skip_cleanup: true
-  script: rsync -ravzhe ssh $TRAVIS_BUILD_DIR/ --exclude-from '$TRAVIS_BUILD_DIR/.exclude' $user@$deploy_host:path/to/files
+  script: rsync -ravzhe $TRAVIS_BUILD_DIR/ --exclude-from '$TRAVIS_BUILD_DIR/.exclude' $user@$deploy_host:path/to/files
   on:
     branch: master
