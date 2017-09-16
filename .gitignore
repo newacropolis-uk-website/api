@@ -19,6 +19,7 @@ venv
 
 # environment
 environment.sh
+env.sh
 
 # mac os
 .DS_Store
@@ -28,3 +29,6 @@ environment.sh
 *.pub
 client-secret.json
 credentials.tar.gz
+
+# notes
+*.notes
