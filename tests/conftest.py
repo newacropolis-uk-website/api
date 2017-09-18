@@ -12,7 +12,7 @@ from flask_script import Manager
 import sqlalchemy
 
 from app import create_app, db as _db, get_env
-from tests.db import create_event
+from tests.db import create_event, create_event_type, create_fee
 
 TEST_DATABASE_URI = os.environ['DATABASE_URL_{}'.format(get_env())] + '_test'
 
@@ -61,17 +61,24 @@ def db_session(db):
 
     db.session.remove()
     for tbl in reversed(db.metadata.sorted_tables):
-        # if tbl.name not in ["provider_details"]:
+        # if tbl.name not in ["fees"]:
         db.engine.execute(tbl.delete())
     db.session.commit()
 
 
 @pytest.fixture(scope='function')
-def sample_events(db):
-    events = []
-    events.append(create_event(title='test_title 1', description='test description 1', date='2017-08-07 12:00:00'))
-    events.append(create_event(title='test_title 2', description='test description 2', date='2017-08-07 13:00:00'))
-    return events
+def sample_event(db):
+    return create_event(title='test_title', description='test description')
+
+
+@pytest.fixture(scope='function')
+def sample_event_type(db, sample_fee):
+    return create_event_type(event_type='short course', fee_id=sample_fee.id)
+
+
+@pytest.fixture(scope='function')
+def sample_fee(db):
+    return create_fee(fee=5, conc_fee=3)
 
 
 def create_test_db_if_does_not_exist(db):
