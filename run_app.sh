@@ -11,11 +11,11 @@ if [ ! -z "$1" ]; then
     cd $www_dir
     port="$(python app/config.py -e $1)"
 
-    # kill any existing services running on port
-    fuser -k -n tcp $port
-
     ENV=$1
 fi
+
+# kill any existing services running on port
+fuser -k -n tcp $port
 
 echo "hosting on $www_dir"
 
