@@ -33,7 +33,9 @@ def create_app(**kwargs):
 
 def register_blueprint(application):
     from app.events.rest import events_blueprint
-    application.register_blueprint(events_blueprint, url_prefix='/events')
+    from app.fees.rest import fees_blueprint
+    application.register_blueprint(events_blueprint)
+    application.register_blueprint(fees_blueprint)
 
 
 def get_env():
@@ -42,7 +44,7 @@ def get_env():
     elif 'www-live' in get_root_path():
         return 'live'
     else:
-        return os.environ.get('ENVIRONMENT_STATE', 'development')
+        return os.environ.get('ENVIRONMENT', 'development')
 
 
 def get_root_path():
