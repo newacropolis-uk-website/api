@@ -5,8 +5,7 @@ from flask import Blueprint, Flask
 from flask_sqlalchemy import SQLAlchemy
 
 logging.basicConfig(filename='logs/app.log', level=logging.DEBUG)
-f = logging.Formatter("%(asctime)s;%(levelname)s;%(message)s",
-                              "%Y-%m-%d %H:%M:%S")
+f = logging.Formatter("%(asctime)s;%(levelname)s;%(message)s", "%Y-%m-%d %H:%M:%S")
 stream_log_handler = logging.StreamHandler()
 stream_log_handler.setFormatter(f)
 logging.getLogger().addHandler(stream_log_handler)
