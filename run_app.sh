@@ -32,11 +32,7 @@ fi
 
 python app.py db upgrade
 
-if [ $www_dir != "www" ]; then
-    python app.py runserver --port $port&
-else
-    python app.py runserver --port $port
-fi
+python app.py runserver --port $port
 
 if [ $www_dir != "www" ]; then
     exit 0

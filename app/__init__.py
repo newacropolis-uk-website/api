@@ -1,14 +1,9 @@
 import os
 import logging
+from logging.handlers import RotatingFileHandler
 
 from flask import Blueprint, Flask
 from flask_sqlalchemy import SQLAlchemy
-
-logging.basicConfig(filename='logs/app.log', level=logging.DEBUG)
-f = logging.Formatter("%(asctime)s;%(levelname)s;%(message)s", "%Y-%m-%d %H:%M:%S")
-stream_log_handler = logging.StreamHandler()
-stream_log_handler.setFormatter(f)
-logging.getLogger().addHandler(stream_log_handler)
 
 db = SQLAlchemy()
 application = Flask(__name__)
@@ -23,7 +18,9 @@ def create_app(**kwargs):
     application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     application.config.update(kwargs)
 
-    logging.debug("connected to db: {}".format(application.config.get('SQLALCHEMY_DATABASE_URI')))
+    configure_logging()
+
+    application.logger.debug("connected to db: {}".format(application.config.get('SQLALCHEMY_DATABASE_URI')))
 
     db.init_app(application)
 
@@ -50,3 +47,26 @@ def get_env():
 
 def get_root_path():
     return application.root_path
+
+
+def configure_logging():
+    f = logging.Formatter("%(asctime)s;%(levelname)s;%(message)s", "%Y-%m-%d %H:%M:%S")
+
+    rfh = RotatingFileHandler('logs/app.log', maxBytes=10000, backupCount=1)
+    rfh.setLevel(logging.DEBUG)
+    rfh.setFormatter(f)
+
+    if rfh not in application.logger.handlers:
+        application.logger.addHandler(rfh)
+
+    ch = logging.StreamHandler()
+    ch.setFormatter(f)
+
+    if ch not in application.logger.handlers:
+        application.logger.addHandler(ch)
+
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.DEBUG)
+
+    if rfh not in log.handlers:
+        log.addHandler(rfh)
