@@ -10,10 +10,10 @@ else
 fi
 
 if [ -z "$environment" ]; then
-    if [ ${TRAVIS_BRANCH} == "live-deploy" ]; then
-        environment=live
+    if [ ! -z "$1" ]; then
+        environment=$1
     else
-        echo "set environment as preview"
+        echo "*** set environment as preview ***"
         environment=preview
     fi
 fi 
@@ -33,8 +33,9 @@ if [ $port != 'No environment' ]; then
     export DATABASE_URL_$environment=$DATABASE_URL_ENV
     export PGPASSWORD=$PGPASSWORD
     export test_env=$test_env
-    sudo -H sh bootstrap.sh $environment
-    sh run_app.sh $environment $output_params"""
+    # sudo -H . bootstrap.sh
+    . ./boostrap.sh
+    ./run_app.sh $environment $output_params"""
 else
     echo "$port"
     exit 1

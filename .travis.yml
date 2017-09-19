@@ -15,8 +15,18 @@ before_deploy:
 - chmod 600 travis_rsa
 - ssh-add travis_rsa
 deploy:
-  provider: script
-  skip_cleanup: true
-  script: ./deploy.sh 
-  on:
-    branch: master
+  - provider: script
+    skip_cleanup: true
+    script: ./deploy.sh preview
+    on:
+      branch: master
+  - provider: script
+    skip_cleanup: true
+    script: ./deploy.sh development
+    on:
+      branch: test-deployment
+  - provider: script
+    skip_cleanup: true
+    script: ./deploy.sh live
+    on:
+      branch: live-deploy
