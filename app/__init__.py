@@ -1,13 +1,14 @@
 import os
-
-from flask import Blueprint
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-
 import logging
 
+from flask import Blueprint, Flask
+from flask_sqlalchemy import SQLAlchemy
+
 logging.basicConfig(filename='logs/app.log', level=logging.DEBUG)
-logging.getLogger().addHandler(logging.StreamHandler())
+f = logging.Formatter("%(asctime)s;%(levelname)s;%(message)s", "%Y-%m-%d %H:%M:%S")
+stream_log_handler = logging.StreamHandler()
+stream_log_handler.setFormatter(f)
+logging.getLogger().addHandler(stream_log_handler)
 
 db = SQLAlchemy()
 application = Flask(__name__)
