@@ -4,7 +4,8 @@ if [ ! -d "venv" ]; then
 fi
 
 if [ -z "$VIRTUAL_ENV" ] && [ -d venv ]; then
-  . ./venv/bin/activate
+  echo 'activate venv'
+  source ./venv/bin/activate
 fi
 
 pip install -r requirements.txt

@@ -34,7 +34,7 @@ if [ $port != 'No environment' ]; then
     export PGPASSWORD=$PGPASSWORD
     export test_env=$test_env
     sudo -H sh bootstrap.sh $environment
-    sh run_app.sh $environment $output_params"""
+    ./run_app.sh $environment $output_params"""
 else
     echo "$port"
     exit 1
