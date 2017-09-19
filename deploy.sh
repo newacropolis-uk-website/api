@@ -9,7 +9,9 @@ else
     src="$TRAVIS_BUILD_DIR"
 fi
 
-if [ -z "$environment" ]; then
+if [ ! -z "$1" ]; then
+    environment=$1
+elif [ -z "$environment" ]; then
     if [ ${TRAVIS_BRANCH} == "live-deploy" ]; then
         environment=live
     else

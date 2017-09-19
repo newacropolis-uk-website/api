@@ -17,14 +17,14 @@ before_deploy:
 deploy:
   - provider: script
     skip_cleanup: true
-    script: ./deploy.sh 
+    script: ./deploy.sh preview
     on:
       branch: master
   - provider: script
     skip_cleanup: true
     script: ./deploy.sh development
     on:
-      branch: ensure-venv
+      branch: test-deployment
   - provider: script
     skip_cleanup: true
     script: ./deploy.sh live
