@@ -6,7 +6,7 @@
 On project path -
 
 ```shell
-sh run_tests.sh
+./run_tests.sh
 ```
 
 ## Starting the web application
@@ -14,7 +14,7 @@ sh run_tests.sh
 On project path -
 
 ```shell
-sh run_app.sh
+./run_app.sh [ENV]
 ```
 
 Where ENV is -
@@ -28,5 +28,3 @@ Where ENV is -
 ## Logging
 
 Logs are stored under the `logs` folder
-
-2017
