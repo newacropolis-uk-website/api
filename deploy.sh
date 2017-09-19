@@ -33,7 +33,8 @@ if [ $port != 'No environment' ]; then
     export DATABASE_URL_$environment=$DATABASE_URL_ENV
     export PGPASSWORD=$PGPASSWORD
     export test_env=$test_env
-    sudo -H sh bootstrap.sh $environment
+    # sudo -H . bootstrap.sh
+    . ./boostrap.sh
     ./run_app.sh $environment $output_params"""
 else
     echo "$port"
