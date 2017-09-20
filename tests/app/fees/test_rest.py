@@ -50,6 +50,5 @@ class WhenPostingFee(object):
         assert response.status_code == 400
 
         json_resp = json.loads(response.get_data(as_text=True))
-        print(json_resp)
         assert all([e['error'] == "ValidationError" for e in json_resp['errors']])
         assert json_resp['errors'][0]['message']
