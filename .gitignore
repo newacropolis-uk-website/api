@@ -5,7 +5,7 @@
 *.pyc
 
 # log files
-*.log
+logs/*.log*
 
 # test resources
 *.xml

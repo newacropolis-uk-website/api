@@ -24,12 +24,12 @@ def create_app(**kwargs):
 
     db.init_app(application)
 
-    register_blueprint(application)
+    register_blueprint()
 
     return application
 
 
-def register_blueprint(application):
+def register_blueprint():
     from app.events.rest import events_blueprint
     from app.fees.rest import fees_blueprint
     application.register_blueprint(events_blueprint)
@@ -50,14 +50,15 @@ def get_root_path():
 
 
 def configure_logging():
+    del application.logger.handlers[:]
+
     f = logging.Formatter("%(asctime)s;%(levelname)s;%(message)s", "%Y-%m-%d %H:%M:%S")
 
-    rfh = RotatingFileHandler('logs/app.log', maxBytes=10000, backupCount=1)
+    rfh = RotatingFileHandler('logs/app.log', maxBytes=10000, backupCount=3)
     rfh.setLevel(logging.DEBUG)
     rfh.setFormatter(f)
 
-    if rfh not in application.logger.handlers:
-        application.logger.addHandler(rfh)
+    application.logger.addHandler(rfh)
 
     ch = logging.StreamHandler()
     ch.setFormatter(f)
@@ -70,3 +71,8 @@ def configure_logging():
 
     if rfh not in log.handlers:
         log.addHandler(rfh)
+
+    if ch not in log.handlers:
+        log.addHandler(ch)
+
+    application.logger.info('Logging configured')
