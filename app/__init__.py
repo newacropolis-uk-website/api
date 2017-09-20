@@ -71,7 +71,7 @@ def configure_logging():
 
     if rfh not in log.handlers:
         log.addHandler(rfh)
-    
+
     if ch not in log.handlers:
         log.addHandler(ch)
 
