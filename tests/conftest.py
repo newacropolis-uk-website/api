@@ -77,8 +77,8 @@ def sample_event_type(db):
 
 
 @pytest.fixture(scope='function')
-def sample_fee(db):
-    return create_fee(fee=5, conc_fee=3)
+def sample_fee(db, sample_event_type):
+    return create_fee(fee=5, conc_fee=3, event_type_id=sample_event_type.id)
 
 
 def create_test_db_if_does_not_exist(db):
