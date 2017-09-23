@@ -43,7 +43,7 @@ def create_event_type(
 
 def create_fee(event_type_id=None, fee=5, conc_fee=3, multi_day_fee=0, multi_day_conc_fee=0, valid_from='2017-08-31'):
     if not event_type_id:
-        event_type = create_event_type()
+        event_type = create_event_type(event_type='seminar')
         event_type_id = event_type.id
 
     data = {
