@@ -17,6 +17,7 @@ class WhenUsingFeeModel(object):
 
         assert fee.serialize() == {
             'id': str(fee.id),
+            'event_type_id': str(fee.event_type_id),
             'fee': fee.fee,
             'conc_fee': fee.conc_fee,
             'multi_day_fee': fee.multi_day_fee,

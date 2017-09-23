@@ -12,13 +12,12 @@ class EventType(db.Model):
     __tablename__ = 'event_types'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     old_id = db.Column(db.Integer)
-    event_type = db.Column(db.String(255))
+    event_type = db.Column(db.String(255), unique=True)
     event_desc = db.Column(db.String())
     event_filename = db.Column(db.String(255))
     duration = db.Column(db.Integer)
     repeat = db.Column(db.Integer)
     repeat_interval = db.Column(db.Integer)
-    fee_id = db.Column(UUID(as_uuid=True), db.ForeignKey('fees.id'))
 
 
 class Fee(db.Model):
@@ -29,11 +28,13 @@ class Fee(db.Model):
     multi_day_fee = db.Column(db.Integer, nullable=True)
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
     valid_from = db.Column(db.Date, nullable=True)
-    event_type = db.relationship(EventType, backref=db.backref("fee", uselist=False))
+    event_type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_types.id'), nullable=False)
+    event_type = db.relationship(EventType, backref=db.backref("fees"))
 
     def serialize(self):
         return {
             'id': str(self.id),
+            'event_type_id': str(self.event_type_id),
             'fee': self.fee,
             'conc_fee': self.conc_fee,
             'multi_day_fee': self.multi_day_fee,

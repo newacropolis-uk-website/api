@@ -22,7 +22,8 @@ class WhenPostingFee(object):
         {'fee': 20, 'conc_fee': 15, 'valid_from': "2017-02-01"},
         {'fee': 20, 'conc_fee': 15, 'multi_day_fee': 30, 'multi_day_conc_fee': 20, 'valid_from': "2017-02-01"}
     ])
-    def it_creates_a_fee_on_valid_post_data(self, client, data, sample_fee, db_session):
+    def it_creates_a_fee_on_valid_post_data(self, client, data, sample_fee, sample_event_type, db_session):
+        data.update({'event_type_id': str(sample_event_type.id)})
         response = client.post(
             url_for('fees.create_fee'),
             data=json.dumps(data),
