@@ -72,8 +72,8 @@ def sample_event(db):
 
 
 @pytest.fixture(scope='function')
-def sample_event_type(db, sample_fee):
-    return create_event_type(event_type='short course', fee_id=sample_fee.id)
+def sample_event_type(db):
+    return create_event_type(event_type='short course')
 
 
 @pytest.fixture(scope='function')
