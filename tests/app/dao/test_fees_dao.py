@@ -1,6 +1,6 @@
 import json
 
-from app.dao.fees_dao import dao_create_fee, dao_update_fee, dao_get_fees
+from app.dao.fees_dao import dao_create_fee, dao_update_fee, dao_get_fees, dao_get_fee_by_id
 from app.models import Fee
 
 from tests.db import create_fee
@@ -31,3 +31,9 @@ class WhenUsingFeesDAO(object):
         assert Fee.query.count() == 2
         fees_from_db = Fee.query.all()
         assert set(fees) == set(fees_from_db)
+
+    def it_gets_a_fee_by_id(self, db, db_session, sample_fee):
+        fee = create_fee(fee=100, conc_fee=80)
+
+        fetched_fee = dao_get_fee_by_id(fee.id)
+        assert fetched_fee == fee

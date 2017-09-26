@@ -16,4 +16,8 @@ def dao_update_fee(fee_obj, **kwargs):
 
 
 def dao_get_fees():
-    return Fee.query.order_by(Fee.id).all()
+    return Fee.query.order_by(Fee.event_type_id, Fee.valid_from).all()
+
+
+def dao_get_fee_by_id(fee_id):
+    return Fee.query.filter_by(id=fee_id).one()
