@@ -16,8 +16,9 @@ from app.models import Fee
 from app.schema_validation import validate
 
 fees_blueprint = Blueprint('fees', __name__, url_prefix='/fees')
-fee_blueprint = Blueprint('fee', __name__, url_prefix='/fee')
+fee_blueprint = Blueprint('fee', __name__, url_prefix='/fee/')
 register_errors(fees_blueprint)
+register_errors(fee_blueprint)
 
 
 @fees_blueprint.route('')
