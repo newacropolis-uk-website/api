@@ -16,7 +16,7 @@ from app.models import Fee
 from app.schema_validation import validate
 
 fees_blueprint = Blueprint('fees', __name__, url_prefix='/fees')
-fee_blueprint = Blueprint('fee', __name__, url_prefix='/fee/')
+fee_blueprint = Blueprint('fee', __name__, url_prefix='/fee')
 register_errors(fees_blueprint)
 register_errors(fee_blueprint)
 
@@ -28,14 +28,14 @@ def get_fees():
     return jsonify(data=fees)
 
 
-@fee_blueprint.route('<uuid:fee_id>', methods=['GET'])
+@fee_blueprint.route('/<uuid:fee_id>', methods=['GET'])
 def get_fee_by_id(fee_id):
     current_app.logger.info('get_fee: {}'.format(fee_id))
     fee = dao_get_fee_by_id(fee_id)
     return jsonify(data=fee.serialize())
 
 
-@fees_blueprint.route('', methods=['POST'])
+@fee_blueprint.route('', methods=['POST'])
 def create_fee():
     data = request.get_json()
 
@@ -47,7 +47,7 @@ def create_fee():
     return jsonify(data=fee.serialize()), 201
 
 
-@fees_blueprint.route('<uuid:fee_id>', methods=['POST'])
+@fee_blueprint.route('/<uuid:fee_id>', methods=['POST'])
 def update_fee(fee_id):
     data = request.get_json()
 
