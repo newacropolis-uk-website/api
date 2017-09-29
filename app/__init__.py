@@ -32,7 +32,10 @@ def create_app(**kwargs):
 def register_blueprint():
     from app.events.rest import events_blueprint
     from app.fees.rest import fees_blueprint, fee_blueprint
+    from app.event_types.rest import event_types_blueprint, event_type_blueprint
     application.register_blueprint(events_blueprint)
+    application.register_blueprint(event_types_blueprint)
+    application.register_blueprint(event_type_blueprint)
     application.register_blueprint(fees_blueprint)
     application.register_blueprint(fee_blueprint)
 
