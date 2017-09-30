@@ -11,7 +11,6 @@ post_create_fee_schema = {
         "conc_fee": {"type": "integer"},
         "multi_day_fee": {"type": ["integer", "null"]},
         "multi_day_conc_fee": {"type": ["integer", "null"]},
-        "valid_from": {"type": ["string", "null"], "format": "datetime"}
     },
     "required": ["event_type_id", "fee", "conc_fee"]
 }
@@ -27,6 +26,5 @@ post_update_fee_schema = {
         "conc_fee": {"type": "integer"},
         "multi_day_fee": {"type": ["integer", "null"]},
         "multi_day_conc_fee": {"type": ["integer", "null"]},
-        "valid_from": {"type": ["string", "null"], "format": "datetime"}
     },
 }

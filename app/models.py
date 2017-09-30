@@ -49,9 +49,9 @@ class Fee(db.Model):
     conc_fee = db.Column(db.Integer, nullable=False)
     multi_day_fee = db.Column(db.Integer, nullable=True)
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
-    created_at = db.Column(db.Date, nullable=False, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
     event_type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_types.id'), nullable=False)
-    event_type = db.relationship(EventType, backref=db.backref("fees"))
+    event_type = db.relationship(EventType, backref=db.backref("fees", order_by=created_at.desc()))
 
     def serialize(self):
         return {
