@@ -3,6 +3,8 @@ import pytest
 from flask import json, url_for
 from tests.conftest import request
 
+from tests.db import create_fee
+
 
 class WhenGettingEventTypes(object):
 
@@ -27,6 +29,24 @@ class WhenGettingEventTypeByID(object):
 
         json_resp = json.loads(response.get_data(as_text=True))['data']
         assert json_resp['id'] == str(sample_event_type.id)
+
+    def it_returns_correct_event_type_with_fees(self, client, sample_event_type, db_session):
+        fees = [
+            create_fee(event_type_id=str(sample_event_type.id)),
+            create_fee(event_type_id=str(sample_event_type.id), fee=10, conc_fee=7)
+        ]
+
+        response = client.get(
+            url_for('event_type.get_event_type_by_id', event_type_id=str(sample_event_type.id))
+        )
+        assert response.status_code == 200
+
+        json_resp = json.loads(response.get_data(as_text=True))['data']
+        assert json_resp['id'] == str(sample_event_type.id)
+
+        for i, fee in enumerate(fees):
+            assert json_resp['fees'][i]['fee'] == fee.fee
+            assert json_resp['fees'][i]['conc_fee'] == fee.conc_fee
 
 
 class WhenPostingEventType(object):

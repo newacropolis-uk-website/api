@@ -20,6 +20,15 @@ class EventType(db.Model):
     repeat_interval = db.Column(db.Integer)
 
     def serialize(self):
+        def fees():
+            _fees = []
+            for fee in self.fees:
+                _fees.append({
+                    'fee': fee.fee,
+                    'conc_fee': fee.conc_fee,
+                })
+            return _fees
+
         return {
             'id': str(self.id),
             'event_type': self.event_type,
@@ -27,7 +36,8 @@ class EventType(db.Model):
             'event_filename': self.event_filename,
             'duration': self.duration,
             'repeat': self.repeat,
-            'repeat_interval': self.repeat_interval
+            'repeat_interval': self.repeat_interval,
+            'fees': fees(),
         }
 
 
