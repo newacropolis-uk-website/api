@@ -42,7 +42,7 @@ def upgrade():
     sa.Column('conc_fee', sa.Integer(), nullable=False),
     sa.Column('multi_day_fee', sa.Integer(), nullable=True),
     sa.Column('multi_day_conc_fee', sa.Integer(), nullable=True),
-    sa.Column('valid_from', sa.Date(), nullable=True),
+    sa.Column('created_at', sa.Date(), nullable=False),
     sa.Column('event_type_id', postgresql.UUID(as_uuid=True), nullable=False),
     sa.ForeignKeyConstraint(['event_type_id'], ['event_types.id'], ),
     sa.PrimaryKeyConstraint('id')

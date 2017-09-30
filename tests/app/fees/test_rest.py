@@ -34,8 +34,7 @@ class WhenPostingFee(object):
 
     @pytest.mark.parametrize('data', [
         {'fee': 20, 'conc_fee': 15},
-        {'fee': 20, 'conc_fee': 15, 'valid_from': "2017-02-01"},
-        {'fee': 20, 'conc_fee': 15, 'multi_day_fee': 30, 'multi_day_conc_fee': 20, 'valid_from': "2017-02-01"}
+        {'fee': 20, 'conc_fee': 15, 'multi_day_fee': 30, 'multi_day_conc_fee': 20}
     ])
     def it_creates_a_fee_on_valid_post_data(self, client, data, sample_event_type, db_session):
         data.update({'event_type_id': str(sample_event_type.id)})
@@ -54,9 +53,6 @@ class WhenPostingFee(object):
         ({'fee': 20}, 'event_type_id is a required property'),
         ({'event_type_id': uuid.uuid4(), 'fee': 20}, 'conc_fee is a required property'),
         ({'event_type_id': uuid.uuid4(), 'conc_fee': 15}, 'fee is a required property'),
-        ({'event_type_id': uuid.uuid4(), 'fee': 20, 'conc_fee': 15, 'valid_from': "01-01-2017"},
-            'valid_from datetime format is invalid. '
-            'It must be a valid ISO8601 date time format, https://en.wikipedia.org/wiki/ISO_8601'),
     ])
     def it_returns_400_on_invalid_post_data(self, client, data, error_msg, db_session):
         response = client.post(
