@@ -1,3 +1,4 @@
+import datetime
 import enum
 import uuid
 from app import db
@@ -48,7 +49,7 @@ class Fee(db.Model):
     conc_fee = db.Column(db.Integer, nullable=False)
     multi_day_fee = db.Column(db.Integer, nullable=True)
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
-    valid_from = db.Column(db.Date, nullable=True)
+    created_at = db.Column(db.Date, nullable=False, default=datetime.datetime.utcnow)
     event_type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_types.id'), nullable=False)
     event_type = db.relationship(EventType, backref=db.backref("fees"))
 
@@ -60,7 +61,7 @@ class Fee(db.Model):
             'conc_fee': self.conc_fee,
             'multi_day_fee': self.multi_day_fee,
             'multi_day_conc_fee': self.multi_day_conc_fee,
-            'valid_from': self.valid_from.isoformat() if self.valid_from else None
+            'created_at': self.created_at.isoformat()
         }
 
 
