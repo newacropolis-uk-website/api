@@ -47,12 +47,12 @@ class WhenUsingEventTypessDAO(object):
 
     def it_gets_an_event_type_with_fees_ordered(self, db, db_session, sample_event_type):
         fees = [
-            create_fee(event_type_id=str(sample_event_type.id), created_at='2017-01-01'),
-            create_fee(event_type_id=str(sample_event_type.id), fee=8, conc_fee=6, created_at='2017-02-01'),
+            create_fee(event_type_id=str(sample_event_type.id), valid_from='2017-01-01'),
+            create_fee(event_type_id=str(sample_event_type.id), fee=8, conc_fee=6, valid_from='2017-02-01'),
             create_fee(event_type_id=str(sample_event_type.id), fee=10, conc_fee=7)
         ]
 
         event_type = dao_get_event_type_by_id(str(sample_event_type.id))
         assert event_type.id == sample_event_type.id
         assert len(event_type.fees) == 3
-        assert sorted(fees, key=lambda f: getattr(f, 'created_at'), reverse=True) == event_type.fees
+        assert sorted(fees, key=lambda f: getattr(f, 'valid_from'), reverse=True) == event_type.fees
