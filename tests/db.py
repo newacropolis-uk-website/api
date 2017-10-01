@@ -41,7 +41,7 @@ def create_event_type(
     return event_type
 
 
-def create_fee(event_type_id=None, fee=5, conc_fee=3, multi_day_fee=0, multi_day_conc_fee=0, created_at=None):
+def create_fee(event_type_id=None, fee=5, conc_fee=3, multi_day_fee=0, multi_day_conc_fee=0, valid_from=None):
     if not event_type_id:
         event_type = create_event_type(event_type='seminar')
         event_type_id = event_type.id
@@ -52,7 +52,7 @@ def create_fee(event_type_id=None, fee=5, conc_fee=3, multi_day_fee=0, multi_day
         'conc_fee': conc_fee,
         'multi_day_fee': multi_day_fee,
         'multi_day_conc_fee': multi_day_conc_fee,
-        'created_at': created_at
+        'valid_from': valid_from
     }
     fee = Fee(**data)
 

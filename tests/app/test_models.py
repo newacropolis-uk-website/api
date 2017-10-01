@@ -22,5 +22,5 @@ class WhenUsingFeeModel(object):
             'conc_fee': fee.conc_fee,
             'multi_day_fee': fee.multi_day_fee,
             'multi_day_conc_fee': fee.multi_day_conc_fee,
-            'created_at': fee.created_at.isoformat()
+            'valid_from': fee.valid_from.isoformat()
         }

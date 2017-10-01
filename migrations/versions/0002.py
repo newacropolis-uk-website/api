@@ -35,12 +35,12 @@ def upgrade():
 
         for event_fee in event_type_fees:
             op.execute(
-                "INSERT INTO fees (id, fee, conc_fee, created_at, event_type_id)"
-                "VALUES ('{id}', {fee}, {conc_fee}, '{created_at}', '{event_type_id}')".format(
+                "INSERT INTO fees (id, fee, conc_fee, valid_from, event_type_id)"
+                "VALUES ('{id}', {fee}, {conc_fee}, '{valid_from}', '{event_type_id}')".format(
                     id=str(uuid.uuid4()),
                     fee=event_fee['Fee'],
                     conc_fee=event_fee['ConcFee'],
-                    created_at=event_fee['StartDate'],
+                    valid_from=event_fee['StartDate'],
                     event_type_id=event_type_id
                 )
             )
