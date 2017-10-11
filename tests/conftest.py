@@ -14,7 +14,7 @@ import sqlalchemy
 from app import create_app, db as _db, get_env
 from tests.db import create_event, create_event_type, create_fee
 
-TEST_DATABASE_URI = os.environ['DATABASE_URL_{}'.format(get_env())] + '_test'
+TEST_DATABASE_URI = os.environ['DATABASE_URL'] + '_test'
 
 
 @pytest.yield_fixture(scope='session')
