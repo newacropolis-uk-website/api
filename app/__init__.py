@@ -16,7 +16,7 @@ application = Flask(__name__)
 def create_app(**kwargs):
     from app.config import configs
 
-    environment_state = get_env(application)
+    environment_state = get_env()
 
     application.config.from_object(configs[environment_state])
     application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -25,18 +25,18 @@ def create_app(**kwargs):
 
     jwt = JWTManager(application)
 
-    configure_logging(application)
+    configure_logging()
 
     application.logger.debug("connected to db: {}".format(application.config.get('SQLALCHEMY_DATABASE_URI')))
 
     db.init_app(application)
 
-    register_blueprint(application)
+    register_blueprint()
 
     return application
 
 
-def register_blueprint(application):
+def register_blueprint():
     from app.events.rest import events_blueprint
     from app.fees.rest import fees_blueprint, fee_blueprint
     from app.event_types.rest import event_types_blueprint, event_type_blueprint
@@ -49,20 +49,20 @@ def register_blueprint(application):
     application.register_blueprint(fee_blueprint)
 
 
-def get_env(application):
-    if 'www-preview' in get_root_path(application):
+def get_env():
+    if 'www-preview' in get_root_path():
         return 'preview'
-    elif 'www-live' in get_root_path(application):
+    elif 'www-live' in get_root_path():
         return 'live'
     else:
         return os.environ.get('ENVIRONMENT', 'development')
 
 
-def get_root_path(application):
+def get_root_path():
     return application.root_path
 
 
-def configure_logging(application):
+def configure_logging():
     del application.logger.handlers[:]
 
     f = logging.Formatter("%(asctime)s;%(levelname)s;%(message)s", "%Y-%m-%d %H:%M:%S")
