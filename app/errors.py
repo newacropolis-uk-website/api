@@ -5,6 +5,11 @@ from flask import (
 from jsonschema import ValidationError
 from sqlalchemy.exc import SQLAlchemyError, DataError
 from sqlalchemy.orm.exc import NoResultFound
+from flask_jwt_extended.exceptions import (
+    JWTDecodeError, NoAuthorizationError, InvalidHeaderError, WrongTokenError,
+    RevokedTokenError, FreshTokenRequired, CSRFError, UserLoadError,
+    UserClaimsVerificationError
+)
 
 
 def register_errors(blueprint):
@@ -20,6 +25,7 @@ def register_errors(blueprint):
         current_app.logger.exception(msg)
         return jsonify(result='error', message=str(msg)), 400
 
+    @blueprint.errorhandler(NoAuthorizationError)
     @blueprint.errorhandler(401)
     def unauthorized(e):
         error_message = "Unauthorized, authentication token must be provided"

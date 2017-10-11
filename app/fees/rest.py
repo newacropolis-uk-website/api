@@ -5,9 +5,10 @@ from flask import (
     jsonify,
     request
 )
+from flask_jwt_extended import jwt_required
 
 from app import logging
-
+from app.authentication.auth import authenticate, identity
 from app.dao.fees_dao import dao_create_fee, dao_get_fees, dao_update_fee, dao_get_fee_by_id
 from app.errors import register_errors
 
@@ -22,6 +23,7 @@ register_errors(fee_blueprint)
 
 
 @fees_blueprint.route('')
+@jwt_required
 def get_fees():
     current_app.logger.info('get_fees')
     fees = [f.serialize() if f else None for f in dao_get_fees()]
