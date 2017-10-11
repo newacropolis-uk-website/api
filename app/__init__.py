@@ -10,12 +10,11 @@ from flask_jwt_extended import (
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
+application = Flask(__name__)
 
 
 def create_app(**kwargs):
     from app.config import configs
-
-    application = Flask(__name__)
 
     environment_state = get_env(application)
 

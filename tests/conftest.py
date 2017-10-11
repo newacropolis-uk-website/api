@@ -10,6 +10,7 @@ from alembic.config import Config
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 import sqlalchemy
+from flask_jwt_extended import create_access_token
 
 from app import create_app, db as _db, get_env
 from tests.db import create_event, create_event_type, create_fee
@@ -97,7 +98,15 @@ def create_test_db_if_does_not_exist(db):
             raise
 
 
-def request(url, method, data=None):
-    r = method(url, data=data)
+def request(url, method, data=None, headers=None):
+    r = method(url, data=data, headers=headers)
     r.soup = BeautifulSoup(r.get_data(as_text=True), 'html.parser')
     return r
+
+
+def create_authorization_header():
+    client_id = current_app.config.get('ADMIN_CLIENT_USER_NAME')
+    secret = current_app.config.get('ADMIN_CLIENT_SECRET')
+
+    token = create_access_token(identity=client_id)
+    return 'Authorization', 'Bearer {}'.format(token)

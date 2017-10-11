@@ -2,12 +2,12 @@ import pytest
 import uuid
 
 from flask import json, url_for
-from tests.conftest import request
+from tests.conftest import request, create_authorization_header
 
 
 @pytest.fixture
 def get_fees_page(client):
-    return request(url_for('fees.get_fees'), client.get)
+    return request(url_for('fees.get_fees'), client.get, headers=[create_authorization_header()])
 
 
 class WhenGettingFees(object):
