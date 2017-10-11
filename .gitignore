@@ -32,3 +32,9 @@ credentials.tar.gz
 
 # notes
 *.notes
+
+# migration
+data/**
+
+# private shell scripts
+login.sh
