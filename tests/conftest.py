@@ -24,6 +24,8 @@ def app():
         'TESTING': True,
         'SQLALCHEMY_DATABASE_URI': TEST_DATABASE_URI,
         'PREFERRED_URL_SCHEME': 'http',
+        'ADMIN_CLIENT_ID': 'testadmin',
+        'ADMIN_PASSWORD': 'testpassword'
     })
 
     ctx = _app.app_context()
@@ -105,8 +107,7 @@ def request(url, method, data=None, headers=None):
 
 
 def create_authorization_header():
-    client_id = current_app.config.get('ADMIN_CLIENT_USER_NAME')
-    secret = current_app.config.get('ADMIN_CLIENT_SECRET')
+    client_id = 'testadmin'
 
     token = create_access_token(identity=client_id)
     return 'Authorization', 'Bearer {}'.format(token)
