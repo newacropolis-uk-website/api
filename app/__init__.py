@@ -11,6 +11,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 application = Flask(__name__)
+jwt = JWTManager(application)
 
 
 def create_app(**kwargs):
@@ -21,9 +22,13 @@ def create_app(**kwargs):
     application.config.from_object(configs[environment_state])
     application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     application.config['JWT_SECRET_KEY'] = 'super-secret'
-    application.config.update(kwargs)
+    application.config['JWT_BLACKLIST_ENABLED'] = True
+    application.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access']
 
-    jwt = JWTManager(application)
+    # application.config['JWT_TOKEN_LOCATION'] = 'cookies'
+
+    if kwargs:
+        application.config.update(kwargs)
 
     configure_logging()
 
