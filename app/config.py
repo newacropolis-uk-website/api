@@ -27,6 +27,8 @@ def main(argv):
 class Config(object):
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    ADMIN_CLIENT_ID = os.environ.get('ADMIN_CLIENT_ID')
+    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
 
 
 class Development(Config):
