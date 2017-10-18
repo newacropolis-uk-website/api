@@ -22,7 +22,8 @@ class WhenGettingFeeByID(object):
 
     def it_returns_correct_fee(self, client, sample_fee, db_session):
         response = client.get(
-            url_for('fee.get_fee_by_id', fee_id=str(sample_fee.id))
+            url_for('fee.get_fee_by_id', fee_id=str(sample_fee.id)),
+            headers=[create_authorization_header()]
         )
         assert response.status_code == 200
 
@@ -41,7 +42,7 @@ class WhenPostingFee(object):
         response = client.post(
             url_for('fee.create_fee'),
             data=json.dumps(data),
-            headers=[('Content-Type', 'application/json')]
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 201
 
@@ -58,7 +59,7 @@ class WhenPostingFee(object):
         response = client.post(
             url_for('fee.create_fee'),
             data=json.dumps(data),
-            headers=[('Content-Type', 'application/json')]
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 400
 
@@ -71,7 +72,7 @@ class WhenPostingFee(object):
         response = client.post(
             url_for('fee.update_fee', fee_id=sample_fee.id),
             data=json.dumps(data),
-            headers=[('Content-Type', 'application/json')]
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 200
 

@@ -30,6 +30,7 @@ def get_fees():
 
 
 @fee_blueprint.route('/<uuid:fee_id>', methods=['GET'])
+@jwt_required
 def get_fee_by_id(fee_id):
     current_app.logger.info('get_fee: {}'.format(fee_id))
     fee = dao_get_fee_by_id(fee_id)
@@ -37,6 +38,7 @@ def get_fee_by_id(fee_id):
 
 
 @fee_blueprint.route('', methods=['POST'])
+@jwt_required
 def create_fee():
     data = request.get_json()
 
@@ -49,6 +51,7 @@ def create_fee():
 
 
 @fee_blueprint.route('/<uuid:fee_id>', methods=['POST'])
+@jwt_required
 def update_fee(fee_id):
     data = request.get_json()
 
