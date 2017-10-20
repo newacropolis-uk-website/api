@@ -57,14 +57,25 @@ class WhenAccessingAnEndpointWithAuth(object):
 
         @auth_blueprint.route('/protected')
         @jwt_required
-        def test_endpoint():
+        def protected():
             return 'protected', 200
+
+        @auth_blueprint.route('/unprotected')
+        def unprotected():
+            return 'unprotected', 200
 
         app.register_blueprint(auth_blueprint)
 
         with app.test_request_context(), app.test_client() as client:
-            print('client')
             yield client
+
+    def it_show_page_on_unprotected_endpoint(self, auth_app):
+        response = auth_app.get(
+            path='/unprotected'
+        )
+
+        assert response.status_code == 200
+        assert response.data == 'unprotected'
 
     def it_show_page_if_valid_auth_token_provided(self, auth_app):
         response = auth_app.get(
@@ -84,7 +95,7 @@ class WhenAccessingAnEndpointWithAuth(object):
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['message'] == 'Unauthorized, authentication token must be provided'
 
-    def it_raises_403_if_invalid_auth_token_provided(self, auth_app):
+    def it_raises_400_if_invalid_auth_token_provided(self, auth_app):
         response = auth_app.get(
             path='/protected',
             headers=[('Authorization', 'Bearer invalid')]
