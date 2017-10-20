@@ -35,7 +35,7 @@ def register_errors(blueprint):
     @blueprint.errorhandler(DecodeError)
     def decode_error(e):
         msg = 'Decode error on auth token'
-        current_app.logger.exception(msg)
+        current_app.logger.exception(msg, e.message)
         return jsonify(result='error', message=str(msg)), 400
 
     @blueprint.errorhandler(NoAuthorizationError)
