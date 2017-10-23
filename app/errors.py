@@ -3,14 +3,22 @@ from flask import (
     current_app,
     json)
 from jsonschema import ValidationError
-from jwt.exceptions import DecodeError
+from jwt.exceptions import DecodeError, ExpiredSignatureError
 from sqlalchemy.exc import DataError
 from sqlalchemy.orm.exc import NoResultFound
 from flask_jwt_extended.exceptions import (
-    JWTDecodeError, NoAuthorizationError, InvalidHeaderError, WrongTokenError,
-    RevokedTokenError, FreshTokenRequired, CSRFError, UserLoadError,
+    JWTDecodeError,
+    NoAuthorizationError,
+    InvalidHeaderError,
+    WrongTokenError,
+    RevokedTokenError,
+    FreshTokenRequired,
+    CSRFError,
+    UserLoadError,
     UserClaimsVerificationError
 )
+
+from app.authentication.errors import AuthenticationError
 
 
 def register_errors(blueprint):
@@ -38,11 +46,28 @@ def register_errors(blueprint):
         current_app.logger.exception(msg, e.message)
         return jsonify(result='error', message=str(msg)), 400
 
+    @blueprint.errorhandler(InvalidHeaderError)
+    def invalid_header(e):
+        msg = 'Invalid header error'
+        current_app.logger.exception(msg)
+        return jsonify(result='error', message=str(msg)), 400
+
+    @blueprint.errorhandler(ExpiredSignatureError)
+    def expire_signature_error(e):
+        msg = 'Signature expired'
+        current_app.logger.exception(msg, e.message)
+        return jsonify(result='error', message=str(msg)), 401
+
     @blueprint.errorhandler(NoAuthorizationError)
     @blueprint.errorhandler(401)
     def unauthorized(e):
         error_message = "Unauthorized, authentication token must be provided"
         return jsonify(result='error', message=error_message), 401, [('WWW-Authenticate', 'Bearer')]
+
+    @blueprint.errorhandler(AuthenticationError)
+    def forbidden(e):
+        error_message = "Bad username or password"
+        return jsonify(result='error', message=error_message), 403
 
     @blueprint.errorhandler(403)
     def forbidden(e):
