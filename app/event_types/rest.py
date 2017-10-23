@@ -31,7 +31,6 @@ register_errors(event_type_blueprint)
 def get_event_types():
     current_app.logger.info('get_event_types')
     event_types = [e.serialize() if e else None for e in dao_get_event_types()]
-    print(event_types)
     return jsonify(data=event_types)
 
 
