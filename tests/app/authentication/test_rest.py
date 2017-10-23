@@ -107,7 +107,7 @@ class WhenRefreshingToken(object):
         response = client.post(
             url_for('auth.refresh'),
             headers=[
-                ('Content-Type', 'application/json'), 
+                ('Content-Type', 'application/json'),
                 ('Authorization', 'invalid')
             ]
         )
@@ -115,6 +115,7 @@ class WhenRefreshingToken(object):
 
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['message'] == 'Invalid header error'
+
 
 class WhenAccessingAProtectedEndpoint(object):
 
