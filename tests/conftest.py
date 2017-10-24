@@ -108,16 +108,13 @@ def request(url, method, data=None, headers=None):
     return r
 
 
-def create_authorization_header():
-    client_id = 'testadmin'
+def create_authorization_header(client_id='testadmin'):
     expires = datetime.timedelta(minutes=1)
 
     token = create_access_token(identity=client_id, expires_delta=expires)
     return 'Authorization', 'Bearer {}'.format(token)
 
 
-def create_refresh_header():
-    client_id = 'testadmin'
-
+def create_refresh_header(client_id='testadmin'):
     token = create_refresh_token(identity=client_id)
     return 'Authorization', 'Bearer {}'.format(token)

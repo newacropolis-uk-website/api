@@ -103,6 +103,16 @@ class WhenRefreshingToken(object):
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['access_token']
 
+    def it_403_on_an_invalid_refresh_token(self, client, mocker):
+        response = client.post(
+            url_for('auth.refresh'),
+            headers=[('Content-Type', 'application/json'), create_refresh_header('invalid_user')]
+        )
+        assert response.status_code == 403
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['message'] == "Bad username"
+
     def it_400_on_invalid_refresh_token(self, client, mocker):
         response = client.post(
             url_for('auth.refresh'),

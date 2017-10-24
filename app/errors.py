@@ -65,8 +65,8 @@ def register_errors(blueprint):
         return jsonify(result='error', message=error_message), 401, [('WWW-Authenticate', 'Bearer')]
 
     @blueprint.errorhandler(AuthenticationError)
-    def forbidden(e):
-        error_message = "Bad username or password"
+    def authentication_error(e):
+        error_message = e.error_message
         return jsonify(result='error', message=error_message), 403
 
     @blueprint.errorhandler(403)

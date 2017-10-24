@@ -64,11 +64,14 @@ def login():
 @auth_blueprint.route('/refresh', methods=['POST'])
 @jwt_refresh_token_required
 def refresh():
-    current_user = get_jwt_identity()
-    ret = {
-        'access_token': create_access_token(identity=current_user)
+    username = get_jwt_identity()
+    if username != current_app.config['ADMIN_CLIENT_ID']:
+        raise AuthenticationError('Bad username')
+
+    resp = {
+        'access_token': create_access_token(identity=username)
     }
-    return jsonify(ret), 200
+    return jsonify(resp), 200
 
 
 @auth_blueprint.route('/logout', methods=['POST'])
