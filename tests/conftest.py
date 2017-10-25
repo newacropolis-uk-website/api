@@ -26,7 +26,7 @@ def app():
         'SQLALCHEMY_DATABASE_URI': TEST_DATABASE_URI,
         'PREFERRED_URL_SCHEME': 'http',
         'ADMIN_CLIENT_ID': 'testadmin',
-        'ADMIN_PASSWORD': 'testpassword',
+        'ADMIN_CLIENT_SECRET': 'testsecret',
         'TOKEN_EXPIRY': 1
     })
 

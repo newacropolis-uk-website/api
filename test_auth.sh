@@ -10,7 +10,7 @@ setupAccessToken() {
     export TKN=$(curl -X POST $api_server'/auth/login' \
     -H "Content-Type: application/json" \
     -X "POST" \
-    -d '{"username": "test","password": "test"}' | jq -r '.access_token')
+    -d '{"username": "'$username'","password": "'$password'"}' | jq -r '.access_token')
 }
 
 GetFees() {
@@ -43,6 +43,6 @@ setupAccessToken
 
 # API calls
 GetFees
-# GetEventTypes
+GetEventTypes
 Logout
 GetFees

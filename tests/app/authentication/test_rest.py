@@ -18,7 +18,7 @@ class WhenDoingLogin(object):
     def it_returns_an_access_token(self, client):
         data = {
             'username': 'testadmin',
-            'password': 'testpassword'
+            'password': 'testsecret'
         }
         response = client.post(
             url_for('auth.login'),

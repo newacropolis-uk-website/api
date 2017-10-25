@@ -44,7 +44,7 @@ def login():
     username = data['username']
     password = data['password']
 
-    if username != current_app.config['ADMIN_CLIENT_ID'] or password != current_app.config['ADMIN_PASSWORD']:
+    if username != current_app.config['ADMIN_CLIENT_ID'] or password != current_app.config['ADMIN_CLIENT_SECRET']:
         raise AuthenticationError()
     expiry = datetime.timedelta(minutes=current_app.config['TOKEN_EXPIRY'])
 
