@@ -3,10 +3,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 from flask import Blueprint, Flask, jsonify, request
-from flask_jwt_extended import (
-    JWTManager, jwt_required, create_access_token,
-    get_jwt_identity
-)
+from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
