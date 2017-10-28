@@ -6,6 +6,8 @@ from flask import (
     request
 )
 
+from flask_jwt_extended import jwt_required
+
 from app.dao.event_types_dao import (
     dao_create_event_type,
     dao_get_event_types,
@@ -25,10 +27,10 @@ register_errors(event_type_blueprint)
 
 
 @event_types_blueprint.route('')
+@jwt_required
 def get_event_types():
     current_app.logger.info('get_event_types')
     event_types = [e.serialize() if e else None for e in dao_get_event_types()]
-    print(event_types)
     return jsonify(data=event_types)
 
 

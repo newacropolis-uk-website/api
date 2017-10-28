@@ -5,9 +5,9 @@ from flask import (
     jsonify,
     request
 )
+from flask_jwt_extended import jwt_required
 
 from app import logging
-
 from app.dao.fees_dao import dao_create_fee, dao_get_fees, dao_update_fee, dao_get_fee_by_id
 from app.errors import register_errors
 
@@ -22,6 +22,7 @@ register_errors(fee_blueprint)
 
 
 @fees_blueprint.route('')
+@jwt_required
 def get_fees():
     current_app.logger.info('get_fees')
     fees = [f.serialize() if f else None for f in dao_get_fees()]
@@ -29,6 +30,7 @@ def get_fees():
 
 
 @fee_blueprint.route('/<uuid:fee_id>', methods=['GET'])
+@jwt_required
 def get_fee_by_id(fee_id):
     current_app.logger.info('get_fee: {}'.format(fee_id))
     fee = dao_get_fee_by_id(fee_id)
@@ -36,6 +38,7 @@ def get_fee_by_id(fee_id):
 
 
 @fee_blueprint.route('', methods=['POST'])
+@jwt_required
 def create_fee():
     data = request.get_json()
 
@@ -48,6 +51,7 @@ def create_fee():
 
 
 @fee_blueprint.route('/<uuid:fee_id>', methods=['POST'])
+@jwt_required
 def update_fee(fee_id):
     data = request.get_json()
 

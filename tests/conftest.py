@@ -1,5 +1,6 @@
 import os
 import subprocess
+import datetime
 
 from bs4 import BeautifulSoup
 from flask import current_app
@@ -10,11 +11,12 @@ from alembic.config import Config
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 import sqlalchemy
+from flask_jwt_extended import create_access_token, create_refresh_token
 
 from app import create_app, db as _db, get_env
 from tests.db import create_event, create_event_type, create_fee
 
-TEST_DATABASE_URI = os.environ['DATABASE_URL_{}'.format(get_env())] + '_test'
+TEST_DATABASE_URI = os.environ['DATABASE_URL_' + get_env()] + '_test'
 
 
 @pytest.yield_fixture(scope='session')
@@ -23,6 +25,9 @@ def app():
         'TESTING': True,
         'SQLALCHEMY_DATABASE_URI': TEST_DATABASE_URI,
         'PREFERRED_URL_SCHEME': 'http',
+        'ADMIN_CLIENT_ID': 'testadmin',
+        'ADMIN_CLIENT_SECRET': 'testsecret',
+        'TOKEN_EXPIRY': 1
     })
 
     ctx = _app.app_context()
@@ -97,7 +102,19 @@ def create_test_db_if_does_not_exist(db):
             raise
 
 
-def request(url, method, data=None):
-    r = method(url, data=data)
+def request(url, method, data=None, headers=None):
+    r = method(url, data=data, headers=headers)
     r.soup = BeautifulSoup(r.get_data(as_text=True), 'html.parser')
     return r
+
+
+def create_authorization_header(client_id='testadmin'):
+    expires = datetime.timedelta(minutes=1)
+
+    token = create_access_token(identity=client_id, expires_delta=expires)
+    return 'Authorization', 'Bearer {}'.format(token)
+
+
+def create_refresh_header(client_id='testadmin'):
+    token = create_refresh_token(identity=client_id)
+    return 'Authorization', 'Bearer {}'.format(token)

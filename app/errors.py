@@ -3,8 +3,22 @@ from flask import (
     current_app,
     json)
 from jsonschema import ValidationError
-from sqlalchemy.exc import SQLAlchemyError, DataError
+from jwt.exceptions import DecodeError, ExpiredSignatureError
+from sqlalchemy.exc import DataError
 from sqlalchemy.orm.exc import NoResultFound
+from flask_jwt_extended.exceptions import (
+    JWTDecodeError,
+    NoAuthorizationError,
+    InvalidHeaderError,
+    WrongTokenError,
+    RevokedTokenError,
+    FreshTokenRequired,
+    CSRFError,
+    UserLoadError,
+    UserClaimsVerificationError
+)
+
+from app.authentication.errors import AuthenticationError
 
 
 def register_errors(blueprint):
@@ -20,13 +34,46 @@ def register_errors(blueprint):
         current_app.logger.exception(msg)
         return jsonify(result='error', message=str(msg)), 400
 
+    @blueprint.errorhandler(RevokedTokenError)
+    def token_revoked(e):
+        msg = e.message
+        current_app.logger.exception(msg)
+        return jsonify(result='error', message=str(msg)), 400
+
+    @blueprint.errorhandler(DecodeError)
+    def decode_error(e):
+        msg = 'Decode error on auth token'
+        current_app.logger.exception(msg, e.message)
+        return jsonify(result='error', message=str(msg)), 400
+
+    @blueprint.errorhandler(InvalidHeaderError)
+    def invalid_header(e):
+        msg = 'Invalid header error'
+        current_app.logger.exception(msg)
+        return jsonify(result='error', message=str(msg)), 400
+
+    @blueprint.errorhandler(ExpiredSignatureError)
+    def expire_signature_error(e):
+        msg = 'Signature expired'
+        current_app.logger.exception(msg, e.message)
+        return jsonify(result='error', message=str(msg)), 401
+
+    @blueprint.errorhandler(NoAuthorizationError)
     @blueprint.errorhandler(401)
     def unauthorized(e):
+        current_app.logger.exception(e)
         error_message = "Unauthorized, authentication token must be provided"
         return jsonify(result='error', message=error_message), 401, [('WWW-Authenticate', 'Bearer')]
 
+    @blueprint.errorhandler(AuthenticationError)
+    def authentication_error(e):
+        current_app.logger.exception(e)
+        error_message = e.error_message
+        return jsonify(result='error', message=error_message), 403
+
     @blueprint.errorhandler(403)
     def forbidden(e):
+        current_app.logger.exception(e)
         error_message = "Forbidden, invalid authentication token provided"
         return jsonify(result='error', message=error_message), 403
 
@@ -35,20 +82,6 @@ def register_errors(blueprint):
     def no_result_found(e):
         current_app.logger.exception(e)
         return jsonify(result='error', message="No result found"), 404
-
-    @blueprint.errorhandler(SQLAlchemyError)
-    def db_error(e):
-        current_app.logger.exception(e)
-        if hasattr(e, 'orig') and hasattr(e.orig, 'pgerror') and e.orig.pgerror and \
-            ('duplicate key value violates unique constraint "services_name_key"' in e.orig.pgerror or
-                'duplicate key value violates unique constraint "services_email_from_key"' in e.orig.pgerror):
-            return jsonify(
-                result='error',
-                message={'name': ["Duplicate service name '{}'".format(
-                    e.params.get('name', e.params.get('email_from', ''))
-                )]}
-            ), 400
-        return jsonify(result='error', message="Internal server error"), 500
 
     # this must be defined after all other error handlers since it catches the generic Exception object
     @blueprint.app_errorhandler(500)

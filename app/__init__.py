@@ -2,11 +2,13 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 
-from flask import Blueprint, Flask
+from flask import Blueprint, Flask, jsonify, request
+from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 application = Flask(__name__)
+jwt = JWTManager(application)
 
 
 def create_app(**kwargs):
@@ -16,7 +18,14 @@ def create_app(**kwargs):
 
     application.config.from_object(configs[environment_state])
     application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    application.config.update(kwargs)
+    application.config['JWT_SECRET_KEY'] = 'super-secret'
+    application.config['JWT_BLACKLIST_ENABLED'] = True
+    application.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access']
+
+    # application.config['JWT_TOKEN_LOCATION'] = 'cookies'
+
+    if kwargs:
+        application.config.update(kwargs)
 
     configure_logging()
 
@@ -33,6 +42,8 @@ def register_blueprint():
     from app.events.rest import events_blueprint
     from app.fees.rest import fees_blueprint, fee_blueprint
     from app.event_types.rest import event_types_blueprint, event_type_blueprint
+    from app.authentication.rest import auth_blueprint
+    application.register_blueprint(auth_blueprint)
     application.register_blueprint(events_blueprint)
     application.register_blueprint(event_types_blueprint)
     application.register_blueprint(event_type_blueprint)

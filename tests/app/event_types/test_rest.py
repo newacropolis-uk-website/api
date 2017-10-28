@@ -1,7 +1,7 @@
 import pytest
 
 from flask import json, url_for
-from tests.conftest import request
+from tests.conftest import request, create_authorization_header
 
 from tests.db import create_fee
 
@@ -10,7 +10,8 @@ class WhenGettingEventTypes(object):
 
     def it_returns_all_event_types(self, client, sample_event_type, db_session):
         response = client.get(
-            url_for('event_types.get_event_types', event_type_id=str(sample_event_type.id))
+            url_for('event_types.get_event_types', event_type_id=str(sample_event_type.id)),
+            headers=[create_authorization_header()]
         )
         assert response.status_code == 200
 
