@@ -24,7 +24,7 @@ deploy:
     skip_cleanup: true
     script: ./deploy.sh development
     on:
-      branch: test-deployment
+      branch: test-deploy
   - provider: script
     skip_cleanup: true
     script: ./deploy.sh live
