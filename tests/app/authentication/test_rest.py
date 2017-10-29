@@ -41,7 +41,8 @@ class WhenDoingLogin(object):
         assert response.status_code == 403
 
         json_resp = json.loads(response.get_data(as_text=True))
-        assert json_resp['message'] == 'Bad username or password'
+        assert json_resp['message'] == "{}, {}, {}".format(
+            'Bad username or password', data['username'], data['password'])
 
     def it_does_not_return_an_access_token_for_invalid_password(self, client):
         data = {
@@ -56,7 +57,8 @@ class WhenDoingLogin(object):
         assert response.status_code == 403
 
         json_resp = json.loads(response.get_data(as_text=True))
-        assert json_resp['message'] == 'Bad username or password'
+        assert json_resp['message'] == "{}, {}, {}".format(
+            'Bad username or password', data['username'], data['password'])
 
     @pytest.mark.parametrize('data,error_msg', [
         ({'username': 'testuser'}, 'password is a required property'),
@@ -111,7 +113,8 @@ class WhenRefreshingToken(object):
         assert response.status_code == 403
 
         json_resp = json.loads(response.get_data(as_text=True))
-        assert json_resp['message'] == "Bad username"
+        assert json_resp['message'] == "{}, {}, {}".format(
+            'Bad username', None, None)
 
     def it_400_on_invalid_refresh_token(self, client, mocker):
         response = client.post(

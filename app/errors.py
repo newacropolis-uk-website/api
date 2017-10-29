@@ -68,7 +68,7 @@ def register_errors(blueprint):
     @blueprint.errorhandler(AuthenticationError)
     def authentication_error(e):
         current_app.logger.exception(e)
-        error_message = e.error_message
+        error_message = "{}, {}, {}".format(e.error_message, e.username, e.password)
         return jsonify(result='error', message=error_message), 403
 
     @blueprint.errorhandler(403)

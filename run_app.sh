@@ -30,6 +30,11 @@ else
   echo ${DATABASE_URL##*/} 'created'
 fi
 
+if [ -z "$VIRTUAL_ENV" ] && [ -d venv ]; then
+  echo 'activate venv'
+  source ./venv/bin/activate
+fi
+
 python app.py db upgrade
 
 python app.py runserver --port $port
