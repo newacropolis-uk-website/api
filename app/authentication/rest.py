@@ -45,7 +45,7 @@ def login():
     password = data['password']
 
     if username != current_app.config['ADMIN_CLIENT_ID'] or password != current_app.config['ADMIN_CLIENT_SECRET']:
-        raise AuthenticationError()
+        raise AuthenticationError(username=username, password=password)
     expiry = datetime.timedelta(minutes=current_app.config['TOKEN_EXPIRY'])
 
     # Identity can be any data that is json serializable
@@ -66,7 +66,7 @@ def login():
 def refresh():
     username = get_jwt_identity()
     if username != current_app.config['ADMIN_CLIENT_ID']:
-        raise AuthenticationError('Bad username')
+        raise AuthenticationError(message='Bad username')
 
     resp = {
         'access_token': create_access_token(identity=username)

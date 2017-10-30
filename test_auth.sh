@@ -4,6 +4,8 @@ setupURLS() {
     export api_server='http://localhost:5000'
     export username='test'
     export password='test'
+
+    echo "*** running on - " $api_server
 }
 
 setupAccessToken() {
@@ -11,6 +13,7 @@ setupAccessToken() {
     -H "Content-Type: application/json" \
     -X "POST" \
     -d '{"username": "'$username'","password": "'$password'"}' | jq -r '.access_token')
+    echo $TKN
 }
 
 GetFees() {
