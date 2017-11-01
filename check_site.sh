@@ -26,7 +26,7 @@ done
 
 if [ -z "$info" ]; then
     echo 'failed'
-    # exit 1
+    exit 1
 else
     echo $info
     echo 'success'
