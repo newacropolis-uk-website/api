@@ -30,6 +30,7 @@ if [ $port != 'No environment' ]; then
     echo starting app $environment on port $port
     ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
     cd www-$environment
+    export ENVIRONMENT=$environment
     export DATABASE_URL_$environment=$DATABASE_URL_ENV
     export PGPASSWORD=$PGPASSWORD
     export ADMIN_CLIENT_ID=$ADMIN_CLIENT_ID
@@ -37,6 +38,9 @@ if [ $port != 'No environment' ]; then
     # sudo -H . bootstrap.sh
     ./bootstrap.sh
     ./run_app.sh $environment $output_params"""
+
+    eval "API_ENV=\${API_$environment}"
+    ./check_site.sh $API_ENV
 else
     echo "$port"
     exit 1

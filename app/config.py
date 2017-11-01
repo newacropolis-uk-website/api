@@ -26,6 +26,7 @@ def main(argv):
 
 class Config(object):
     DEBUG = False
+    ENVIRONMENT = os.environ.get('ENVIRONMENT', 'development')
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     ADMIN_CLIENT_ID = os.environ.get('ADMIN_CLIENT_ID')
     ADMIN_CLIENT_SECRET = os.environ.get('ADMIN_CLIENT_SECRET')
@@ -35,6 +36,7 @@ class Config(object):
 
 class Development(Config):
     DEBUG = True
+    ENVIRONMENT = 'development'
     SESSION_COOKIE_SECURE = False
     SESSION_PROTECTION = None
     PORT = 5000
@@ -43,6 +45,7 @@ class Development(Config):
 
 class Preview(Config):
     DEBUG = True
+    ENVIRONMENT = 'preview'
     SESSION_COOKIE_SECURE = False
     SESSION_PROTECTION = None
     PORT = 4000
@@ -51,6 +54,7 @@ class Preview(Config):
 
 class Live(Config):
     DEBUG = True
+    ENVIRONMENT = 'live'
     SESSION_COOKIE_SECURE = False
     SESSION_PROTECTION = None
     PORT = 8000
