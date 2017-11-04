@@ -1,0 +1,1 @@
+scripts=$(find scripts -type f -exec md5sum {} \; | sort -k 2 | md5sum); travis=($(md5sum .travis.yml)); echo $scripts"."; echo $travis"."; checksum="$scripts $travis"; if [ "$checksum" != "$integrity_checksum" ]; then echo 'script / travis intrgrity failed'; exit 1; fi
