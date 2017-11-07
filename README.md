@@ -1,12 +1,13 @@
 # New Acropolis UK API  [![Build Status](https://travis-ci.org/NewAcropolis/api.svg?branch=master)](https://travis-ci.org/NewAcropolis/api)
 
+[![Coverage Status](https://coveralls.io/repos/github/NewAcropolis/api/badge.svg?branch=master)](https://coveralls.io/github/NewAcropolis/api?branch=master)
 
 ## Running tests
 
 On project path -
 
 ```shell
-./run_tests.sh
+./scripts/run_tests.sh
 ```
 
 ## Starting the web application
@@ -14,7 +15,7 @@ On project path -
 On project path -
 
 ```shell
-./run_app.sh [ENV]
+./scripts/run_app.sh [ENV]
 ```
 
 Where ENV is -
