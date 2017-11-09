@@ -32,10 +32,8 @@ if [ $port != 'No environment' ]; then
     cd www-$environment
     export ENVIRONMENT=$environment
     export DATABASE_URL_$environment=$DATABASE_URL_ENV
-    # export PGPASSWORD=$PGPASSWORD
     export ADMIN_CLIENT_ID=$ADMIN_CLIENT_ID
     export ADMIN_CLIENT_SECRET=$ADMIN_CLIENT_SECRET
-    # sudo -H . bootstrap.sh
     ./scripts/bootstrap.sh
     ./scripts/run_app.sh $environment $output_params"""
 
