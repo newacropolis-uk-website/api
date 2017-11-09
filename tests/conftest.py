@@ -16,7 +16,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token
 from app import create_app, db as _db, get_env
 from tests.db import create_event, create_event_type, create_fee
 
-TEST_DATABASE_URI = os.environ['DATABASE_URL_' + get_env()] + '_test'
+TEST_DATABASE_URI = "postgresql://localhost/na_api_" + get_env() + '_test'
 
 
 @pytest.yield_fixture(scope='session')
