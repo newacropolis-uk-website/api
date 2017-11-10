@@ -13,7 +13,6 @@ n=0
 until [ $n -ge 5 ]
 do
     info=$(curl -s -X GET "$api_url" | jq -r '.info')
-
     if [ ! -z "$info" ]; then
         break
     fi
@@ -24,11 +23,10 @@ do
     sleep 10
 done
 
-if [ -z "$info" ]; then
+if [ -z "$info" -o "$info" = "null" ]; then
     echo 'failed'
     exit 1
 else
     echo $info
     echo 'success'
-    # exit 0
 fi
