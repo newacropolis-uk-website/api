@@ -27,5 +27,6 @@ if [ -z "$info" -o "$info" = "null" ]; then
     echo 'failed'
     exit 1
 else
+    echo $info
     echo 'success'
 fi
