@@ -34,7 +34,7 @@ if [ $port != 'No environment' ]; then
     export DATABASE_URL_$environment=$DATABASE_URL_ENV
     export ADMIN_CLIENT_ID=$ADMIN_CLIENT_ID
     export ADMIN_CLIENT_SECRET=$ADMIN_CLIENT_SECRET
-    ./scripts/bootstrap.sh
+    sudo ./scripts/bootstrap.sh
     ./scripts/run_app.sh $environment gunicorn $output_params"""
 
     eval "API_ENV=\${API_$environment}"
