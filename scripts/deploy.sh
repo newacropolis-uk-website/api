@@ -22,7 +22,7 @@ if [ -z $debug ]; then
     output_params=">&- 2>&- <&- &"
 fi
 
-port="$(python $src/app/config.py -e $environment)"
+port="$(python $src/api/config.py -e $environment)"
 if [ $port != 'No environment' ]; then
     rsync -ravzhe "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" $src/ --exclude-from "$src/.exclude" --quiet $user@$deploy_host:www-$environment/
     eval "DATABASE_URL_ENV=\${DATABASE_URL_$environment}"
@@ -35,7 +35,7 @@ if [ $port != 'No environment' ]; then
     export ADMIN_CLIENT_ID=$ADMIN_CLIENT_ID
     export ADMIN_CLIENT_SECRET=$ADMIN_CLIENT_SECRET
     ./scripts/bootstrap.sh
-    ./scripts/run_app.sh $environment $output_params"""
+    ./scripts/run_app.sh $environment gunicorn $output_params"""
 
     eval "API_ENV=\${API_$environment}"
     ./scripts/check_site.sh $API_ENV
