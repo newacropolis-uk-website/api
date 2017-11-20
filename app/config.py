@@ -32,6 +32,7 @@ class Config(object):
     ADMIN_CLIENT_SECRET = os.environ.get('ADMIN_CLIENT_SECRET')
     ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
     TOKEN_EXPIRY = os.environ.get('TOKEN_EXPIRY', 15)
+    APP_SERVER = os.environ.get('APP_SERVER')
 
 
 class Development(Config):

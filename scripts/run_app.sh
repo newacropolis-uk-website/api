@@ -37,7 +37,34 @@ fi
 
 python app.py db upgrade
 
-python app.py runserver --port $port
+if [ "$2" = "gunicorn" -o "$1" = "gunicorn" ]; then
+  export APP_SERVER=gunicorn
+  NAME="na_api"
+  FLASKDIR=app
+  SOCKFILE=sock
+  USER=root
+  GROUP=root
+  NUM_WORKERS=3
+  
+  echo "Starting $NAME"
+  
+  # Create the run directory if it doesn't exist
+  RUNDIR=$(dirname $SOCKFILE)
+  test -d $RUNDIR || mkdir -p $RUNDIR
+  
+  # Start your gunicorn
+  exec gunicorn wsgi -b 0.0.0.0:$port \
+    --access-logfile logs/gunicorn.log \
+    --error-logfile logs/gunicorn.error.log \
+    --name $NAME \
+    --workers $NUM_WORKERS \
+    # --user=$USER --group=$GROUP \
+    # --bind=unix:$SOCKFILE
+    --log-level DEBUG \
+    --reload
+else
+  export APP_SERVER=flask
+  python app.py runserver --port $port
 
 if [ $www_dir != "www" ]; then
     echo "running on " $ENV

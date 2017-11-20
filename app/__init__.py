@@ -29,7 +29,8 @@ def create_app(**kwargs):
 
     configure_logging()
 
-    application.logger.debug("connected to db: {}".format(application.config.get('SQLALCHEMY_DATABASE_URI')))
+    db_name = application.config.get('SQLALCHEMY_DATABASE_URI').split('/')[-1]
+    application.logger.debug("connected to db: {}".format(db_name))
 
     db.init_app(application)
 
@@ -67,29 +68,58 @@ def get_root_path():
 
 
 def configure_logging():
+    ch = logging.StreamHandler()
+    if ch in application.logger.handlers:
+        return
+
     del application.logger.handlers[:]
 
-    f = logging.Formatter("%(asctime)s;%(levelname)s;%(message)s", "%Y-%m-%d %H:%M:%S")
+    f = GunicornTruncatingFormatter("%(asctime)s;[%(process)d];%(levelname)s;%(message)s", "%Y-%m-%d %H:%M:%S")
 
-    rfh = RotatingFileHandler('logs/app.log', maxBytes=10000, backupCount=3)
-    rfh.setLevel(logging.DEBUG)
-    rfh.setFormatter(f)
+    if application.config['APP_SERVER'] == 'gunicorn':       
+        gunicorn_access_logger = logging.getLogger('gunicorn.access')
+        application.logger.handlers.extend(gunicorn_access_logger.handlers)
 
-    application.logger.addHandler(rfh)
+        gunicorn_error_logger = logging.getLogger('gunicorn.error')
+        application.logger.handlers.extend(gunicorn_error_logger.handlers)
 
-    ch = logging.StreamHandler()
-    ch.setFormatter(f)
+        rfh = RotatingFileHandler('logs/app.log', maxBytes=10000, backupCount=3)
+        rfh.setLevel(logging.DEBUG)
+        rfh.setFormatter(f)
 
-    if ch not in application.logger.handlers:
+        application.logger.addHandler(rfh)
+
+        gunicorn_access_logger.addHandler(rfh)
+        gunicorn_error_logger.addHandler(rfh)
+
+        ch.setFormatter(f)
+
+        gunicorn_access_logger.addHandler(ch)
+        gunicorn_error_logger.addHandler(ch)
+
+        application.logger.info('Gunicorn logging configured')
+    else:
+        ch.setFormatter(f)
+
         application.logger.addHandler(ch)
 
-    log = logging.getLogger('werkzeug')
-    log.setLevel(logging.DEBUG)
+        werkzeug_log = logging.getLogger('werkzeug')
+        werkzeug_log.setLevel(logging.DEBUG)
 
-    if rfh not in log.handlers:
-        log.addHandler(rfh)
+        rfh = RotatingFileHandler('logs/app.log', maxBytes=10000, backupCount=3)
+        rfh.setLevel(logging.DEBUG)
+        rfh.setFormatter(f)
 
-    if ch not in log.handlers:
-        log.addHandler(ch)
+        application.logger.addHandler(rfh)
 
-    application.logger.info('Logging configured')
+        werkzeug_log.addHandler(rfh)
+
+        application.logger.info('Flask logging configured')
+
+
+class GunicornTruncatingFormatter(logging.Formatter):
+    def format(self, record):
+        GUNICORN_START_LOG = '127.0.0.1 - - ['
+        if 'message' in dir(record) and record.msg[:15] == GUNICORN_START_LOG:
+            record.msg = record.msg[42:]
+        return super(GunicornTruncatingFormatter, self).format(record)
