@@ -22,8 +22,6 @@ def create_app(**kwargs):
     application.config['JWT_BLACKLIST_ENABLED'] = True
     application.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access']
 
-    # application.config['JWT_TOKEN_LOCATION'] = 'cookies'
-
     if kwargs:
         application.config.update(kwargs)
 
@@ -76,7 +74,10 @@ def configure_logging():
 
     f = GunicornTruncatingFormatter("%(asctime)s;[%(process)d];%(levelname)s;%(message)s", "%Y-%m-%d %H:%M:%S")
 
-    if application.config['APP_SERVER'] == 'gunicorn':       
+    ch.setFormatter(f)
+    application.logger.addHandler(ch)
+
+    if application.config.get('APP_SERVER') == 'gunicorn':
         gunicorn_access_logger = logging.getLogger('gunicorn.access')
         application.logger.handlers.extend(gunicorn_access_logger.handlers)
 
@@ -91,8 +92,6 @@ def configure_logging():
 
         gunicorn_access_logger.addHandler(rfh)
         gunicorn_error_logger.addHandler(rfh)
-
-        ch.setFormatter(f)
 
         gunicorn_access_logger.addHandler(ch)
         gunicorn_error_logger.addHandler(ch)
@@ -112,6 +111,7 @@ def configure_logging():
 
         application.logger.addHandler(rfh)
 
+        werkzeug_log.addHandler(ch)
         werkzeug_log.addHandler(rfh)
 
         application.logger.info('Flask logging configured')
@@ -119,7 +119,7 @@ def configure_logging():
 
 class GunicornTruncatingFormatter(logging.Formatter):
     def format(self, record):
-        GUNICORN_START_LOG = '127.0.0.1 - - ['
-        if 'message' in dir(record) and record.msg[:15] == GUNICORN_START_LOG:
+        START_LOG = '127.0.0.1 - - ['
+        if 'msg' in dir(record) and record.msg[:15] == START_LOG:
             record.msg = record.msg[42:]
         return super(GunicornTruncatingFormatter, self).format(record)

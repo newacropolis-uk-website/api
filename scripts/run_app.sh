@@ -7,11 +7,15 @@ www_dir="www-$ENV"
 port=5000
 
 if [ ! -z "$1" ]; then
-    www_dir="www-$1"
-    cd $www_dir
-    port="$(python app/config.py -e $1)"
-
     ENV=$1
+
+    if [ "$ENV" = "gunicorn" ]; then
+      ENV=development
+    fi
+
+    www_dir="www-$ENV"
+    cd $www_dir
+    port="$(python app/config.py -e $ENV)"
 fi
 
 # kill any existing services running on port
@@ -35,7 +39,7 @@ if [ -z "$VIRTUAL_ENV" ] && [ -d venv ]; then
   source ./venv/bin/activate
 fi
 
-python app.py db upgrade
+python app_start.py db upgrade
 
 if [ "$2" = "gunicorn" -o "$1" = "gunicorn" ]; then
   export APP_SERVER=gunicorn
@@ -64,9 +68,10 @@ if [ "$2" = "gunicorn" -o "$1" = "gunicorn" ]; then
     --reload
 else
   export APP_SERVER=flask
-  python app.py runserver --port $port
+  python app_start.py runserver --port $port
 
-if [ $www_dir != "www" ]; then
-    echo "running on " $ENV
-    exit 0
+  if [ $www_dir != "www" ]; then
+      echo "running on " $ENV
+      exit 0
+  fi
 fi
