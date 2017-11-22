@@ -27,9 +27,6 @@ def create_app(**kwargs):
 
     configure_logging()
 
-    db_name = application.config.get('SQLALCHEMY_DATABASE_URI').split('/')[-1]
-    application.logger.debug("connected to db: {}".format(db_name))
-
     db.init_app(application)
 
     register_blueprint()
@@ -66,6 +63,9 @@ def get_root_path():
 
 
 def configure_logging():
+    if not application.config.get('APP_SERVER'):
+        return
+
     ch = logging.StreamHandler()
     if ch in application.logger.handlers:
         return
@@ -73,7 +73,6 @@ def configure_logging():
     del application.logger.handlers[:]
 
     f = GunicornTruncatingFormatter("%(asctime)s;[%(process)d];%(levelname)s;%(message)s", "%Y-%m-%d %H:%M:%S")
-
     ch.setFormatter(f)
     application.logger.addHandler(ch)
 
@@ -98,10 +97,6 @@ def configure_logging():
 
         application.logger.info('Gunicorn logging configured')
     else:
-        ch.setFormatter(f)
-
-        application.logger.addHandler(ch)
-
         werkzeug_log = logging.getLogger('werkzeug')
         werkzeug_log.setLevel(logging.DEBUG)
 
@@ -115,6 +110,9 @@ def configure_logging():
         werkzeug_log.addHandler(rfh)
 
         application.logger.info('Flask logging configured')
+
+    db_name = application.config.get('SQLALCHEMY_DATABASE_URI').split('/')[-1]
+    application.logger.debug("connected to db: {}".format(db_name))
 
 
 class GunicornTruncatingFormatter(logging.Formatter):
