@@ -72,9 +72,15 @@ def configure_logging():
 
     del application.logger.handlers[:]
 
-    f = GunicornTruncatingFormatter("%(asctime)s;[%(process)d];%(levelname)s;%(message)s", "%Y-%m-%d %H:%M:%S")
+    f = LogTruncatingFormatter("%(asctime)s;[%(process)d];%(levelname)s;%(message)s", "%Y-%m-%d %H:%M:%S")
     ch.setFormatter(f)
     application.logger.addHandler(ch)
+
+    rfh = RotatingFileHandler('logs/app.log', maxBytes=10000, backupCount=3)
+    rfh.setLevel(logging.DEBUG)
+    rfh.setFormatter(f)
+
+    application.logger.addHandler(rfh)
 
     if application.config.get('APP_SERVER') == 'gunicorn':
         gunicorn_access_logger = logging.getLogger('gunicorn.access')
@@ -82,12 +88,6 @@ def configure_logging():
 
         gunicorn_error_logger = logging.getLogger('gunicorn.error')
         application.logger.handlers.extend(gunicorn_error_logger.handlers)
-
-        rfh = RotatingFileHandler('logs/app.log', maxBytes=10000, backupCount=3)
-        rfh.setLevel(logging.DEBUG)
-        rfh.setFormatter(f)
-
-        application.logger.addHandler(rfh)
 
         gunicorn_access_logger.addHandler(rfh)
         gunicorn_error_logger.addHandler(rfh)
@@ -100,12 +100,6 @@ def configure_logging():
         werkzeug_log = logging.getLogger('werkzeug')
         werkzeug_log.setLevel(logging.DEBUG)
 
-        rfh = RotatingFileHandler('logs/app.log', maxBytes=10000, backupCount=3)
-        rfh.setLevel(logging.DEBUG)
-        rfh.setFormatter(f)
-
-        application.logger.addHandler(rfh)
-
         werkzeug_log.addHandler(ch)
         werkzeug_log.addHandler(rfh)
 
@@ -115,9 +109,9 @@ def configure_logging():
     application.logger.debug("connected to db: {}".format(db_name))
 
 
-class GunicornTruncatingFormatter(logging.Formatter):
+class LogTruncatingFormatter(logging.Formatter):
     def format(self, record):
         START_LOG = '127.0.0.1 - - ['
         if 'msg' in dir(record) and record.msg[:15] == START_LOG:
             record.msg = record.msg[42:]
-        return super(GunicornTruncatingFormatter, self).format(record)
+        return super(LogTruncatingFormatter, self).format(record)
