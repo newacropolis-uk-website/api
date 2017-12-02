@@ -22,14 +22,10 @@ def create_app(**kwargs):
     application.config['JWT_BLACKLIST_ENABLED'] = True
     application.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access']
 
-    # application.config['JWT_TOKEN_LOCATION'] = 'cookies'
-
     if kwargs:
         application.config.update(kwargs)
 
     configure_logging()
-
-    application.logger.debug("connected to db: {}".format(application.config.get('SQLALCHEMY_DATABASE_URI')))
 
     db.init_app(application)
 
@@ -67,9 +63,18 @@ def get_root_path():
 
 
 def configure_logging():
+    if not application.config.get('APP_SERVER'):
+        return
+
+    ch = logging.StreamHandler()
+    if ch in application.logger.handlers:
+        return
+
     del application.logger.handlers[:]
 
-    f = logging.Formatter("%(asctime)s;%(levelname)s;%(message)s", "%Y-%m-%d %H:%M:%S")
+    f = LogTruncatingFormatter("%(asctime)s;[%(process)d];%(levelname)s;%(message)s", "%Y-%m-%d %H:%M:%S")
+    ch.setFormatter(f)
+    application.logger.addHandler(ch)
 
     rfh = RotatingFileHandler('logs/app.log', maxBytes=10000, backupCount=3)
     rfh.setLevel(logging.DEBUG)
@@ -77,19 +82,36 @@ def configure_logging():
 
     application.logger.addHandler(rfh)
 
-    ch = logging.StreamHandler()
-    ch.setFormatter(f)
+    if application.config.get('APP_SERVER') == 'gunicorn':
+        gunicorn_access_logger = logging.getLogger('gunicorn.access')
+        application.logger.handlers.extend(gunicorn_access_logger.handlers)
 
-    if ch not in application.logger.handlers:
-        application.logger.addHandler(ch)
+        gunicorn_error_logger = logging.getLogger('gunicorn.error')
+        application.logger.handlers.extend(gunicorn_error_logger.handlers)
 
-    log = logging.getLogger('werkzeug')
-    log.setLevel(logging.DEBUG)
+        gunicorn_access_logger.addHandler(rfh)
+        gunicorn_error_logger.addHandler(rfh)
 
-    if rfh not in log.handlers:
-        log.addHandler(rfh)
+        gunicorn_access_logger.addHandler(ch)
+        gunicorn_error_logger.addHandler(ch)
 
-    if ch not in log.handlers:
-        log.addHandler(ch)
+        application.logger.info('Gunicorn logging configured')
+    else:
+        werkzeug_log = logging.getLogger('werkzeug')
+        werkzeug_log.setLevel(logging.DEBUG)
 
-    application.logger.info('Logging configured')
+        werkzeug_log.addHandler(ch)
+        werkzeug_log.addHandler(rfh)
+
+        application.logger.info('Flask logging configured')
+
+    db_name = application.config.get('SQLALCHEMY_DATABASE_URI').split('/')[-1]
+    application.logger.debug("connected to db: {}".format(db_name))
+
+
+class LogTruncatingFormatter(logging.Formatter):
+    def format(self, record):
+        START_LOG = '127.0.0.1 - - ['
+        if 'msg' in dir(record) and record.msg[:15] == START_LOG:
+            record.msg = record.msg[42:]
+        return super(LogTruncatingFormatter, self).format(record)

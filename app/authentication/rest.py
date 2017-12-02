@@ -27,11 +27,13 @@ register_errors(auth_blueprint)
 
 def add_blacklist(jti):
     blacklist.add(jti)
+    current_app.logger.info('add to blacklist: {}, {}'.format(jti, blacklist))
 
 
 @jwt.token_in_blacklist_loader
 def check_if_token_in_blacklist(decrypted_token):
     jti = decrypted_token['jti']
+    current_app.logger.info('check_token: {}, {}'.format(jti, blacklist))
     return jti in blacklist
 
 
