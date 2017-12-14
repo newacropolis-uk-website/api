@@ -3,6 +3,7 @@ from app import db
 from app.dao.events_dao import dao_create_event
 from app.dao.event_types_dao import dao_create_event_type
 from app.dao.fees_dao import dao_create_fee
+from app.dao.blacklist_dao import store_token
 from app.models import Event, EventType, Fee
 
 
@@ -58,3 +59,8 @@ def create_fee(event_type_id=None, fee=5, conc_fee=3, multi_day_fee=0, multi_day
 
     dao_create_fee(fee)
     return fee
+
+
+def create_token_blacklist(sample_decoded_token):
+    store_token(sample_decoded_token)
+    return sample_decoded_token

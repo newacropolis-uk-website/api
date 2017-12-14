@@ -79,18 +79,30 @@ class WhenDoingLogin(object):
 
 class WhenDoingLogout(object):
 
-    def it_logs_the_user_out_and_adds_token_to_blacklist(self, client, mocker):
-        mock = mocker.patch("app.authentication.rest.add_blacklist")
-        mocker.patch("app.authentication.rest.get_raw_jwt", return_value={'jti': 'test'})
-        response = client.post(
-            url_for('auth.logout'),
-            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+    @pytest.mark.parametrize('url,create_header', [
+        ('auth.logout_refresh', create_refresh_header),
+        ('auth.logout', create_authorization_header)
+    ])
+    @freeze_time("2017-12-10T23:10:00")
+    def it_logs_the_user_out_and_adds_token_to_blacklist(
+            self, client, mocker, url, create_header, sample_decoded_token):
+        mock_store_token = mocker.patch("app.authentication.rest.store_token")
+        mock_prune_database = mocker.patch("app.authentication.rest.prune_database")
+        mocker.patch(
+            "app.authentication.rest.get_raw_jwt",
+            return_value=sample_decoded_token
+        )
+
+        response = client.delete(
+            url_for(url),
+            headers=[('Content-Type', 'application/json'), create_header()]
         )
         assert response.status_code == 200
 
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['logout']
-        mock.assert_called_with('test')
+        assert mock_prune_database.called
+        mock_store_token.assert_called_with(sample_decoded_token)
 
 
 class WhenRefreshingToken(object):

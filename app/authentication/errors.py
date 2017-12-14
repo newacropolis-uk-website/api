@@ -16,3 +16,7 @@ class AuthenticationError(Exception):
     @property
     def error_message(self):
         return self._message
+
+
+class TokenNotFound(Exception):
+    pass
