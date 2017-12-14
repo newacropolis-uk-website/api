@@ -16,7 +16,7 @@ def dao_update_event_type(event_type_obj, **kwargs):
 
 
 def dao_get_event_types():
-    return EventType.query.order_by(EventType.id).all()
+    return EventType.query.order_by(EventType.event_type).all()
 
 
 def dao_get_event_type_by_id(event_type_id):
