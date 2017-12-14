@@ -86,6 +86,22 @@ def sample_fee(db, sample_event_type):
     return create_fee(fee=5, conc_fee=3, event_type_id=sample_event_type.id)
 
 
+# token set around 2017-12-10T23:10:00
+@pytest.fixture(scope='function')
+def sample_decoded_token():
+    start, expiry = get_unixtime_start_and_expiry()
+
+    return {
+        'jti': 'test',
+        'exp': expiry,
+        'iat': start,
+        'fresh': False,
+        'type': 'access',
+        'nbf': start,
+        'identity': 'admin'
+    }
+
+
 def create_test_db_if_does_not_exist(db):
     try:
         conn = db.engine.connect()
@@ -118,3 +134,13 @@ def create_authorization_header(client_id='testadmin'):
 def create_refresh_header(client_id='testadmin'):
     token = create_refresh_token(identity=client_id)
     return 'Authorization', 'Bearer {}'.format(token)
+
+
+def get_unixtime_start_and_expiry(year=2017, month=12, day=10, hour=23, minute=10):
+    from time import mktime
+    d = datetime.datetime(year, month, day, hour, minute, 0)
+    unixtime = mktime(d.timetuple())
+
+    added_time = 900
+    unixtime_expiry = unixtime + added_time
+    return unixtime, unixtime_expiry
