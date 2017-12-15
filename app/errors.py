@@ -18,7 +18,7 @@ from flask_jwt_extended.exceptions import (
     UserClaimsVerificationError
 )
 
-from app.authentication.errors import AuthenticationError
+from app.authentication.errors import AuthenticationError, TokenNotFound
 
 
 def register_errors(blueprint):
@@ -33,6 +33,12 @@ def register_errors(blueprint):
         msg = e.description or "Invalid request parameters"
         current_app.logger.exception(msg)
         return jsonify(result='error', message=str(msg)), 400
+
+    @blueprint.errorhandler(TokenNotFound)
+    def token_not_found(e):
+        msg = 'Token not found'
+        current_app.logger.exception('TokenNotFound: {}'.format(e.message))
+        return jsonify(result='error', message=msg), 400
 
     @blueprint.errorhandler(RevokedTokenError)
     def token_revoked(e):

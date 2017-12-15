@@ -17,7 +17,7 @@ from jwt.exceptions import DecodeError, ExpiredSignatureError
 from sqlalchemy.exc import DataError
 from sqlalchemy.orm.exc import NoResultFound
 
-from app.authentication.errors import AuthenticationError
+from app.authentication.errors import AuthenticationError, TokenNotFound
 from app.errors import register_errors
 
 
@@ -38,6 +38,10 @@ class WhenAnErrorOccurs(object):
         @error_blueprint.route('/status-400')
         def status_400():
             abort(400)
+
+        @error_blueprint.route('/token-not-found')
+        def token_not_found():
+            raise TokenNotFound()
 
         @error_blueprint.route('/revoked-token')
         def revoked_token():
@@ -108,6 +112,14 @@ class WhenAnErrorOccurs(object):
         assert response.status_code == 400
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['message'] == "The browser (or proxy) sent a request that this server could not understand."
+
+    def it_handles_token_not_found(self, error_app):
+        response = error_app.get(
+            path='/token-not-found'
+        )
+        assert response.status_code == 400
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['message'] == "Token not found"
 
     def it_handles_revoked_token(self, error_app):
         response = error_app.get(
