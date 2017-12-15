@@ -33,8 +33,8 @@ class WhenGettingEventTypeByID(object):
 
     def it_returns_correct_event_type_with_fees(self, client, sample_event_type, db_session):
         fees = [
-            create_fee(event_type_id=str(sample_event_type.id)),
-            create_fee(event_type_id=str(sample_event_type.id), fee=10, conc_fee=7)
+            create_fee(event_type_id=str(sample_event_type.id), valid_from='2017-03-01'),
+            create_fee(event_type_id=str(sample_event_type.id), fee=10, conc_fee=7, valid_from='2017-02-01')
         ]
 
         response = client.get(

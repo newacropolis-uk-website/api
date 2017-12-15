@@ -9,7 +9,7 @@ from app.models import EventType
 from tests.db import create_event_type, create_fee
 
 
-class WhenUsingEventTypessDAO(object):
+class WhenUsingEventTypesDAO(object):
 
     def it_creates_an_event_type(self, db, db_session):
         event_type = create_event_type()

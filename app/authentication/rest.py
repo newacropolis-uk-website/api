@@ -17,6 +17,7 @@ from flask_jwt_extended import (
 from app import jwt
 from app.authentication.errors import AuthenticationError
 from app.authentication.schemas import post_login_schema
+from app.dao.blacklist_dao import store_token, prune_database, is_token_revoked
 from app.errors import register_errors
 from app.schema_validation import validate
 
@@ -25,16 +26,11 @@ auth_blueprint = Blueprint('auth', __name__, url_prefix='/auth')
 register_errors(auth_blueprint)
 
 
-def add_blacklist(jti):
-    blacklist.add(jti)
-    current_app.logger.info('add to blacklist: {}, {}'.format(jti, blacklist))
-
-
 @jwt.token_in_blacklist_loader
 def check_if_token_in_blacklist(decrypted_token):
     jti = decrypted_token['jti']
     current_app.logger.info('check_token: {}, {}'.format(jti, blacklist))
-    return jti in blacklist
+    return is_token_revoked(decrypted_token)
 
 
 @auth_blueprint.route('/login', methods=['POST'])
@@ -53,6 +49,7 @@ def login():
     # Identity can be any data that is json serializable
     access_token = create_access_token(identity=username, expires_delta=expiry)
     refresh_token = create_refresh_token(identity=username)
+
     resp = jsonify(
         {
             'login': True,
@@ -76,9 +73,18 @@ def refresh():
     return jsonify(resp), 200
 
 
-@auth_blueprint.route('/logout', methods=['POST'])
+@auth_blueprint.route('/logout', methods=['DELETE'])
 @jwt_required
 def logout():
-    jti = get_raw_jwt()['jti']
-    add_blacklist(jti)
+    prune_database()
+    store_token(get_raw_jwt())
+    return jsonify({"logout": True}), 200
+
+
+# Endpoint for revoking the current users refresh token
+@auth_blueprint.route('/logout-refresh', methods=['DELETE'])
+@jwt_refresh_token_required
+def logout_refresh():
+    prune_database()
+    store_token(get_raw_jwt())
     return jsonify({"logout": True}), 200
