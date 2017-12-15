@@ -48,7 +48,10 @@ class EventType(db.Model):
                 _fees.append({
                     'fee': fee.fee,
                     'conc_fee': fee.conc_fee,
+                    'valid_from': fee.valid_from.isoformat()
                 })
+
+            _fees = sorted(_fees, key=lambda f: f['valid_from'], reverse=True)
             return _fees
 
         return {
