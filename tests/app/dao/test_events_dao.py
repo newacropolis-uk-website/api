@@ -22,9 +22,8 @@ class WhenUsingEventsDAO(object):
         assert event.title == event_from_db.title
 
     def it_gets_all_events(self, db, db_session, sample_event):
-        create_event(title='test title 2')
-        events = dao_get_events()
+        events = [create_event(title='test title 2'), sample_event]
+        events_from_db = dao_get_events()
 
         assert Event.query.count() == 2
-        event_from_db = Event.query.all()
-        assert set(events) == set(event_from_db)
+        assert set(events) == set(events_from_db)

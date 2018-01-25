@@ -16,8 +16,8 @@ from tests.db import create_token_blacklist
 class WhenUsingBlacklistDAO(object):
 
     # need this test in order to reset db when running full test
-    def it_passes(self, db_session):
-        pass
+    # def it_passes(self, db_session):
+    #     pass
 
     def it_stores_a_token(self, db_session, sample_decoded_token):
         assert TokenBlacklist.query.count() == 0
