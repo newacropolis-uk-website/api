@@ -8,16 +8,6 @@ from jsonschema import (Draft4Validator, ValidationError, FormatChecker)
 def validate(json_to_validate, schema):
     format_checker = FormatChecker()
 
-    @format_checker.checks('datetime', raises=ValidationError)
-    def validate_schema_date_with_hour(instance):
-        if isinstance(instance, str) or isinstance(instance, unicode):
-            try:
-                dt = iso8601.parse_date(instance).replace(tzinfo=None)
-            except ParseError:
-                raise ValidationError("datetime format is invalid. It must be a valid ISO8601 date time format, "
-                                      "https://en.wikipedia.org/wiki/ISO_8601")
-        return True
-
     validator = Draft4Validator(schema, format_checker=format_checker)
     errors = list(validator.iter_errors(json_to_validate))
     if errors.__len__() > 0:

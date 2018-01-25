@@ -25,11 +25,10 @@ class WhenUsingFeesDAO(object):
         assert fee.fee == fee_from_db.fee
 
     def it_gets_all_fees(self, db, db_session, sample_fee):
-        fee = create_fee(fee=100, conc_fee=80)
+        fees = [create_fee(fee=100, conc_fee=80), sample_fee]
 
-        fees = dao_get_fees()
+        fees_from_db = dao_get_fees()
         assert Fee.query.count() == 2
-        fees_from_db = Fee.query.all()
         assert set(fees) == set(fees_from_db)
 
     def it_gets_a_fee_by_id(self, db, db_session, sample_fee):
