@@ -1,5 +1,5 @@
-from app.models import Event, Fee
-from tests.db import create_event, create_fee
+from app.models import Event, Fee, Speaker
+from tests.db import create_event, create_fee, create_speaker
 
 
 class WhenUsingEventModel(object):
@@ -12,7 +12,7 @@ class WhenUsingEventModel(object):
 
 class WhenUsingFeeModel(object):
 
-    def it_shows_json_obj_on_serialize(self, db, db_session):
+    def it_shows_fee_json_on_serialize(self, db, db_session):
         fee = create_fee(fee=5, conc_fee=3)
 
         assert fee.serialize() == {
@@ -24,3 +24,20 @@ class WhenUsingFeeModel(object):
             'multi_day_conc_fee': fee.multi_day_conc_fee,
             'valid_from': fee.valid_from.isoformat()
         }
+
+
+class WhenUsingSpeakerModel(object):
+
+    def it_shows_speaker_json_on_serialize(self, db, db_session):
+        speaker = create_speaker()
+
+        assert speaker.serialize() == {
+            'id': str(speaker.id),
+            'title': speaker.title,
+            'name': speaker.name
+        }
+
+    def it_gets_last_name_correctly(self, db, db_session):
+        speaker = create_speaker(name='John Smith')
+
+        assert speaker.last_name == 'Smith'

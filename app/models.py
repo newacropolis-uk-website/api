@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import (
     UUID,
     JSON
 )
+from sqlalchemy.ext.hybrid import hybrid_property
 
 
 class TokenBlacklist(db.Model):
@@ -116,3 +117,23 @@ class Event(db.Model):
 
     def __repr__(self):
         return '<Event: id {}>'.format(self.id)
+
+
+class Speaker(db.Model):
+    __tablename__ = 'speakers'
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = db.Column(db.String(100))
+    name = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'title': self.title,
+            'name': self.name
+        }
+
+    @hybrid_property
+    def last_name(self):
+        return str(self.name).split(' ')[-1]
