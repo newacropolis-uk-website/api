@@ -36,10 +36,11 @@ def create_app(**kwargs):
 
 def register_blueprint():
     from app.rest import base_blueprint
+    from app.authentication.rest import auth_blueprint
     from app.events.rest import events_blueprint
     from app.fees.rest import fees_blueprint, fee_blueprint
     from app.event_types.rest import event_types_blueprint, event_type_blueprint
-    from app.authentication.rest import auth_blueprint
+    from app.routes.speakers.rest import speakers_blueprint, speaker_blueprint
     application.register_blueprint(base_blueprint)
     application.register_blueprint(auth_blueprint)
     application.register_blueprint(events_blueprint)
@@ -47,6 +48,8 @@ def register_blueprint():
     application.register_blueprint(event_type_blueprint)
     application.register_blueprint(fees_blueprint)
     application.register_blueprint(fee_blueprint)
+    application.register_blueprint(speakers_blueprint)
+    application.register_blueprint(speaker_blueprint)
 
 
 def get_env():
