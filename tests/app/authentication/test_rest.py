@@ -86,10 +86,10 @@ class WhenDoingLogout(object):
     @freeze_time("2017-12-10T23:10:00")
     def it_logs_the_user_out_and_adds_token_to_blacklist(
             self, client, mocker, url, create_header, sample_decoded_token):
-        mock_store_token = mocker.patch("app.authentication.rest.store_token")
-        mock_prune_database = mocker.patch("app.authentication.rest.prune_database")
+        mock_store_token = mocker.patch("app.routes.authentication.rest.store_token")
+        mock_prune_database = mocker.patch("app.routes.authentication.rest.prune_database")
         mocker.patch(
-            "app.authentication.rest.get_raw_jwt",
+            "app.routes.authentication.rest.get_raw_jwt",
             return_value=sample_decoded_token
         )
 

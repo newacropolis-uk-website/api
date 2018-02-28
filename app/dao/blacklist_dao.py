@@ -5,7 +5,7 @@ from flask_jwt_extended import decode_token, get_jwt_identity
 
 from app import db
 from app.dao.decorators import transactional
-from app.authentication.errors import TokenNotFound
+from app.routes.authentication.errors import TokenNotFound
 from app.models import TokenBlacklist
 
 

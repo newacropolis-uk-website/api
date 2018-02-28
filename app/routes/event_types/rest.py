@@ -16,7 +16,7 @@ from app.dao.event_types_dao import (
 )
 from app.errors import register_errors
 
-from app.event_types.schemas import post_create_event_type_schema, post_update_event_type_schema
+from app.routes.event_types.schemas import post_create_event_type_schema, post_update_event_type_schema
 from app.models import EventType
 from app.schema_validation import validate
 
