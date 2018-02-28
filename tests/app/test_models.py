@@ -34,7 +34,8 @@ class WhenUsingSpeakerModel(object):
         assert speaker.serialize() == {
             'id': str(speaker.id),
             'title': speaker.title,
-            'name': speaker.name
+            'name': speaker.name,
+            'alternate_names': None
         }
 
     def it_gets_last_name_correctly(self, db, db_session):
