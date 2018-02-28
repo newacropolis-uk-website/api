@@ -17,7 +17,7 @@ from jwt.exceptions import DecodeError, ExpiredSignatureError
 from sqlalchemy.exc import DataError
 from sqlalchemy.orm.exc import NoResultFound
 
-from app.authentication.errors import AuthenticationError, TokenNotFound
+from app.routes.authentication.errors import AuthenticationError, TokenNotFound
 from app.errors import register_errors
 
 

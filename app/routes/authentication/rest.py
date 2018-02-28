@@ -15,8 +15,8 @@ from flask_jwt_extended import (
     jwt_required,
 )
 from app import jwt
-from app.authentication.errors import AuthenticationError
-from app.authentication.schemas import post_login_schema
+from app.routes.authentication.errors import AuthenticationError
+from app.routes.authentication.schemas import post_login_schema
 from app.dao.blacklist_dao import store_token, prune_database, is_token_revoked
 from app.errors import register_errors
 from app.schema_validation import validate

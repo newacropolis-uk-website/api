@@ -11,7 +11,7 @@ from app import logging
 from app.dao.fees_dao import dao_create_fee, dao_get_fees, dao_update_fee, dao_get_fee_by_id
 from app.errors import register_errors
 
-from app.fees.schemas import post_create_fee_schema, post_update_fee_schema
+from app.routes.fees.schemas import post_create_fee_schema, post_update_fee_schema
 from app.models import Fee
 from app.schema_validation import validate
 

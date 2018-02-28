@@ -18,7 +18,7 @@ from flask_jwt_extended.exceptions import (
     UserClaimsVerificationError
 )
 
-from app.authentication.errors import AuthenticationError, TokenNotFound
+from app.routes.authentication.errors import AuthenticationError, TokenNotFound
 
 
 def register_errors(blueprint):
