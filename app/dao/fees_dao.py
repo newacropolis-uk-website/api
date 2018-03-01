@@ -9,10 +9,10 @@ def dao_create_fee(fee):
 
 
 @transactional
-def dao_update_fee(fee_obj, **kwargs):
-    for key, value in kwargs.items():
-        setattr(fee_obj, key, value)
-    db.session.add(fee_obj)
+def dao_update_fee(fee_id, **kwargs):
+    return Fee.query.filter_by(id=fee_id).update(
+        kwargs
+    )
 
 
 def dao_get_fees():
