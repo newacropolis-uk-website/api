@@ -9,10 +9,10 @@ def dao_create_speaker(speaker):
 
 
 @transactional
-def dao_update_speaker(speaker_obj, **kwargs):
-    for key, value in kwargs.items():
-        setattr(speaker_obj, key, value)
-    db.session.add(speaker_obj)
+def dao_update_speaker(speaker_id, **kwargs):
+    return Speaker.query.filter_by(id=speaker_id).update(
+        kwargs
+    )
 
 
 def dao_get_speakers():

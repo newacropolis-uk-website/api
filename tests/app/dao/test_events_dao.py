@@ -13,13 +13,12 @@ class WhenUsingEventsDAO(object):
         event_from_db = Event.query.first()
         assert event == event_from_db
 
-    def it_updates_an_event(self, db, db_session, sample_event):
-        event = sample_event
-        dao_update_event(event, title='new title')
+    def it_updates_an_event_dao(self, db, db_session, sample_event):
+        dao_update_event(sample_event.id, title='new title')
 
-        event_from_db = Event.query.filter(Event.id == event.id).first()
+        event_from_db = Event.query.filter(Event.id == sample_event.id).first()
 
-        assert event.title == event_from_db.title
+        assert sample_event.title == event_from_db.title
 
     def it_gets_all_events(self, db, db_session, sample_event):
         events = [create_event(title='test title 2'), sample_event]

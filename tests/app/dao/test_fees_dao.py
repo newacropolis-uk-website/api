@@ -16,13 +16,12 @@ class WhenUsingFeesDAO(object):
 
         assert fee == fee_from_db
 
-    def it_updates_a_fee(self, db, db_session, sample_fee):
-        fee = sample_fee
-        dao_update_fee(fee, fee=10)
+    def it_updates_a_fee_dao(self, db, db_session, sample_fee):
+        dao_update_fee(sample_fee.id, fee=10)
 
-        fee_from_db = Fee.query.filter(Fee.id == fee.id).first()
+        fee_from_db = Fee.query.filter(Fee.id == sample_fee.id).first()
 
-        assert fee.fee == fee_from_db.fee
+        assert sample_fee.fee == fee_from_db.fee
 
     def it_gets_all_fees(self, db, db_session, sample_fee):
         fees = [create_fee(fee=100, conc_fee=80), sample_fee]

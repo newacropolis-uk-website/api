@@ -9,10 +9,10 @@ def dao_create_event(event):
 
 
 @transactional
-def dao_update_event(event, **kwargs):
-    for key, value in kwargs.items():
-        setattr(event, key, value)
-    db.session.add(event)
+def dao_update_event(event_id, **kwargs):
+    return Event.query.filter_by(id=event_id).update(
+        kwargs
+    )
 
 
 def dao_get_events():

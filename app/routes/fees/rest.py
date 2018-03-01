@@ -59,6 +59,6 @@ def update_fee(fee_id):
 
     fetched_fee = dao_get_fee_by_id(fee_id)
 
-    dao_update_fee(fetched_fee, **data)
+    dao_update_fee(fee_id, **data)
 
     return jsonify(data=fetched_fee.serialize()), 200
