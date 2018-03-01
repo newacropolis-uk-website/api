@@ -61,6 +61,6 @@ def update_event_type(event_type_id):
 
     fetched_event_type = dao_get_event_type_by_id(event_type_id)
 
-    dao_update_event_type(fetched_event_type, **data)
+    dao_update_event_type(event_type_id, **data)
 
     return jsonify(data=fetched_event_type.serialize()), 200

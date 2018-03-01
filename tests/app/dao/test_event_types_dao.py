@@ -18,13 +18,12 @@ class WhenUsingEventTypesDAO(object):
         event_type_from_db = EventType.query.first()
         assert event_type == event_type_from_db
 
-    def it_updates_an_event_type(self, db, db_session, sample_event_type):
-        event_type = create_event_type(event_type='talk')
-        dao_update_event_type(event_type, event_type='workshop')
+    def it_updates_an_event_type_dao(self, db, db_session, sample_event_type):
+        dao_update_event_type(sample_event_type.id, event_type='workshop')
 
-        event_from_db = EventType.query.filter(EventType.id == event_type.id).first()
+        event_from_db = EventType.query.filter(EventType.id == sample_event_type.id).first()
 
-        assert event_type.event_type == 'workshop'
+        assert event_from_db.event_type == 'workshop'
 
     def it_gets_all_event_types(self, db_session, sample_event_type):
         create_event_type(event_type='course')
