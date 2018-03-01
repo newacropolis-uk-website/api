@@ -81,8 +81,8 @@ def update_speaker(speaker_id):
 
     validate(data, post_update_speaker_schema)
 
-    fetched_speaker = dao_get_speaker_by_id(speaker_id)
+    speaker = dao_get_speaker_by_id(speaker_id)
 
-    dao_update_speaker(fetched_speaker, **data)
+    dao_update_speaker(speaker_id, **data)
 
-    return jsonify(fetched_speaker.serialize()), 200
+    return jsonify(speaker.serialize()), 200
