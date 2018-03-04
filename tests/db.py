@@ -70,7 +70,8 @@ def create_token_blacklist(sample_decoded_token):
 def create_speaker(title='Mr', name='First Mid Last-name'):
     data = {
         'title': title,
-        'name': name
+        'name': name,
+        'alternate_names': 'Dr Someone|Mr D. Someone'
     }
 
     speaker = Speaker(**data)
