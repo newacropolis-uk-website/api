@@ -8,6 +8,7 @@ post_create_speaker_schema = {
     "properties": {
         'title': {"type": "string"},
         'name': {"type": "string"},
+        'alternate_names': {"type": "string"},
     },
     "required": ["name"]
 }
@@ -32,5 +33,6 @@ post_update_speaker_schema = {
     "properties": {
         'title': {"type": "string"},
         'name': {"type": "string"},
+        'alternate_names': {"type": "string"},
     },
 }
