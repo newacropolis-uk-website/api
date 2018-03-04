@@ -89,7 +89,7 @@ class WhenGettingSpeakerByID(object):
 class WhenPostingSpeaker(object):
 
     @pytest.mark.parametrize('data', [
-        {'title': 'Dr', 'name': 'Sarah Black'},
+        {'title': 'Dr', 'name': 'Sarah Black', 'alternate_names': 'Dr S. Black|Dr Sarah Black'},
         {'name': 'Diane Cyan'}
     ])
     def it_creates_a_speaker_on_valid_post_data(self, client, data, db_session):
@@ -121,7 +121,7 @@ class WhenPostingSpeaker(object):
         assert json_resp['errors'][0]['message'] == error_msg
 
     def it_updates_a_speaker_on_valid_post_data(self, client, sample_speaker, db_session):
-        data = {'title': 'Dr', 'name': 'Sarah Black'}
+        data = {'title': 'Dr', 'name': 'Sarah Black', 'alternate_names': 'Dr Sarah Black'}
         response = client.post(
             url_for('speaker.update_speaker', speaker_id=sample_speaker.id),
             data=json.dumps(data),
