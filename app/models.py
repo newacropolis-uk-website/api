@@ -139,3 +139,20 @@ class Speaker(db.Model):
     @hybrid_property
     def last_name(self):
         return str(self.name).split(' ')[-1]
+
+
+class EventDate(db.Model):
+    __tablename__ = 'event_dates'
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_id = db.Column(UUID(as_uuid=True), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    event_datetime = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    duration = db.Column(db.Integer, nullable=True)
+    soldout = db.Column(db.Boolean, default=False)
+    repeat = db.Column(db.Integer, nullable=True)
+    repeat_interval = db.Column(db.Integer, nullable=True)
+    fee = db.Column(db.Integer, nullable=True)
+    conc_fee = db.Column(db.Integer, nullable=True)
+    multi_day_fee = db.Column(db.Integer, nullable=True)
+    multi_day_conc_fee = db.Column(db.Integer, nullable=True)
