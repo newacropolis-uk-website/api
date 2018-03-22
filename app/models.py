@@ -97,6 +97,7 @@ class Event(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     old_id = db.Column(db.Integer)
+    event_type_id = db.Column(UUID(as_uuid=True), nullable=True)
     title = db.Column(db.String(255))
     sub_title = db.Column(db.String(255))
     description = db.Column(db.String())
@@ -156,3 +157,10 @@ class EventDate(db.Model):
     conc_fee = db.Column(db.Integer, nullable=True)
     multi_day_fee = db.Column(db.Integer, nullable=True)
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'event_id': str(self.event_id),
+            'event_datetime': self.event_datetime.strftime('%Y-%m-%d %H:%M')
+        }

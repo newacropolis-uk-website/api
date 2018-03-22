@@ -14,7 +14,7 @@ import sqlalchemy
 from flask_jwt_extended import create_access_token, create_refresh_token
 
 from app import create_app, db as _db, get_env
-from tests.db import create_event, create_event_type, create_fee, create_speaker
+from tests.db import create_event, create_event_date, create_event_type, create_fee, create_speaker
 
 TEST_DATABASE_URI = "postgresql://localhost/na_api_" + get_env() + '_test'
 
@@ -79,6 +79,11 @@ def sample_event(db):
 @pytest.fixture(scope='function')
 def sample_event_type(db):
     return create_event_type(event_type='short course')
+
+
+@pytest.fixture(scope='function')
+def sample_event_date(db):
+    return create_event_date()
 
 
 @pytest.fixture(scope='function')

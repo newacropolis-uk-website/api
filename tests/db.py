@@ -2,14 +2,19 @@ from app import db
 
 from app.dao.blacklist_dao import store_token
 from app.dao.events_dao import dao_create_event
+from app.dao.event_dates_dao import dao_create_event_date
 from app.dao.event_types_dao import dao_create_event_type
 from app.dao.fees_dao import dao_create_fee
 from app.dao.speakers_dao import dao_create_speaker
-from app.models import Event, EventType, Fee, Speaker
+from app.models import Event, EventDate, EventType, Fee, Speaker
 
 
-def create_event(title='test title', description='test description'):
+def create_event(title='test title', description='test description', event_type_id=None):
+    if not event_type_id:
+        event_type = create_event_type(event_type='workshop')
+        event_type_id = str(event_type.id)
     data = {
+        'event_type_id': event_type_id,
         'title': title,
         'description': description,
     }
@@ -41,6 +46,41 @@ def create_event_type(
 
     dao_create_event_type(event_type)
     return event_type
+
+
+def create_event_date(
+    event_id=None,
+    event_datetime='2018-01-01 19:00',
+    duration=90,
+    soldout=False,
+    repeat=3,
+    repeat_interval=7,
+    fee=5,
+    conc_fee=3,
+    multi_day_fee=12,
+    multi_day_conc_fee=10
+):
+    if not event_id:
+        event_type = create_event_type()
+        event = create_event(event_type_id=str(event_type.id))
+        event_id = event.id
+
+    data = {
+        'event_id': event_id,
+        'event_datetime': event_datetime,
+        'duration': duration,
+        'soldout': soldout,
+        'repeat': repeat,
+        'repeat_interval': repeat_interval,
+        'fee': fee,
+        'conc_fee': conc_fee,
+        'multi_day_fee': multi_day_fee,
+        'multi_day_conc_fee': multi_day_conc_fee,
+    }
+    event_date = EventDate(**data)
+
+    dao_create_event_date(event_date)
+    return event_date
 
 
 def create_fee(event_type_id=None, fee=5, conc_fee=3, multi_day_fee=0, multi_day_conc_fee=0, valid_from=None):
