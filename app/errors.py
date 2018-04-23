@@ -21,12 +21,32 @@ from flask_jwt_extended.exceptions import (
 from app.routes.authentication.errors import AuthenticationError, TokenNotFound
 
 
+class InvalidRequest(Exception):
+    code = None
+    fields = []
+
+    def __init__(self, message, status_code):
+        super(InvalidRequest, self).__init__()
+        self.message = message
+        self.status_code = status_code
+
+    def to_dict(self):
+        return {'result': 'error', 'message': self.message}
+
+
 def register_errors(blueprint):
 
     @blueprint.errorhandler(ValidationError)
     def validation_error(error):
         current_app.logger.exception(error)
         return jsonify(json.loads(error.message)), 400
+
+    @blueprint.errorhandler(InvalidRequest)
+    def invalid_data(error):
+        response = jsonify(error.to_dict())
+        response.status_code = error.status_code
+        current_app.logger.info(error)
+        return response
 
     @blueprint.errorhandler(400)
     def bad_request(e):

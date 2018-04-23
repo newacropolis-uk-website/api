@@ -18,7 +18,7 @@ from sqlalchemy.exc import DataError
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.routes.authentication.errors import AuthenticationError, TokenNotFound
-from app.errors import register_errors
+from app.errors import register_errors, InvalidRequest
 
 
 class WhenAnErrorOccurs(object):
@@ -81,8 +81,11 @@ class WhenAnErrorOccurs(object):
 
         @error_blueprint.route('/data-error')
         def data_error():
-            print('data error')
             raise DataError(None, None, None)
+
+        @error_blueprint.route('/invalid-request')
+        def invalid_request():
+            raise InvalidRequest('Invalid request', 400)
 
         @error_blueprint.route('/status-500')
         def status_500():
@@ -200,6 +203,14 @@ class WhenAnErrorOccurs(object):
         assert response.status_code == 404
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['message'] == "No result found"
+
+    def it_handles_invalid_request(self, error_app):
+        response = error_app.get(
+            path='/invalid-request'
+        )
+        assert response.status_code == 400
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['message'] == "Invalid request"
 
     def it_handles_status_500(self, error_app):
         response = error_app.get(
