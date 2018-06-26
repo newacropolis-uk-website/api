@@ -6,7 +6,8 @@ from app.dao.event_dates_dao import dao_create_event_date
 from app.dao.event_types_dao import dao_create_event_type
 from app.dao.fees_dao import dao_create_fee
 from app.dao.speakers_dao import dao_create_speaker
-from app.models import Event, EventDate, EventType, Fee, Speaker
+from app.dao.venues_dao import dao_create_venue
+from app.models import Event, EventDate, EventType, Fee, Speaker, Venue
 
 
 def create_event(title='test title', description='test description', event_type_id=None):
@@ -60,6 +61,7 @@ def create_event_date(
     multi_day_fee=12,
     multi_day_conc_fee=10
 ):
+    venue = create_venue()
     if not event_id:
         event_type = create_event_type()
         event = create_event(event_type_id=str(event_type.id))
@@ -76,6 +78,7 @@ def create_event_date(
         'conc_fee': conc_fee,
         'multi_day_fee': multi_day_fee,
         'multi_day_conc_fee': multi_day_conc_fee,
+        'venue_id': venue.id,
     }
     event_date = EventDate(**data)
 
@@ -118,3 +121,19 @@ def create_speaker(title='Mr', name='First Mid Last-name'):
 
     dao_create_speaker(speaker)
     return speaker
+
+
+def create_venue(
+    name='Head office', address='10 London Street, N1 1NN', directions='By bus: 100, 111, 123', default=True
+):
+    data = {
+        'name': name,
+        'address': address,
+        'directions': directions,
+        'default': default
+    }
+
+    venue = Venue(**data)
+
+    dao_create_venue(venue)
+    return venue

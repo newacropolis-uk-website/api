@@ -16,6 +16,8 @@ from app.dao.event_dates_dao import (
     dao_get_event_date_by_id,
     dao_has_event_id_and_datetime
 )
+from app.dao.venues_dao import dao_get_default_venue
+
 from app.errors import register_errors, InvalidRequest
 
 from app.routes.event_dates.schemas import post_create_event_date_schema, post_update_event_date_schema
@@ -44,12 +46,17 @@ def get_event_date_by_id(event_date_id):
 
 
 @event_date_blueprint.route('', methods=['POST'])
+@jwt_required
 def create_event_date():
     data = request.get_json()
 
     validate(data, post_create_event_date_schema)
 
     check_event_id_and_datetime(data['event_id'], data['event_datetime'])
+
+    if 'venue_id' not in data:
+        venue = dao_get_default_venue()
+        data['venue_id'] = venue.id
 
     event_date = EventDate(**data)
 
@@ -58,6 +65,7 @@ def create_event_date():
 
 
 @event_date_blueprint.route('/<uuid:event_date_id>', methods=['POST'])
+@jwt_required
 def update_event_date(event_date_id):
     data = request.get_json()
 
