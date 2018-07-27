@@ -157,10 +157,30 @@ class EventDate(db.Model):
     conc_fee = db.Column(db.Integer, nullable=True)
     multi_day_fee = db.Column(db.Integer, nullable=True)
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
+    venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'), nullable=False)
 
     def serialize(self):
         return {
             'id': str(self.id),
             'event_id': str(self.event_id),
             'event_datetime': self.event_datetime.strftime('%Y-%m-%d %H:%M')
+        }
+
+
+class Venue(db.Model):
+    __tablename__ = 'venues'
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = db.Column(db.String(255))
+    address = db.Column(db.String(255))
+    directions = db.Column(db.String(255))
+    default = db.Column(db.Boolean)
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'name': str(self.name),
+            'address': self.address,
+            'directions': self.directions,
+            'default': self.default,
         }

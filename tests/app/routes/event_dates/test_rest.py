@@ -24,7 +24,8 @@ class WhenGettingEventDateByID(object):
 
     def it_returns_correct_event_date(self, client, sample_event_date, db_session):
         response = client.get(
-            url_for('event_date.get_event_date_by_id', event_date_id=str(sample_event_date.id))
+            url_for('event_date.get_event_date_by_id', event_date_id=str(sample_event_date.id)),
+            headers=[create_authorization_header()]
         )
         assert response.status_code == 200
 
@@ -34,7 +35,7 @@ class WhenGettingEventDateByID(object):
 
 class WhenPostingEventDate(object):
 
-    def it_creates_an_event_date_on_valid_post_data(self, client, db_session, sample_event):
+    def it_creates_an_event_date_on_valid_post_data(self, client, db_session, sample_event, sample_venue):
         data = {
             'event_id': str(sample_event.id),
             'event_datetime': '2018-04-11 12:00'
@@ -43,7 +44,7 @@ class WhenPostingEventDate(object):
         response = client.post(
             url_for('event_date.create_event_date'),
             data=json.dumps(data),
-            headers=[('Content-Type', 'application/json')]
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 201
 
@@ -60,7 +61,7 @@ class WhenPostingEventDate(object):
         response = client.post(
             url_for('event_date.create_event_date'),
             data=json.dumps(data),
-            headers=[('Content-Type', 'application/json')]
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 400
         json_resp = json.loads(response.get_data(as_text=True))
@@ -81,7 +82,7 @@ class WhenPostingEventDate(object):
         response = client.post(
             url_for('event_date.create_event_date'),
             data=json.dumps(data),
-            headers=[('Content-Type', 'application/json')]
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 400
 
@@ -94,7 +95,7 @@ class WhenPostingEventDate(object):
         response = client.post(
             url_for('event_date.update_event_date', event_date_id=sample_event_date.id),
             data=json.dumps(data),
-            headers=[('Content-Type', 'application/json')]
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 200
 
@@ -112,7 +113,7 @@ class WhenPostingEventDate(object):
         response = client.post(
             url_for('event_date.update_event_date', event_date_id=event_date_1.id),
             data=json.dumps(data),
-            headers=[('Content-Type', 'application/json')]
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 400
         json_resp = json.loads(response.get_data(as_text=True))

@@ -42,6 +42,7 @@ def register_blueprint():
     from app.routes.event_dates.rest import event_dates_blueprint, event_date_blueprint
     from app.routes.event_types.rest import event_types_blueprint, event_type_blueprint
     from app.routes.speakers.rest import speakers_blueprint, speaker_blueprint
+    from app.routes.venues.rest import venues_blueprint, venue_blueprint
     application.register_blueprint(base_blueprint)
     application.register_blueprint(auth_blueprint)
     application.register_blueprint(events_blueprint)
@@ -53,6 +54,8 @@ def register_blueprint():
     application.register_blueprint(fee_blueprint)
     application.register_blueprint(speakers_blueprint)
     application.register_blueprint(speaker_blueprint)
+    application.register_blueprint(venues_blueprint)
+    application.register_blueprint(venue_blueprint)
 
 
 def get_env():
