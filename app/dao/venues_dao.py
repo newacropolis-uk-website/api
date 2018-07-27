@@ -8,6 +8,8 @@ def dao_create_venue(venue):
     default = dao_get_default_venue()
     if not default:
         venue.default = True
+    else:
+        venue.default = False
 
     db.session.add(venue)
 

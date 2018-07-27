@@ -175,3 +175,12 @@ class Venue(db.Model):
     address = db.Column(db.String(255))
     directions = db.Column(db.String(255))
     default = db.Column(db.Boolean)
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'name': str(self.name),
+            'address': self.address,
+            'directions': self.directions,
+            'default': self.default,
+        }
