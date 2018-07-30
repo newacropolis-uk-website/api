@@ -31,7 +31,7 @@ client-secret.json
 credentials.tar.gz
 
 # notes
-*.notes
+notes
 
 # migration
 data/**
