@@ -16,7 +16,12 @@ from app.dao.venues_dao import (
 )
 from app.errors import register_errors
 
-from app.routes.venues.schemas import post_create_venue_schema, post_create_venues_schema, post_update_venue_schema
+from app.routes.venues.schemas import (
+    post_create_venue_schema,
+    post_create_venues_schema,
+    post_import_venues_schema,
+    post_update_venue_schema
+)
 from app.models import Venue
 from app.schema_validation import validate
 
@@ -64,6 +69,33 @@ def create_venues():
         venue = Venue.query.filter(Venue.name == item['name']).first()
         if not venue:
             venue = Venue(**item)
+            venues.append(venue)
+            dao_create_venue(venue)
+        else:
+            current_app.logger.info('venue already exists: {}'.format(venue.name))
+    return jsonify([v.serialize() for v in venues]), 201
+
+
+@venues_blueprint.route('/import', methods=['POST'])
+@jwt_required
+def import_venues():
+    data = request.get_json(force=True)
+
+    validate(data, post_import_venues_schema)
+
+    venues = []
+    for item in data:
+        if not item["name"]:
+            item["name"] = "Head branch"
+
+        venue = Venue.query.filter(Venue.name == item['name']).first()
+        if not venue:
+            venue = Venue(
+                old_id=item['id'],
+                name=item['name'],
+                address=item['address'],
+                directions="<div>Bus: {bus}</div><div>Train: {train}</div>".format(bus=item['bus'], train=item['tube'])
+            )
             venues.append(venue)
             dao_create_venue(venue)
         else:
