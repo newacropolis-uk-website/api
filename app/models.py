@@ -171,6 +171,7 @@ class Venue(db.Model):
     __tablename__ = 'venues'
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    old_id = db.Column(db.Integer)
     name = db.Column(db.String(255))
     address = db.Column(db.String(255))
     directions = db.Column(db.String(255))
@@ -179,6 +180,7 @@ class Venue(db.Model):
     def serialize(self):
         return {
             'id': str(self.id),
+            'old_id': self.old_id,
             'name': str(self.name),
             'address': self.address,
             'directions': self.directions,
