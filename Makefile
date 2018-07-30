@@ -16,3 +16,11 @@ test-one: ## Test one, make test-one test=<test function name>
 .PHONY: test-dir
 test-dir: ## Test directory under tests/app, make test-dir dir=<directory of tests>
 	pytest tests/app/${dir}
+
+.PHONY: run
+run: ## Run app
+	./scripts/run_app.sh
+
+.PHONY: integration-test
+integration-test: ## Run integration tests
+	./scripts/integration_test.sh -a
