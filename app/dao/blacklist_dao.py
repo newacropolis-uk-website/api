@@ -14,6 +14,7 @@ def store_token(decoded_token):
     jti = decoded_token['jti']
     token_type = decoded_token['type']
     user_identity = decoded_token['identity']
+    print(decoded_token)
     expires = datetime.fromtimestamp(decoded_token['exp'])
 
     db_token = TokenBlacklist(

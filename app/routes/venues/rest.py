@@ -25,27 +25,27 @@ from app.routes.venues.schemas import (
 from app.models import Venue
 from app.schema_validation import validate
 
-venues_blueprint = Blueprint('venues', __name__, url_prefix='/venues')
-venue_blueprint = Blueprint('venue', __name__, url_prefix='/venue')
+venues_blueprint = Blueprint('venues', __name__)
+venue_blueprint = Blueprint('venue', __name__)
 register_errors(venues_blueprint)
 register_errors(venue_blueprint)
 
 
-@venues_blueprint.route('')
+@venues_blueprint.route('/venues')
 @jwt_required
 def get_venues():
     venues = [e.serialize() if e else None for e in dao_get_venues()]
     return jsonify(venues)
 
 
-@venue_blueprint.route('/<uuid:venue_id>', methods=['GET'])
+@venue_blueprint.route('/venue/<uuid:venue_id>', methods=['GET'])
 def get_venue_by_id(venue_id):
     current_app.logger.info('get_venue: {}'.format(venue_id))
     venue = dao_get_venue_by_id(venue_id)
     return jsonify(venue.serialize())
 
 
-@venue_blueprint.route('', methods=['POST'])
+@venue_blueprint.route('/venue', methods=['POST'])
 def create_venue():
     data = request.get_json(force=True)
 
@@ -57,7 +57,7 @@ def create_venue():
     return jsonify(venue.serialize()), 201
 
 
-@venues_blueprint.route('', methods=['POST'])
+@venues_blueprint.route('/venues', methods=['POST'])
 @jwt_required
 def create_venues():
     data = request.get_json(force=True)
@@ -76,7 +76,7 @@ def create_venues():
     return jsonify([v.serialize() for v in venues]), 201
 
 
-@venues_blueprint.route('/import', methods=['POST'])
+@venues_blueprint.route('/venues/import', methods=['POST'])
 @jwt_required
 def import_venues():
     data = request.get_json(force=True)
@@ -103,7 +103,7 @@ def import_venues():
     return jsonify([v.serialize() for v in venues]), 201
 
 
-@venue_blueprint.route('/<uuid:venue_id>', methods=['POST'])
+@venue_blueprint.route('/venue/<uuid:venue_id>', methods=['POST'])
 def update_venue(venue_id):
     data = request.get_json()
 

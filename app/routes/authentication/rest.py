@@ -44,6 +44,7 @@ def login():
 
     if username != current_app.config['ADMIN_CLIENT_ID'] or password != current_app.config['ADMIN_CLIENT_SECRET']:
         raise AuthenticationError(username=username, password=password)
+
     expiry = datetime.timedelta(minutes=current_app.config['TOKEN_EXPIRY'])
 
     # Identity can be any data that is json serializable

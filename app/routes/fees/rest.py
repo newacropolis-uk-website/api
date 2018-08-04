@@ -15,13 +15,13 @@ from app.routes.fees.schemas import post_create_fee_schema, post_update_fee_sche
 from app.models import Fee
 from app.schema_validation import validate
 
-fees_blueprint = Blueprint('fees', __name__, url_prefix='/fees')
-fee_blueprint = Blueprint('fee', __name__, url_prefix='/fee')
+fees_blueprint = Blueprint('fees', __name__)
+fee_blueprint = Blueprint('fee', __name__)
 register_errors(fees_blueprint)
 register_errors(fee_blueprint)
 
 
-@fees_blueprint.route('')
+@fees_blueprint.route('/fees')
 @jwt_required
 def get_fees():
     current_app.logger.info('get_fees')
@@ -29,7 +29,7 @@ def get_fees():
     return jsonify(data=fees)
 
 
-@fee_blueprint.route('/<uuid:fee_id>', methods=['GET'])
+@fee_blueprint.route('/fee/<uuid:fee_id>', methods=['GET'])
 @jwt_required
 def get_fee_by_id(fee_id):
     current_app.logger.info('get_fee: {}'.format(fee_id))
@@ -37,7 +37,7 @@ def get_fee_by_id(fee_id):
     return jsonify(data=fee.serialize())
 
 
-@fee_blueprint.route('', methods=['POST'])
+@fee_blueprint.route('/fee', methods=['POST'])
 @jwt_required
 def create_fee():
     data = request.get_json()
@@ -50,7 +50,7 @@ def create_fee():
     return jsonify(data=fee.serialize()), 201
 
 
-@fee_blueprint.route('/<uuid:fee_id>', methods=['POST'])
+@fee_blueprint.route('/fee/<uuid:fee_id>', methods=['POST'])
 @jwt_required
 def update_fee(fee_id):
     data = request.get_json()
