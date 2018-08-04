@@ -140,10 +140,16 @@ function Logout {
 # GetFees
 
 # setup 
-setupURLS "$1"
+setupURLS "$2"
 setupAccessToken
 
-case "$1" in
+if [ -z $1 ]; then
+    arg="-a"
+else
+    arg=$1
+fi
+
+case "$arg" in
 
         -a) echo "Run all"
             GetFees
@@ -158,6 +164,14 @@ case "$1" in
 
         -i)
                 ImportVenues
+        ;;
+
+        -s)
+            GetSpeakers
+        ;;
+
+        -x)
+            Logout
         ;;
 
 esac

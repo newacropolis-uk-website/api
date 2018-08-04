@@ -27,7 +27,8 @@ def app():
         'PREFERRED_URL_SCHEME': 'http',
         'ADMIN_CLIENT_ID': 'testadmin',
         'ADMIN_CLIENT_SECRET': 'testsecret',
-        'TOKEN_EXPIRY': 1
+        'TOKEN_EXPIRY': 1,
+        'JWT_SECRET_KEY': 'secret'
     })
 
     ctx = _app.app_context()

@@ -24,13 +24,13 @@ from app.routes.event_dates.schemas import post_create_event_date_schema, post_u
 from app.models import EventDate
 from app.schema_validation import validate
 
-event_dates_blueprint = Blueprint('event_dates', __name__, url_prefix='/event_dates')
-event_date_blueprint = Blueprint('event_date', __name__, url_prefix='/event_date')
+event_dates_blueprint = Blueprint('event_dates', __name__)
+event_date_blueprint = Blueprint('event_date', __name__)
 register_errors(event_dates_blueprint)
 register_errors(event_date_blueprint)
 
 
-@event_dates_blueprint.route('')
+@event_dates_blueprint.route('/event_dates')
 @jwt_required
 def get_event_dates():
     current_app.logger.info('get_event_dates')
@@ -38,14 +38,14 @@ def get_event_dates():
     return jsonify(data=event_dates)
 
 
-@event_date_blueprint.route('/<uuid:event_date_id>', methods=['GET'])
+@event_date_blueprint.route('/event_date/<uuid:event_date_id>', methods=['GET'])
 def get_event_date_by_id(event_date_id):
     current_app.logger.info('get_event_date: {}'.format(event_date_id))
     event_date = dao_get_event_date_by_id(event_date_id)
     return jsonify(data=event_date.serialize())
 
 
-@event_date_blueprint.route('', methods=['POST'])
+@event_date_blueprint.route('/event_date', methods=['POST'])
 @jwt_required
 def create_event_date():
     data = request.get_json()
@@ -64,7 +64,7 @@ def create_event_date():
     return jsonify(data=event_date.serialize()), 201
 
 
-@event_date_blueprint.route('/<uuid:event_date_id>', methods=['POST'])
+@event_date_blueprint.route('/event_date/<uuid:event_date_id>', methods=['POST'])
 @jwt_required
 def update_event_date(event_date_id):
     data = request.get_json()

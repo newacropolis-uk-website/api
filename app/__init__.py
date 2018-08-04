@@ -18,9 +18,6 @@ def create_app(**kwargs):
 
     application.config.from_object(configs[environment_state])
     application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    application.config['JWT_SECRET_KEY'] = 'super-secret'
-    application.config['JWT_BLACKLIST_ENABLED'] = True
-    application.config['JWT_BLACKLIST_TOKEN_CHECKS'] = ['access']
 
     if kwargs:
         application.config.update(kwargs)
@@ -31,7 +28,16 @@ def create_app(**kwargs):
 
     register_blueprint()
 
+    init_app(application)
+
     return application
+
+
+def init_app(app):
+    @app.before_request
+    def check_for_apikey():
+        # print("check: ", request)
+        pass
 
 
 def register_blueprint():
