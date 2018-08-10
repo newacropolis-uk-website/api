@@ -97,13 +97,18 @@ class Event(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     old_id = db.Column(db.Integer)
-    event_type_id = db.Column(UUID(as_uuid=True), nullable=True)
+    event_type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_types.id'), nullable=False)
     title = db.Column(db.String(255))
     sub_title = db.Column(db.String(255))
     description = db.Column(db.String())
     booking_code = db.Column(db.String(20))
     image_filename = db.Column(db.String(255))
+    fee = db.Column(db.Integer, nullable=True)
+    conc_fee = db.Column(db.Integer, nullable=True)
+    multi_day_fee = db.Column(db.Integer, nullable=True)
+    multi_day_conc_fee = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    speaker_id = db.Column(UUID(as_uuid=True), db.ForeignKey('speakers.id'), nullable=False)
 
     def serialize(self):
         return {
@@ -113,7 +118,11 @@ class Event(db.Model):
             'sub_title': self.sub_title,
             'description': self.description,
             'booking_code': self.booking_code,
-            'image_filename': self.image_filename
+            'image_filename': self.image_filename,
+            'fee': self.fee,
+            'conc_fee': self.conc_fee,
+            'multi_day_fee': self.multi_day_fee,
+            'multi_day_conc_fee': self.multi_day_conc_fee,
         }
 
     def __repr__(self):
