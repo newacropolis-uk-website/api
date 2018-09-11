@@ -15,7 +15,7 @@ class WhenGettingEventDates(object):
         )
         assert response.status_code == 200
 
-        json_resp = json.loads(response.get_data(as_text=True))['data']
+        json_resp = json.loads(response.get_data(as_text=True))
         assert len(json_resp) == 1
         assert json_resp[0]['id'] == str(sample_event_date.id)
 
@@ -29,7 +29,7 @@ class WhenGettingEventDateByID(object):
         )
         assert response.status_code == 200
 
-        json_resp = json.loads(response.get_data(as_text=True))['data']
+        json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['id'] == str(sample_event_date.id)
 
 
@@ -50,7 +50,7 @@ class WhenPostingEventDate(object):
 
         json_resp = json.loads(response.get_data(as_text=True))
         for key in data.keys():
-            assert data[key] == json_resp['data'][key]
+            assert data[key] == json_resp[key]
 
     def it_doesnt_create_duplicate_event_dates(self, client, db_session, sample_event_date):
         data = {
@@ -101,7 +101,7 @@ class WhenPostingEventDate(object):
 
         json_resp = json.loads(response.get_data(as_text=True))
         for key in data.keys():
-            assert data[key] == json_resp['data'][key]
+            assert data[key] == json_resp[key]
 
     def it_doesnt_update_duplicate_event_date(self, client, db_session, sample_event_date):
         event_date_1 = create_event_date(event_id=sample_event_date.event_id)

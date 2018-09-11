@@ -57,6 +57,7 @@ class EventType(db.Model):
 
         return {
             'id': str(self.id),
+            'old_id': self.old_id,
             'event_type': self.event_type,
             'event_desc': self.event_desc,
             'event_filename': self.event_filename,

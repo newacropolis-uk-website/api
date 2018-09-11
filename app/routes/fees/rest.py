@@ -26,7 +26,7 @@ register_errors(fee_blueprint)
 def get_fees():
     current_app.logger.info('get_fees')
     fees = [f.serialize() if f else None for f in dao_get_fees()]
-    return jsonify(data=fees)
+    return jsonify(fees)
 
 
 @fee_blueprint.route('/fee/<uuid:fee_id>', methods=['GET'])
@@ -34,7 +34,7 @@ def get_fees():
 def get_fee_by_id(fee_id):
     current_app.logger.info('get_fee: {}'.format(fee_id))
     fee = dao_get_fee_by_id(fee_id)
-    return jsonify(data=fee.serialize())
+    return jsonify(fee.serialize())
 
 
 @fee_blueprint.route('/fee', methods=['POST'])
@@ -47,7 +47,7 @@ def create_fee():
     fee = Fee(**data)
 
     dao_create_fee(fee)
-    return jsonify(data=fee.serialize()), 201
+    return jsonify(fee.serialize()), 201
 
 
 @fee_blueprint.route('/fee/<uuid:fee_id>', methods=['POST'])
@@ -61,4 +61,4 @@ def update_fee(fee_id):
 
     dao_update_fee(fee_id, **data)
 
-    return jsonify(data=fetched_fee.serialize()), 200
+    return jsonify(fetched_fee.serialize()), 200

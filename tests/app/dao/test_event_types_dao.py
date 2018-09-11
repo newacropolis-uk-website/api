@@ -2,7 +2,8 @@ from app.dao.event_types_dao import (
     dao_create_event_type,
     dao_update_event_type,
     dao_get_event_types,
-    dao_get_event_type_by_id
+    dao_get_event_type_by_id,
+    dao_get_event_type_by_old_id
 )
 from app.models import EventType
 
@@ -41,6 +42,11 @@ class WhenUsingEventTypesDAO(object):
 
     def it_gets_an_event_type(self, db, db_session, sample_event_type):
         event_type = dao_get_event_type_by_id(str(sample_event_type.id))
+
+        assert event_type.id == sample_event_type.id
+
+    def it_get_event_type_by_old_id(self, db, db_session, sample_event_type):
+        event_type = dao_get_event_type_by_old_id(str(sample_event_type.old_id))
 
         assert event_type.id == sample_event_type.id
 

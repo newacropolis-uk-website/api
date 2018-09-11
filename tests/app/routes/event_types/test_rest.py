@@ -15,7 +15,7 @@ class WhenGettingEventTypes(object):
         )
         assert response.status_code == 200
 
-        json_resp = json.loads(response.get_data(as_text=True))['data']
+        json_resp = json.loads(response.get_data(as_text=True))
         assert len(json_resp) == 1
         assert json_resp[0]['id'] == str(sample_event_type.id)
 
@@ -28,7 +28,7 @@ class WhenGettingEventTypeByID(object):
         )
         assert response.status_code == 200
 
-        json_resp = json.loads(response.get_data(as_text=True))['data']
+        json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['id'] == str(sample_event_type.id)
 
     def it_returns_correct_event_type_with_fees(self, client, sample_event_type, db_session):
@@ -42,12 +42,81 @@ class WhenGettingEventTypeByID(object):
         )
         assert response.status_code == 200
 
-        json_resp = json.loads(response.get_data(as_text=True))['data']
+        json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['id'] == str(sample_event_type.id)
 
         for i, fee in enumerate(fees):
             assert json_resp['fees'][i]['fee'] == fee.fee
             assert json_resp['fees'][i]['conc_fee'] == fee.conc_fee
+
+
+class WhenPostingEventTypes(object):
+
+    def it_creates_event_types_for_imported_event_types(self, client, db_session):
+        data = [
+            {
+                "id": "1",
+                "EventType": "Talk",
+                "Fees": "5",
+                "ConcFees": "3",
+                "EventDesc": "",
+                "EventFilename": None
+            },
+            {
+                "id": "2",
+                "EventType": "Introductory Course",
+                "Fees": "0",
+                "ConcFees": None,
+                "EventDesc": "",
+                "EventFilename": None
+            }
+        ]
+
+        response = client.post(
+            url_for('event_types.import_event_types'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 201
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert len(json_resp) == len(data)
+        for i in range(0, len(data) - 1):
+            assert json_resp[i]["old_id"] == int(data[i]["id"])
+            assert json_resp[i]["event_type"] == data[i]["EventType"]
+
+    def it_ignores_existing_event_types_for_imported_event_types(self, client, db_session, sample_event_type):
+        data = [
+            {
+                "id": "1",
+                "EventType": sample_event_type.event_type,
+                "Fees": "5",
+                "ConcFees": "3",
+                "EventDesc": "",
+                "EventFilename": None
+            },
+            {
+                "id": "2",
+                "EventType": "Introductory Course",
+                "Fees": "0",
+                "ConcFees": None,
+                "EventDesc": "",
+                "EventFilename": None
+            }
+        ]
+
+        response = client.post(
+            url_for('event_types.import_event_types'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 201
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        # should ignore the first data element but create the second one
+        assert len(json_resp) == 1
+        assert json_resp[0]["old_id"] == int(data[1]["id"])
+        assert json_resp[0]["event_type"] == data[1]["EventType"]
 
 
 class WhenPostingEventType(object):
@@ -60,13 +129,13 @@ class WhenPostingEventType(object):
         response = client.post(
             url_for('event_type.create_event_type'),
             data=json.dumps(data),
-            headers=[('Content-Type', 'application/json')]
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 201
 
         json_resp = json.loads(response.get_data(as_text=True))
         for key in data.keys():
-            assert data[key] == json_resp['data'][key]
+            assert data[key] == json_resp[key]
 
     @pytest.mark.parametrize('data,error_msg', [
         ({'event_desc': 'Seminar test'}, 'event_type is a required property'),
@@ -75,7 +144,7 @@ class WhenPostingEventType(object):
         response = client.post(
             url_for('event_type.create_event_type'),
             data=json.dumps(data),
-            headers=[('Content-Type', 'application/json')]
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 400
 
@@ -88,10 +157,10 @@ class WhenPostingEventType(object):
         response = client.post(
             url_for('event_type.update_event_type', event_type_id=sample_event_type.id),
             data=json.dumps(data),
-            headers=[('Content-Type', 'application/json')]
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert response.status_code == 200
 
         json_resp = json.loads(response.get_data(as_text=True))
         for key in data.keys():
-            assert data[key] == json_resp['data'][key]
+            assert data[key] == json_resp[key]
