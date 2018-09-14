@@ -13,7 +13,7 @@ def get_fees_page(client):
 class WhenGettingFees(object):
 
     def it_returns_all_fees(self, sample_fee, get_fees_page, db_session):
-        data = json.loads(get_fees_page.get_data(as_text=True))['data']
+        data = json.loads(get_fees_page.get_data(as_text=True))
         assert len(data) == 1
         assert data[0]['id'] == str(sample_fee.id)
 
@@ -27,7 +27,7 @@ class WhenGettingFeeByID(object):
         )
         assert response.status_code == 200
 
-        json_resp = json.loads(response.get_data(as_text=True))['data']
+        json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['id'] == str(sample_fee.id)
 
 
@@ -48,7 +48,7 @@ class WhenPostingFee(object):
 
         json_resp = json.loads(response.get_data(as_text=True))
         for key in data.keys():
-            assert data[key] == json_resp['data'][key]
+            assert data[key] == json_resp[key]
 
     @pytest.mark.parametrize('data,error_msg', [
         ({'fee': 20}, 'event_type_id is a required property'),
@@ -78,4 +78,4 @@ class WhenPostingFee(object):
 
         json_resp = json.loads(response.get_data(as_text=True))
         for key in data.keys():
-            assert data[key] == json_resp['data'][key]
+            assert data[key] == json_resp[key]

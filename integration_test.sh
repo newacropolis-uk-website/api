@@ -20,7 +20,7 @@ function setupAccessToken {
     -H "Content-Type: application/json" \
     -X "POST" \
     -d '{"username": "'$username'","password": "'$password'"}' | jq -r '.access_token')
-    # echo $TKN
+    echo $TKN
 }
 
 function GetFees {
@@ -39,6 +39,31 @@ function GetEventTypes {
     -H "Authorization: Bearer $TKN"
 }
 
+event_types=$(cat  << EOF
+    [
+        {"id":"1","EventType":"Talk","Fees":"5","ConcFees":"3","EventDesc":"","EventFilename":null},
+        {"id":"2","EventType":"Introductory Course","Fees":"120","ConcFees":"85","EventDesc":"","EventFilename":null},
+        {"id":"3","EventType":"Seminar","Fees":"0","ConcFees":null,"EventDesc":"","EventFilename":null},
+        {"id":"4","EventType":"Ecological event","Fees":"0","ConcFees":null,"EventDesc":"","EventFilename":null},
+        {"id":"5","EventType":"Excursion","Fees":"0","ConcFees":null,"EventDesc":"","EventFilename":"TextExcursion.gif"},
+        {"id":"6","EventType":"Exhibition","Fees":"0","ConcFees":null,"EventDesc":"","EventFilename":null},
+        {"id":"7","EventType":"Meeting","Fees":"0","ConcFees":null,"EventDesc":"","EventFilename":null},
+        {"id":"8","EventType":"Cultural Event","Fees":"0","ConcFees":null,"EventDesc":"","EventFilename":"TextCultural.gif"},
+        {"id":"9","EventType":"Short Course","Fees":"0","ConcFees":null,"EventDesc":null,"EventFilename":null},
+        {"id":"10","EventType":"Workshop","Fees":"0","ConcFees":null,"EventDesc":null,"EventFilename":null}
+    ]
+EOF
+)
+
+function ImportEventTypes {
+    echo "*** Import event types ***"
+
+    curl -X POST $api_server'/event_types/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$event_types"
+}
+
 function GetSpeakers {
     echo "*** Get speakers ***"
 
@@ -55,8 +80,6 @@ speakers=$(cat  << EOF
     ]
 EOF
 )
-
-
 
 function PostSpeakers {
     echo "*** Post speakers ***"
@@ -154,6 +177,7 @@ case "$arg" in
         -a) echo "Run all"
             GetFees
             GetEventTypes
+            ImportEventTypes
             PostSpeakers
             GetSpeakers
             ImportVenues
@@ -162,8 +186,16 @@ case "$arg" in
             GetFees
         ;;
 
+        -et)
+            GetEventTypes
+        ;;
+
+        -iet)
+            ImportEventTypes
+        ;;
+
         -i)
-                ImportVenues
+            ImportVenues
         ;;
 
         -s)

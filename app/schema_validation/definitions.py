@@ -9,3 +9,9 @@ datetime = {
     "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$",
     "validationMessage": "is not a datetime in format YYYY-MM-DD HH:MM",
 }
+
+number = {
+    "type": "string",
+    "pattern": "^[0-9]*$",
+    "validationMessage": "is not a number",
+}
