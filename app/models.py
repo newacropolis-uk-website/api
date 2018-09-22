@@ -109,7 +109,6 @@ class Event(db.Model):
     multi_day_fee = db.Column(db.Integer, nullable=True)
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    speaker_id = db.Column(UUID(as_uuid=True), db.ForeignKey('speakers.id'), nullable=False)
 
     def serialize(self):
         return {
@@ -168,6 +167,7 @@ class EventDate(db.Model):
     multi_day_fee = db.Column(db.Integer, nullable=True)
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
     venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'), nullable=False)
+    speaker_id = db.Column(UUID(as_uuid=True), db.ForeignKey('speakers.id'), nullable=True)
 
     def serialize(self):
         return {

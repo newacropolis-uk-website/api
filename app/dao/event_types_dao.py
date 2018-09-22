@@ -24,4 +24,4 @@ def dao_get_event_type_by_id(event_type_id):
 
 
 def dao_get_event_type_by_old_id(old_event_type_id):
-    return EventType.query.filter_by(old_id=old_event_type_id).one()
+    return EventType.query.filter_by(old_id=old_event_type_id).first()

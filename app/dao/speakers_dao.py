@@ -24,3 +24,7 @@ def dao_get_speakers():
 
 def dao_get_speaker_by_id(speaker_id):
     return Speaker.query.filter_by(id=speaker_id).one()
+
+
+def dao_get_speaker_by_name(name):
+    return Speaker.query.filter_by(name=name).first()
