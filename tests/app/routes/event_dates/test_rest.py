@@ -75,7 +75,7 @@ class WhenPostingEventDate(object):
                 'event_id': 'cc23965c-afb2-4c3a-9460-8ad74783b68b',
                 'event_datetime': '12:00 2018-04-11'
             },
-            'event_datetime is not a datetime in format YYYY-MM-DD HH:MM'
+            'event_datetime is not a datetime in format YYYY-MM-DD HH:MM(:SS)?'
         ),
     ])
     def it_returns_400_on_invalid_event_date_post_data(self, client, data, error_msg, db_session):

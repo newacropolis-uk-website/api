@@ -4,15 +4,24 @@ from datetime import datetime, timedelta
 from iso8601 import iso8601, ParseError
 from jsonschema import (Draft4Validator, ValidationError, FormatChecker)
 
+format_checker = FormatChecker()
+
 
 def validate(json_to_validate, schema):
-    format_checker = FormatChecker()
-
     validator = Draft4Validator(schema, format_checker=format_checker)
     errors = list(validator.iter_errors(json_to_validate))
     if errors.__len__() > 0:
         raise ValidationError(build_error_message(errors))
     return json_to_validate
+
+
+@format_checker.checks('number')
+def string_is_number(value):
+    try:
+        int(value)
+        return True
+    except:
+        return False
 
 
 def build_error_message(errors):
@@ -43,21 +52,20 @@ def __format_message(e):
     def get_path(e):
         error_path = None
         try:
-            error_path = e.path.popleft()
-            # no need to catch IndexError exception explicity as
-            # error_path is None if e.path has no items
+            # error_path = e.path.popleft()
+            error_path = e.path.pop()
         finally:
             return error_path
 
     def get_error_message(e):
-        # e.cause is an exception (such as InvalidPhoneError). if it's not present it was a standard jsonschema error
-        # such as a required field not being present
         error_message = str(e.cause) if e.cause else e.message
         return error_message.replace("'", '')
 
     path = get_path(e)
     message = get_error_message(e)
     if path:
+        if "given schemas" in message:
+            message = "{} {}".format(message, e.validator_value)
         return "{} {}".format(path, message)
     else:
         return "{}".format(message)
