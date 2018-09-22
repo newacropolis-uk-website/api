@@ -1,6 +1,8 @@
 import json
 
-from app.dao.venues_dao import dao_create_venue, dao_update_venue, dao_get_venues, dao_get_venue_by_id
+from app.dao.venues_dao import (
+    dao_create_venue, dao_update_venue, dao_get_venues, dao_get_venue_by_id, dao_get_venue_by_old_id
+)
 from app.models import Venue
 
 from tests.db import create_venue
@@ -54,3 +56,9 @@ class WhenUsingvenuesDAO(object):
 
         fetched_venue = dao_get_venue_by_id(venue.id)
         assert fetched_venue == venue
+
+    def it_gets_a_venue_by_old_id(self, db, db_session, sample_venue):
+        create_venue(directions="By Train: 5 mins walk from Highbury & Islington")
+
+        fetched_venue = dao_get_venue_by_old_id(sample_venue.old_id)
+        assert fetched_venue == sample_venue
