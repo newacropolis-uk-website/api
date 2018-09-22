@@ -14,7 +14,6 @@ def create_event(
     title='test title',
     description='test description',
     event_type_id=None,
-    speaker_id=None,
     fee=5,
     conc_fee=3,
     multi_day_fee=12,
@@ -23,12 +22,8 @@ def create_event(
     if not event_type_id:
         event_type = create_event_type(event_type='workshop')
         event_type_id = str(event_type.id)
-    if not speaker_id:
-        speaker = create_speaker(name='Sarah Test')
-        speaker_id = str(speaker.id)
     data = {
         'event_type_id': event_type_id,
-        'speaker_id': speaker_id,
         'title': title,
         'description': description,
         'fee': fee,
@@ -76,7 +71,8 @@ def create_event_date(
     fee=5,
     conc_fee=3,
     multi_day_fee=12,
-    multi_day_conc_fee=10
+    multi_day_conc_fee=10,
+    speaker_id=None,
 ):
     venue = create_venue()
     if not event_id:
@@ -97,6 +93,10 @@ def create_event_date(
         'multi_day_conc_fee': multi_day_conc_fee,
         'venue_id': venue.id,
     }
+
+    if speaker_id:
+        data['speaker_id'] = speaker_id
+
     event_date = EventDate(**data)
 
     dao_create_event_date(event_date)
@@ -141,9 +141,14 @@ def create_speaker(title='Mr', name='First Mid Last-name'):
 
 
 def create_venue(
-    name='Head office', address='10 London Street, N1 1NN', directions='By bus: 100, 111, 123', default=True
+    old_id='1',
+    name='Head office',
+    address='10 London Street, N1 1NN',
+    directions='By bus: 100, 111, 123',
+    default=True
 ):
     data = {
+        'old_id': old_id,
         'name': name,
         'address': address,
         'directions': directions,

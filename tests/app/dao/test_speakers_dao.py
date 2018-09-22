@@ -1,6 +1,12 @@
 import json
 
-from app.dao.speakers_dao import dao_create_speaker, dao_update_speaker, dao_get_speakers, dao_get_speaker_by_id
+from app.dao.speakers_dao import (
+    dao_create_speaker,
+    dao_update_speaker,
+    dao_get_speakers,
+    dao_get_speaker_by_id,
+    dao_get_speaker_by_name
+)
 from app.models import Speaker
 
 from tests.db import create_speaker
@@ -34,4 +40,10 @@ class WhenUsingSpeakersDAO(object):
         speaker = create_speaker(name='Sam Black')
 
         fetched_speaker = dao_get_speaker_by_id(speaker.id)
+        assert fetched_speaker == speaker
+
+    def it_gets_a_speaker_by_name(self, db, db_session, sample_speaker):
+        speaker = create_speaker(name='Sam Black')
+
+        fetched_speaker = dao_get_speaker_by_name(speaker.name)
         assert fetched_speaker == speaker

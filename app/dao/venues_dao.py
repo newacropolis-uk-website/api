@@ -37,5 +37,9 @@ def dao_get_venue_by_id(venue_id):
     return Venue.query.filter_by(id=venue_id).one()
 
 
+def dao_get_venue_by_old_id(venue_id):
+    return Venue.query.filter_by(old_id=venue_id).first()
+
+
 def dao_get_default_venue():
     return Venue.query.filter_by(default=True).first()
