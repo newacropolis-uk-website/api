@@ -11,12 +11,13 @@ from sqlalchemy import inspect
 from app import logging
 
 from app.dao.speakers_dao import dao_get_speakers, dao_get_speaker_by_id, dao_create_speaker, dao_update_speaker
-from app.errors import register_errors
+from app.errors import register_errors, InvalidRequest
 from app.models import Speaker
 from app.schema_validation import validate
 from app.routes.speakers.schemas import (
     post_create_speaker_schema,
     post_create_speakers_schema,
+    post_import_speakers_schema,
     post_update_speaker_schema
 )
 
@@ -51,6 +52,53 @@ def create_speakers():
         else:
             current_app.logger.info('speaker already exists: {}'.format(speaker.name))
     return jsonify([s.serialize() for s in speakers]), 201
+
+
+@speakers_blueprint.route('/speakers/import', methods=['POST'])
+@jwt_required
+def import_speakers():
+    data = request.get_json(force=True)
+
+    validate(data, post_import_speakers_schema)
+
+    errors = []
+    speakers = []
+    for item in data:
+        err = ''
+        if item.get('parent_name'):
+            parent_speaker = Speaker.query.filter(Speaker.name == item['parent_name']).first()
+            if parent_speaker:
+                if parent_speaker.parent_id:
+                    err = 'Parent speaker can`t have a parent'
+                    current_app.logger.error(err)
+                    errors.append(err)
+                else:
+                    item['parent_id'] = str(parent_speaker.id)
+            else:
+                err = 'Can`t find speaker: {}'.format(item['parent_name'])
+                current_app.logger.error(err)
+                errors.append(err)
+            del item['parent_name']
+
+        if not err:
+            speaker = Speaker.query.filter(Speaker.name == item['name']).first()
+            if not speaker:
+                speaker = Speaker(**item)
+                speakers.append(speaker)
+                dao_create_speaker(speaker)
+            else:
+                err = 'speaker already exists: {}'.format(speaker.name)
+                current_app.logger.error(err)
+                errors.append(err)
+
+    res = {
+        "Speakers": s.serialize() for s in speakers
+    }
+
+    if errors:
+        res['Errors'] = errors
+
+    return jsonify(res), 400 if errors else 201
 
 
 @speaker_blueprint.route('/speaker/<uuid:speaker_id>', methods=['GET'])

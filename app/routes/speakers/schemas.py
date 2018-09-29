@@ -8,7 +8,7 @@ post_create_speaker_schema = {
     "properties": {
         'title': {"type": "string"},
         'name': {"type": "string"},
-        'alternate_names': {"type": "string"},
+        'parent_id': uuid,
     },
     "required": ["name"]
 }
@@ -33,6 +33,31 @@ post_update_speaker_schema = {
     "properties": {
         'title': {"type": "string"},
         'name': {"type": "string"},
-        'alternate_names': {"type": "string"},
+        'parent_id': uuid,
     },
+}
+
+post_import_speaker_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for importing speaker",
+    "type": "object",
+    "properties": {
+        'title': {"type": "string"},
+        'name': {"type": "string"},
+        'parent_name': {"type": "string"},
+    },
+    "required": ["name"]
+}
+
+post_import_speakers_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for importing speakers",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "$ref": "#/definitions/speaker"
+    },
+    "definitions": {
+        "speaker": post_import_speaker_schema
+    }
 }
