@@ -64,8 +64,6 @@ def __format_message(e):
     path = get_path(e)
     message = get_error_message(e)
     if path:
-        if "given schemas" in message:
-            message = "{} {}".format(message, e.validator_value)
         return "{} {}".format(path, message)
     else:
         return "{}".format(message)

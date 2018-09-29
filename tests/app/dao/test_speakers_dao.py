@@ -23,12 +23,11 @@ class WhenUsingSpeakersDAO(object):
         assert speaker == speaker_from_db
 
     def it_updates_a_speaker_dao(self, db, db_session, sample_speaker):
-        dao_update_speaker(sample_speaker.id, name='Gary Green', alternate_names='Dr Gary Green|Dr G. Green')
+        dao_update_speaker(sample_speaker.id, name='Gary Green')
 
         speaker_from_db = Speaker.query.filter(Speaker.id == sample_speaker.id).first()
 
         assert sample_speaker.name == speaker_from_db.name
-        assert sample_speaker.alternate_names == 'Dr Gary Green|Dr G. Green'
 
     def it_gets_all_speakers_in_last_name_alphabetical_order(self, db, db_session, sample_speaker):
         speakers = [create_speaker(name='Bob Blue'), create_speaker(name='Sid Green'), sample_speaker]

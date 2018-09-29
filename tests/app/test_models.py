@@ -35,7 +35,7 @@ class WhenUsingSpeakerModel(object):
             'id': str(speaker.id),
             'title': speaker.title,
             'name': speaker.name,
-            'alternate_names': speaker.alternate_names
+            'parent_id': None
         }
 
     def it_gets_last_name_correctly(self, db, db_session):
