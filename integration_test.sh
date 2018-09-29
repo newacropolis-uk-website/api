@@ -72,19 +72,30 @@ function GetSpeakers {
     -H "Authorization: Bearer $TKN" | jq .
 }
 
+# speakers=$(cat  << EOF
+#     [ 
+#         {"title": "Mrs", "name": "Sabine Leitner", "alternate_names": "Sabine Leitner, Director of New Acropolis UK"},
+#         {"title": "Mr", "name": "Julian Scott"},
+#         {"title": "Mr", "name": "James Chan", "alternate_names": "James Chan Lee"}
+#     ]
+# EOF
+# )
+
 speakers=$(cat  << EOF
     [ 
-        {"title": "Mrs", "name": "Sabine Leitner", "alternate_names": "Sabine Leitner, Director of New Acropolis UK"},
+        {"title": "Mrs", "name": "Sabine Leitner"},
+        {"name": "Sabine Leitner, Director of New Acropolis UK", "parent_name": "Sabine Leitner"},
         {"title": "Mr", "name": "Julian Scott"},
-        {"title": "Mr", "name": "James Chan", "alternate_names": "James Chan Lee"}
+        {"title": "Mr", "name": "James Chan"},
+        {"name": "James Chan Lee", "parent_name": "James Chan"}
     ]
 EOF
 )
 
-function PostSpeakers {
-    echo "*** Post speakers ***"
+function ImportSpeakers {
+    echo "*** Import speakers ***"
 
-    curl -X POST $api_server'/speakers' \
+    curl -X POST $api_server'/speakers/import' \
     -H "Accept: application/json" \
     -H "Authorization: Bearer $TKN" \
     -d "$speakers"
@@ -178,7 +189,7 @@ case "$arg" in
             GetFees
             GetEventTypes
             ImportEventTypes
-            PostSpeakers
+            ImportSpeakers
             GetSpeakers
             ImportVenues
             GetVenues
@@ -200,6 +211,10 @@ case "$arg" in
 
         -s)
             GetSpeakers
+        ;;
+
+        -is)
+            ImportSpeakers
         ;;
 
         -x)
