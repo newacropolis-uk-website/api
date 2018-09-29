@@ -127,11 +127,11 @@ def create_token_blacklist(sample_decoded_token):
     return sample_decoded_token
 
 
-def create_speaker(title='Mr', name='First Mid Last-name'):
+def create_speaker(title='Mr', name='First Mid Last-name', parent_id=None):
     data = {
         'title': title,
         'name': name,
-        'alternate_names': 'Dr Someone|Mr D. Someone'
+        'parent_id': parent_id
     }
 
     speaker = Speaker(**data)

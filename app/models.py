@@ -135,15 +135,16 @@ class Speaker(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = db.Column(db.String(100))
     name = db.Column(db.String(255))
-    alternate_names = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    # should only expect 1 parent at most, so a parent cannot be a parent
+    parent_id = db.Column(UUID(as_uuid=True), primary_key=False, default=None, nullable=True)
 
     def serialize(self):
         return {
             'id': str(self.id),
             'title': self.title,
             'name': self.name,
-            'alternate_names': self.alternate_names
+            'parent_id': str(self.parent_id) if self.parent_id else None
         }
 
     @hybrid_property
