@@ -118,6 +118,11 @@ def sample_decoded_token():
     }
 
 
+@pytest.fixture
+def sample_uuid():
+    return '42111e2a-c990-4d38-a785-394277bbc30c'
+
+
 def create_test_db_if_does_not_exist(db):
     try:
         conn = db.engine.connect()
