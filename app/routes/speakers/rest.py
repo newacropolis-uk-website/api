@@ -92,13 +92,13 @@ def import_speakers():
                 errors.append(err)
 
     res = {
-        "Speakers": s.serialize() for s in speakers
+        "speakers": [s.serialize() for s in speakers]
     }
 
     if errors:
-        res['Errors'] = errors
+        res['errors'] = errors
 
-    return jsonify(res), 400 if errors else 201
+    return jsonify(res), 201 if speakers else 400 if errors else 200
 
 
 @speaker_blueprint.route('/speaker/<uuid:speaker_id>', methods=['GET'])

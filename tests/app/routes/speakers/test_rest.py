@@ -129,6 +129,23 @@ class WhenPostingSpeakers(object):
         )
         assert response.status_code == 400
 
+    def it_imports_new_speaker_but_ignores_existing_speaker(self, client, db_session, sample_speaker):
+        data = [
+            {'name': sample_speaker.name},
+            {'name': 'new person'}
+        ]
+
+        response = client.post(
+            url_for('speakers.import_speakers'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 201
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert len(json_resp['speakers']) == len(data) - 1
+        assert json_resp['speakers'][0]['name'] == data[1]['name']
+
     def it_raises_an_error_when_importing_speaker_with_parent_speaker_that_has_parent(
         self, client, db_session, sample_speaker
     ):
