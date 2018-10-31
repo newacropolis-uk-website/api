@@ -72,15 +72,6 @@ function GetSpeakers {
     -H "Authorization: Bearer $TKN" | jq .
 }
 
-# speakers=$(cat  << EOF
-#     [ 
-#         {"title": "Mrs", "name": "Sabine Leitner", "alternate_names": "Sabine Leitner, Director of New Acropolis UK"},
-#         {"title": "Mr", "name": "Julian Scott"},
-#         {"title": "Mr", "name": "James Chan", "alternate_names": "James Chan Lee"}
-#     ]
-# EOF
-# )
-
 speakers=$(cat  << EOF
     [ 
         {"title": "Mrs", "name": "Sabine Leitner"},
@@ -100,12 +91,6 @@ function ImportSpeakers {
     -H "Authorization: Bearer $TKN" \
     -d "$speakers"
 }
-
-    # [ 
-    #     {"title": "Mrs", "name": "Sabine Leitner", "alternate_names": "Sabine Leitner, Director of New Acropolis UK"},
-    #     {"title": "Mr", "name": "Julian Scott"},
-    #     {"title": "Mr", "name": "James Chan", "alternate_names": "James Chan Lee"}
-    # ]
 
 
 function GetVenues {
@@ -144,7 +129,6 @@ venues=$(cat  << EOF
 EOF
 )
 
-
 function ImportVenues {
     echo "*** Import venues ***"
 
@@ -154,6 +138,88 @@ function ImportVenues {
     -d "$venues"
 }
 
+events=$(cat  << EOF
+    [
+        {
+            "id": "1",
+            "BookingCode": "",
+            "MemberPay": "0",
+            "Approved": "y",
+            "Type": "1",
+            "Title": "Philosophy of Economics",
+            "SubTitle": "",
+            "Description": "How Plato and Confucius can help understand economic development",
+            "venue": "1",
+            "Speaker": "Sabine Leitner",
+            "MultiDayFee": "0",
+            "MultiDayConcFee": "0",
+            "StartDate": "2004-09-20 19:30:00",
+            "StartDate2": "0000-00-00 00:00:00",
+            "StartDate3": "0000-00-00 00:00:00",
+            "StartDate4": "0000-00-00 00:00:00",
+            "EndDate": "0000-00-00 00:00:00",
+            "Duration": "0",
+            "Fee": "4",
+            "ConcFee": "2",
+            "Pub-First-Number": "3",
+            "Mem-SignOn-Number": "12",
+            "ImageFilename": "2004\/Economics.jpg",
+            "WebLink": "",
+            "LinkText": null,
+            "MembersOnly": "n",
+            "RegisterStartOnly": "0",
+            "SoldOut": null
+        },
+        {
+            "id": "2",
+            "BookingCode": "",
+            "MemberPay": "0",
+            "Approved": "y",
+            "Type": "2",
+            "Title": "Study Philosophy",
+            "SubTitle": "",
+            "Description": "16-week course introducing the major systems of thoughts from the East and West",
+            "venue": "1",
+            "Speaker": "Julian Scott",
+            "MultiDayFee": null,
+            "MultiDayConcFee": "0",
+            "StartDate": "2004-09-29 19:30:00",
+            "StartDate2": "0000-00-00 00:00:00",
+            "StartDate3": "0000-00-00 00:00:00",
+            "StartDate4": "0000-00-00 00:00:00",
+            "EndDate": "0000-00-00 00:00:00",
+            "Duration": "0",
+            "Fee": "96",
+            "ConcFee": "64",
+            "Pub-First-Number": "1",
+            "Mem-SignOn-Number": "0",
+            "ImageFilename": "2004\/WinterCourse.jpg",
+            "WebLink": "",
+            "LinkText": "",
+            "MembersOnly": "n",
+            "RegisterStartOnly": "0",
+            "SoldOut": null
+        }
+    ]
+EOF
+)
+
+function ExtractSpeakers {
+    echo "*** Extract Speakers ***"
+
+    curl -X POST $api_server'/events/extract-speakers' \
+    -H "Accept: application/json" \
+    -d "$events"
+}
+
+function ImportEvents {
+    echo "*** Import Events ***"
+
+    curl -X POST $api_server'/events/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$events"
+}
 
 function Logout {
     echo "*** Logout ***"
@@ -170,6 +236,8 @@ function Logout {
 # GetSpeakers
 # ImportVenues
 # GetVenues
+# ExtractSpeakers
+# ImportEvents
 # Logout
 # GetFees
 
@@ -193,6 +261,7 @@ case "$arg" in
             GetSpeakers
             ImportVenues
             GetVenues
+            ExtractSpeakers
             Logout
             GetFees
         ;;
@@ -215,6 +284,14 @@ case "$arg" in
 
         -is)
             ImportSpeakers
+        ;;
+
+        -es)
+            ExtractSpeakers
+        ;;
+
+        -ie)
+            ImportEvents
         ;;
 
         -x)
