@@ -18,11 +18,13 @@ def create_event(
     conc_fee=3,
     multi_day_fee=12,
     multi_day_conc_fee=10,
+    old_id=1
 ):
     if not event_type_id:
         event_type = create_event_type(event_type='workshop')
         event_type_id = str(event_type.id)
     data = {
+        'old_id': old_id,
         'event_type_id': event_type_id,
         'title': title,
         'description': description,
