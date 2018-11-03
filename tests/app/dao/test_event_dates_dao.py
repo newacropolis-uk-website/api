@@ -21,11 +21,11 @@ class WhenUsingEventDatesDAO(object):
         assert event_date == event_date_from_db
 
     def it_creates_an_event_date_with_speaker(self, db, db_session, sample_speaker):
-        create_event_date(speaker_id=str(sample_speaker.id))
+        create_event_date(speakers=[sample_speaker])
 
         assert EventDate.query.count() == 1
         event_date_from_db = EventDate.query.first()
-        assert event_date_from_db.speaker_id == sample_speaker.id
+        assert event_date_from_db.speakers[0] == sample_speaker
 
     def it_updates_an_event_date_dao(self, db, db_session, sample_event_date):
         event_from_db = EventDate.query.filter(EventDate.id == sample_event_date.id).first()

@@ -5,6 +5,7 @@ from flask import (
     jsonify,
     request
 )
+import re
 
 from flask_jwt_extended import jwt_required
 
@@ -68,7 +69,7 @@ def import_events():
             if item['Speaker']:
                 speakers = []
 
-                for s in item['Speaker'].split(" and "):
+                for s in re.split(r' and | & ', item['Speaker']):
                     speaker = dao_get_speaker_by_name(s)
                     if not speaker:
                         err = '{} speaker not found: {}'.format(item['id'], item['Speaker'])
@@ -95,11 +96,8 @@ def import_events():
                 booking_code=item['BookingCode'],
                 image_filename=item['ImageFilename'],
             )
-            events.append(event)
-            dao_create_event(event)
 
             event_date = EventDate(
-                event_id=event.id,
                 event_datetime=item['StartDate'],
                 duration=item['Duration'],
                 fee=item['Fee'],
@@ -110,6 +108,11 @@ def import_events():
             )
 
             dao_create_event_date(event_date, speakers)
+
+            event.event_dates.append(event_date)
+
+            events.append(event)
+            dao_create_event(event)
         else:
             err = 'event already exists: {} - {}'.format(event.old_id, event.title)
             current_app.logger.info(err)

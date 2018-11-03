@@ -2,7 +2,7 @@ import copy
 import pytest
 from flask import json, url_for
 from tests.conftest import request, create_authorization_header
-from tests.db import create_event_type
+from tests.db import create_event_type, create_speaker
 
 
 @pytest.fixture
@@ -126,6 +126,29 @@ class WhenPostingImportEvents(object):
             assert json_events[i]["old_id"] == int(sample_data[i]["id"])
             assert json_events[i]["title"] == sample_data[i]["Title"]
 
+    def it_creates_multiple_speakers_for_imported_events_with_multiple_speakers(
+        self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data
+    ):
+        speaker_1 = create_speaker(name='John Smith')
+        sample_data[0]['Speaker'] = "{} and {}".format(sample_speaker.name, speaker_1.name)
+        sample_data[1]['Speaker'] = sample_speaker.name + " & " + speaker_1.name
+        response = client.post(
+            url_for('events.import_events'),
+            data=json.dumps(sample_data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 201
+
+        json_events = json.loads(response.get_data(as_text=True))['events']
+        assert len(json_events) == len(sample_data)
+        for i in range(0, len(sample_data) - 1):
+            assert json_events[i]["old_id"] == int(sample_data[i]["id"])
+            assert json_events[i]["title"] == sample_data[i]["Title"]
+        assert json_events[0]["event_dates"][0]["speakers"] == [
+            sample_speaker.serialize(), speaker_1.serialize()]
+        assert json_events[1]["event_dates"][0]["speakers"] == [
+            sample_speaker.serialize(), speaker_1.serialize()]
+
     def it_ignores_existing_events_for_imported_events(
         self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_event, sample_data
     ):
@@ -147,7 +170,7 @@ class WhenPostingImportEvents(object):
         ('Speaker', 'speaker'),
         ('venue', 'venue')
     ])
-    def it_adds_errors_to_list_for_a_non_existent_field(
+    def it_adds_errors_to_list_for_a_non_existant_field(
         self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data, field, desc
     ):
         sample_data[1][field] = "0"
