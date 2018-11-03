@@ -209,7 +209,7 @@ function ExtractSpeakers {
 
     curl -X POST $api_server'/events/extract-speakers' \
     -H "Accept: application/json" \
-    -d "$events"
+    -d @data/events.json
 }
 
 function ImportEvents {
@@ -218,7 +218,7 @@ function ImportEvents {
     curl -X POST $api_server'/events/import' \
     -H "Accept: application/json" \
     -H "Authorization: Bearer $TKN" \
-    -d "$events"
+    -d @data/events.json
 }
 
 function Logout {
