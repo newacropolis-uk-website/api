@@ -105,7 +105,7 @@ class WhenPostingExtractSpeakers(object):
         data_speakers = set([d['Speaker'] for d in sample_data])
 
         assert len(json_resp) == len(data_speakers)
-        assert [s['name'] for s in json_resp] == list(data_speakers)
+        assert set([s['name'] for s in json_resp]) == data_speakers
 
 
 class WhenPostingImportEvents(object):
@@ -142,29 +142,12 @@ class WhenPostingImportEvents(object):
         assert json_resp['events'][0]['title'] == sample_data[1]['Title']
         assert str(json_resp['events'][0]['old_id']) == sample_data[1]['id']
 
-    def it_adds_errors_to_list_for_a_non_existent_event_type(
-        self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data
-    ):
-        sample_data[1]['Type'] = "0"
-        response = client.post(
-            url_for('events.import_events'),
-            data=json.dumps(sample_data),
-            headers=[('Content-Type', 'application/json'), create_authorization_header()]
-        )
-        assert response.status_code == 201
-
-        json_resp = json.loads(response.get_data(as_text=True))
-        assert len(json_resp['events']) == 1
-        assert len(json_resp['errors']) == 1
-        assert json_resp['events'][0]["old_id"] == int(sample_data[0]["id"])
-        assert json_resp['errors'][0] == "event type not found for id: 0"
-
     @pytest.mark.parametrize('field,desc', [
         ('Type', 'event type'),
         ('Speaker', 'speaker'),
         ('venue', 'venue')
     ])
-    def it_adds_errors_to_list_for_a_non_existent_event_type(
+    def it_adds_errors_to_list_for_a_non_existent_field(
         self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data, field, desc
     ):
         sample_data[1][field] = "0"
@@ -178,5 +161,5 @@ class WhenPostingImportEvents(object):
         json_resp = json.loads(response.get_data(as_text=True))
         assert len(json_resp['events']) == 1
         assert len(json_resp['errors']) == 1
-        assert json_resp['events'][0]["old_id"] == int(sample_data[0]["id"])
-        assert json_resp['errors'][0] == "{} not found: 0".format(desc)
+        assert str(json_resp['events'][0]["old_id"]) == str(sample_data[0]["id"])
+        assert json_resp['errors'][0] == "{} {} not found: 0".format(sample_data[1]["id"], desc)

@@ -87,12 +87,22 @@ post_import_event_schema = {
             "type": "string"
         },
         "Fee": {
-            "format": "number",
-            "type": "string"
+            "oneOf": [
+                {"type": "null"},
+                {
+                    "format": "number",
+                    "type": "string"
+                }
+            ]
         },
         "ConcFee": {
-            "format": "number",
-            "type": "string"
+            "oneOf": [
+                {"type": "null"},
+                {
+                    "format": "number",
+                    "type": "string"
+                }
+            ]
         },
         "Pub-First-Number": {"type": ["string", "null"]},   # unused
         "Mem-SignOn-Number": {"type": ["string", "null"]},  # unused

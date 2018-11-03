@@ -40,7 +40,9 @@ def extract_speakers():
     for item in data:
         speakers.append(item['Speaker'])
 
-    return jsonify([{"name": s} for s in set(speakers)]), 200
+    sorted_speakers = [{"name": s} for s in sorted(set(speakers))]
+
+    return jsonify(sorted_speakers), 200
 
 
 @events_blueprint.route('/events/import', methods=['POST'])
@@ -59,20 +61,25 @@ def import_events():
 
             event_type = dao_get_event_type_by_old_id(item['Type'])
             if not event_type:
-                err = 'event type not found: {}'.format(item['Type'])
+                err = '{} event type not found: {}'.format(item['id'], item['Type'])
                 current_app.logger.info(err)
                 errors.append(err)
 
             if item['Speaker']:
-                speaker = dao_get_speaker_by_name(item['Speaker'])
-                if not speaker:
-                    err = 'speaker not found: {}'.format(item['Speaker'])
-                    current_app.logger.info(err)
-                    errors.append(err)
+                speakers = []
+
+                for s in item['Speaker'].split(" and "):
+                    speaker = dao_get_speaker_by_name(s)
+                    if not speaker:
+                        err = '{} speaker not found: {}'.format(item['id'], item['Speaker'])
+                        current_app.logger.info(err)
+                        errors.append(err)
+                    else:
+                        speakers.append(speaker)
 
             venue = dao_get_venue_by_old_id(item['venue'])
             if not venue:
-                err = 'venue not found: {}'.format(item['venue'])
+                err = '{} venue not found: {}'.format(item['id'], item['venue'])
                 current_app.logger.info(err)
                 errors.append(err)
 
@@ -99,11 +106,10 @@ def import_events():
                 conc_fee=item['ConcFee'],
                 multi_day_fee=item['MultiDayFee'],
                 multi_day_conc_fee=item['MultiDayConcFee'],
-                speaker_id=speaker.id,
                 venue_id=venue.id
             )
 
-            dao_create_event_date(event_date)
+            dao_create_event_date(event_date, speakers)
         else:
             err = 'event already exists: {} - {}'.format(event.old_id, event.title)
             current_app.logger.info(err)
