@@ -18,11 +18,13 @@ def create_event(
     conc_fee=3,
     multi_day_fee=12,
     multi_day_conc_fee=10,
+    old_id=1
 ):
     if not event_type_id:
         event_type = create_event_type(event_type='workshop')
         event_type_id = str(event_type.id)
     data = {
+        'old_id': old_id,
         'event_type_id': event_type_id,
         'title': title,
         'description': description,
@@ -72,7 +74,7 @@ def create_event_date(
     conc_fee=3,
     multi_day_fee=12,
     multi_day_conc_fee=10,
-    speaker_id=None,
+    speakers=None,
 ):
     venue = create_venue()
     if not event_id:
@@ -94,10 +96,11 @@ def create_event_date(
         'venue_id': venue.id,
     }
 
-    if speaker_id:
-        data['speaker_id'] = speaker_id
-
     event_date = EventDate(**data)
+
+    if speakers:
+        for s in speakers:
+            event_date.speakers.append(s)
 
     dao_create_event_date(event_date)
     return event_date

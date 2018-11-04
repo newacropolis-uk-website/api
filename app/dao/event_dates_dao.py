@@ -4,7 +4,11 @@ from app.models import EventDate
 
 
 @transactional
-def dao_create_event_date(event_date):
+def dao_create_event_date(event_date, speakers=None):
+    if speakers:
+        for s in speakers:
+            event_date.speakers.append(s)
+
     db.session.add(event_date)
 
 

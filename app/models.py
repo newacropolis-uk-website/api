@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import (
     UUID,
     JSON
 )
+from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.hybrid import hybrid_property
 
 
@@ -109,6 +110,7 @@ class Event(db.Model):
     multi_day_fee = db.Column(db.Integer, nullable=True)
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    event_dates = db.relationship("EventDate", backref=db.backref("events"))
 
     def serialize(self):
         return {
@@ -123,6 +125,7 @@ class Event(db.Model):
             'conc_fee': self.conc_fee,
             'multi_day_fee': self.multi_day_fee,
             'multi_day_conc_fee': self.multi_day_conc_fee,
+            'event_dates': [e.serialize() for e in self.event_dates]
         }
 
     def __repr__(self):
@@ -152,11 +155,20 @@ class Speaker(db.Model):
         return str(self.name).split(' ')[-1]
 
 
+event_date_to_speaker = db.Table(
+    'event_date_to_speaker',
+    db.Model.metadata,
+    db.Column('event_date_id', UUID(as_uuid=True), db.ForeignKey('event_dates.id')),
+    db.Column('speaker_id', UUID(as_uuid=True), db.ForeignKey('speakers.id')),
+    UniqueConstraint('event_date_id', 'speaker_id', name='uix_event_date_id_to_speaker_id')
+)
+
+
 class EventDate(db.Model):
     __tablename__ = 'event_dates'
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    event_id = db.Column(UUID(as_uuid=True), nullable=False)
+    event_id = db.Column(UUID(as_uuid=True), db.ForeignKey('events.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     event_datetime = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     duration = db.Column(db.Integer, nullable=True)
@@ -168,13 +180,18 @@ class EventDate(db.Model):
     multi_day_fee = db.Column(db.Integer, nullable=True)
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
     venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'), nullable=False)
-    speaker_id = db.Column(UUID(as_uuid=True), db.ForeignKey('speakers.id'), nullable=True)
+    speakers = db.relationship(
+        'Speaker',
+        secondary=event_date_to_speaker,
+        backref=db.backref('event_date_to_speaker', lazy='dynamic')
+    )
 
     def serialize(self):
         return {
             'id': str(self.id),
             'event_id': str(self.event_id),
-            'event_datetime': self.event_datetime.strftime('%Y-%m-%d %H:%M')
+            'event_datetime': self.event_datetime.strftime('%Y-%m-%d %H:%M'),
+            'speakers': [s.serialize() for s in self.speakers]
         }
 
 

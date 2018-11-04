@@ -29,6 +29,10 @@ test: ## Run all tests
 test-one: ## Test one, make test-one test=<test function name>
 	pytest -k ${test}
 
+.PHONY: test-failed
+test-failed: ## Test failed tests
+	pytest --lf
+
 .PHONY: test-dir
 test-dir: ## Test directory under tests/app, make test-dir dir=<directory of tests>
 	pytest tests/app/${dir}
