@@ -88,7 +88,7 @@ def import_venues():
         if not item["name"]:
             item["name"] = "Head branch"
 
-        venue = Venue.query.filter(Venue.name == item['name']).first()
+        venue = Venue.query.filter(Venue.old_id == item['id']).first()
         if not venue:
             venue = Venue(
                 old_id=item['id'],
