@@ -89,7 +89,7 @@ function ImportSpeakers {
     curl -X POST $api_server'/speakers/import' \
     -H "Accept: application/json" \
     -H "Authorization: Bearer $TKN" \
-    -d "$speakers"
+    -d @data/speakers.json
 }
 
 
@@ -163,7 +163,7 @@ events=$(cat  << EOF
             "ConcFee": "2",
             "Pub-First-Number": "3",
             "Mem-SignOn-Number": "12",
-            "ImageFilename": "2004\/Economics.jpg",
+            "ImageFilename": "2004/Economics.jpg",
             "WebLink": "",
             "LinkText": null,
             "MembersOnly": "n",
@@ -193,7 +193,7 @@ events=$(cat  << EOF
             "ConcFee": "64",
             "Pub-First-Number": "1",
             "Mem-SignOn-Number": "0",
-            "ImageFilename": "2004\/WinterCourse.jpg",
+            "ImageFilename": "2004/WinterCourse.jpg",
             "WebLink": "",
             "LinkText": "",
             "MembersOnly": "n",
