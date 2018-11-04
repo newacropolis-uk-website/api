@@ -59,6 +59,7 @@ def import_events():
         err = ''
         event = Event.query.filter(Event.old_id == item['id']).first()
         if not event:
+            speakers = []
 
             event_type = dao_get_event_type_by_old_id(item['Type'])
             if not event_type:
@@ -67,8 +68,6 @@ def import_events():
                 errors.append(err)
 
             if item['Speaker']:
-                speakers = []
-
                 for s in re.split(r' and | & ', item['Speaker']):
                     speaker = dao_get_speaker_by_name(s)
                     if not speaker:
@@ -97,24 +96,31 @@ def import_events():
                 image_filename=item['ImageFilename'],
             )
 
-            event_date = EventDate(
-                event_datetime=item['StartDate'],
-                duration=item['Duration'],
-                fee=item['Fee'],
-                conc_fee=item['ConcFee'],
-                multi_day_fee=item['MultiDayFee'],
-                multi_day_conc_fee=item['MultiDayConcFee'],
-                venue_id=venue.id
-            )
+            def add_event_date(event_datetime):
+                event_date = EventDate(
+                    event_datetime=event_datetime,
+                    duration=item['Duration'],
+                    fee=item['Fee'],
+                    conc_fee=item['ConcFee'],
+                    multi_day_fee=item['MultiDayFee'],
+                    multi_day_conc_fee=item['MultiDayConcFee'],
+                    venue_id=venue.id
+                )
 
-            dao_create_event_date(event_date, speakers)
+                dao_create_event_date(event_date, speakers)
 
-            event.event_dates.append(event_date)
+                event.event_dates.append(event_date)
+
+            add_event_date(item['StartDate'])
+
+            for i in range(2, 5):
+                if item['StartDate{}'.format(i)] > '0000-00-00 00:00:00':
+                    add_event_date(item['StartDate{}'.format(i)])
 
             events.append(event)
             dao_create_event(event)
         else:
-            err = 'event already exists: {} - {}'.format(event.old_id, event.title)
+            err = u'event already exists: {} - {}'.format(event.old_id, event.title)
             current_app.logger.info(err)
             errors.append(err)
 

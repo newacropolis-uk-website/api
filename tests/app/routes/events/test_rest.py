@@ -29,9 +29,9 @@ def sample_data(sample_speaker):
             "MultiDayFee": "0",
             "MultiDayConcFee": "0",
             "StartDate": "2004-09-20 19:30:00",
-            "StartDate2": "0000-00-00 00:00:00",
-            "StartDate3": "0000-00-00 00:00:00",
-            "StartDate4": "0000-00-00 00:00:00",
+            "StartDate2": "2004-09-21 19:30:00",
+            "StartDate3": "2004-09-22 19:30:00",
+            "StartDate4": "2004-09-23 19:30:00",
             "EndDate": "0000-00-00 00:00:00",
             "Duration": "0",
             "Fee": "4",
@@ -146,6 +146,11 @@ class WhenPostingImportEvents(object):
             assert json_events[i]["title"] == sample_data[i]["Title"]
         assert json_events[0]["event_dates"][0]["speakers"] == [
             sample_speaker.serialize(), speaker_1.serialize()]
+        assert len(json_events[0]["event_dates"]) == 4
+        assert json_events[0]["event_dates"][0]['event_datetime'] == "2004-09-20 19:30"
+        assert json_events[0]["event_dates"][1]['event_datetime'] == "2004-09-21 19:30"
+        assert json_events[0]["event_dates"][2]['event_datetime'] == "2004-09-22 19:30"
+        assert json_events[0]["event_dates"][3]['event_datetime'] == "2004-09-23 19:30"
         assert json_events[1]["event_dates"][0]["speakers"] == [
             sample_speaker.serialize(), speaker_1.serialize()]
 
