@@ -1,5 +1,6 @@
 import pytest
 
+import json
 from jsonschema import ValidationError
 
 from app.schema_validation.definitions import uuid, datetime
@@ -56,7 +57,6 @@ class WhenProcessingRequests(object):
         with pytest.raises(expected_exception=ValidationError) as e:
             validate(data, test_number_schema)
 
-        import json
         json_err = json.loads(e.value[0])
 
         assert {
