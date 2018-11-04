@@ -135,7 +135,7 @@ function ImportVenues {
     curl -X POST $api_server'/venues/import' \
     -H "Accept: application/json" \
     -H "Authorization: Bearer $TKN" \
-    -d "$venues"
+    -d @data/venues.json
 }
 
 events=$(cat  << EOF
@@ -274,7 +274,7 @@ case "$arg" in
             ImportEventTypes
         ;;
 
-        -i)
+        -iv)
             ImportVenues
         ;;
 
