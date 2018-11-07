@@ -27,6 +27,7 @@ register_errors(events_blueprint)
 
 
 @events_blueprint.route('/events')
+@jwt_required
 def get_events():
     events = [e.serialize() if e else None for e in dao_get_events()]
 

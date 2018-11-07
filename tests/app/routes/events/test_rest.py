@@ -84,7 +84,8 @@ class WhenGettingEvents(object):
 
     def it_returns_all_events(self, client, sample_event, db_session):
         response = client.get(
-            url_for('events.get_events')
+            url_for('events.get_events'),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
 
         data = json.loads(response.get_data(as_text=True))
@@ -100,7 +101,8 @@ class WhenGettingEvents(object):
         create_event(event_type_id=sample_event_type.id, event_dates=[event_date_earliest])
 
         response = client.get(
-            url_for('events.get_events')
+            url_for('events.get_events'),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
 
         data = json.loads(response.get_data(as_text=True))
