@@ -9,7 +9,7 @@ from flask_jwt_extended import (
 from freezegun import freeze_time
 
 from app.errors import register_errors, NoAuthorizationError
-from tests.conftest import request, create_authorization_header, create_refresh_header
+from tests.conftest import create_authorization_header, create_refresh_header
 from tests.db import create_fee
 
 

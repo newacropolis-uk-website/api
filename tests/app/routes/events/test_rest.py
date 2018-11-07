@@ -6,7 +6,7 @@ from app.dao.events_dao import dao_update_event
 from app.dao.event_dates_dao import dao_update_event_date
 from app.models import EventDate
 
-from tests.conftest import request, create_authorization_header
+from tests.conftest import create_authorization_header
 from tests.db import create_event, create_event_date, create_event_type, create_speaker
 
 
