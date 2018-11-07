@@ -1,7 +1,7 @@
 from app.dao.events_dao import dao_create_event, dao_update_event, dao_get_events
 from app.models import Event
 
-from tests.db import create_event
+from tests.db import create_event, create_event_date
 
 
 class WhenUsingEventsDAO(object):
@@ -12,6 +12,15 @@ class WhenUsingEventsDAO(object):
         assert Event.query.count() == 1
         event_from_db = Event.query.first()
         assert event == event_from_db
+
+    def it_creates_an_event_with_event_dates(self, db, db_session):
+        event_date = create_event_date()
+        event = create_event(event_dates=[event_date])
+
+        assert Event.query.count() == 1
+        event_from_db = Event.query.first()
+        assert event == event_from_db
+        assert event_from_db.event_dates[0] == event_date
 
     def it_updates_an_event_dao(self, db, db_session, sample_event):
         dao_update_event(sample_event.id, title='new title')

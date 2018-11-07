@@ -83,8 +83,8 @@ def sample_event_type(db):
 
 
 @pytest.fixture(scope='function')
-def sample_event_date(db):
-    return create_event_date()
+def sample_event_date(db, sample_event):
+    return create_event_date(event_id=sample_event.id)
 
 
 @pytest.fixture(scope='function')

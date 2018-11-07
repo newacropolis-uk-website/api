@@ -96,9 +96,9 @@ class Fee(db.Model):
 
 class Event(db.Model):
     __tablename__ = 'events'
-
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     old_id = db.Column(db.Integer)
+    duration = db.Column(db.Integer, nullable=True)
     event_type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_types.id'), nullable=False)
     title = db.Column(db.String(255))
     sub_title = db.Column(db.String(255))
@@ -111,6 +111,8 @@ class Event(db.Model):
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     event_dates = db.relationship("EventDate", backref=db.backref("events"))
+    venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'))
+    venue = db.relationship("Venue", backref=db.backref("event", uselist=False))
 
     def serialize(self):
         return {
@@ -125,6 +127,7 @@ class Event(db.Model):
             'conc_fee': self.conc_fee,
             'multi_day_fee': self.multi_day_fee,
             'multi_day_conc_fee': self.multi_day_conc_fee,
+            'venue': self.venue.serialize() if self.venue else None,
             'event_dates': [e.serialize() for e in self.event_dates]
         }
 
@@ -179,7 +182,9 @@ class EventDate(db.Model):
     conc_fee = db.Column(db.Integer, nullable=True)
     multi_day_fee = db.Column(db.Integer, nullable=True)
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
-    venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'), nullable=False)
+
+    venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'))
+    venue = db.relationship("Venue", backref=db.backref("event_date", uselist=False))
     speakers = db.relationship(
         'Speaker',
         secondary=event_date_to_speaker,
