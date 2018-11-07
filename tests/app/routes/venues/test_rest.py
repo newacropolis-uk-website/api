@@ -1,23 +1,19 @@
 import pytest
 from flask import json, url_for
-from tests.conftest import request, create_authorization_header
+from tests.conftest import create_authorization_header
 from app.models import Venue
-
-
-@pytest.fixture
-def venues_page(client):
-    return request(url_for('venues.get_venues'), client.get, headers=[create_authorization_header()])
-
-
-@pytest.fixture
-def venue_page(client):
-    return request(url_for('venue.get_venue'), client.get, headers=[create_authorization_header()])
 
 
 class WhenGettingVenues(object):
 
-    def it_returns_all_venues(self, sample_venue, venues_page, db_session):
-        data = json.loads(venues_page.get_data(as_text=True))
+    def it_returns_all_venues(self, client, sample_venue, db_session):
+        response = client.get(
+            url_for('venues.get_venues'),
+            headers=[create_authorization_header()]
+        )
+        assert response.status_code == 200
+
+        data = json.loads(response.get_data(as_text=True))
         assert len(data) == 1
 
 

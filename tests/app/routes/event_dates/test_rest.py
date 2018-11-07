@@ -1,7 +1,7 @@
 import pytest
 
 from flask import json, url_for
-from tests.conftest import request, create_authorization_header
+from tests.conftest import create_authorization_header
 
 from tests.db import create_event_date
 

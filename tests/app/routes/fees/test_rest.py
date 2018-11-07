@@ -2,18 +2,20 @@ import pytest
 import uuid
 
 from flask import json, url_for
-from tests.conftest import request, create_authorization_header
-
-
-@pytest.fixture
-def get_fees_page(client):
-    return request(url_for('fees.get_fees'), client.get, headers=[create_authorization_header()])
+from tests.conftest import create_authorization_header
 
 
 class WhenGettingFees(object):
 
-    def it_returns_all_fees(self, sample_fee, get_fees_page, db_session):
-        data = json.loads(get_fees_page.get_data(as_text=True))
+    def it_returns_all_fees(self, client, sample_fee, db_session):
+        response = client.get(
+            url_for('fees.get_fees'),
+            headers=[create_authorization_header()]
+        )
+        assert response.status_code == 200
+
+        data = json.loads(response.get_data(as_text=True))
+
         assert len(data) == 1
         assert data[0]['id'] == str(sample_fee.id)
 

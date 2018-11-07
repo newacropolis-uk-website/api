@@ -1,19 +1,21 @@
 import pytest
 from flask import json, url_for
-from tests.conftest import request, create_authorization_header
+from tests.conftest import create_authorization_header
 from app.models import Speaker
 from tests.db import create_speaker
 
 
-@pytest.fixture
-def speakers_page(client):
-    return request(url_for('speakers.get_speakers'), client.get, headers=[create_authorization_header()])
-
-
 class WhenGettingSpeakers(object):
 
-    def it_returns_all_speakers(self, sample_speaker, speakers_page, db_session):
-        data = json.loads(speakers_page.get_data(as_text=True))
+    def it_returns_all_speakers(self, client, sample_speaker, db_session):
+        response = client.get(
+            url_for('speakers.get_speakers'),
+            headers=[create_authorization_header()]
+        )
+        assert response.status_code == 200
+
+        data = json.loads(response.get_data(as_text=True))
+
         assert len(data) == 1
 
 
