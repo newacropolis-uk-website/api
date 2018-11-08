@@ -36,11 +36,10 @@ def create_event(
     }
     event = Event(**data)
 
-    dao_create_event(event)
-
     if event_dates:
         event.event_dates.extend(event_dates)
-        db.session.commit()
+
+    dao_create_event(event)
 
     return event
 
