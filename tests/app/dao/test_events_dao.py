@@ -1,4 +1,8 @@
-from app.dao.events_dao import dao_create_event, dao_update_event, dao_get_events
+from freezegun import freeze_time
+
+from app.dao.events_dao import (
+    dao_create_event, dao_update_event, dao_get_events, dao_get_future_events
+)
 from app.models import Event
 
 from tests.db import create_event, create_event_date
@@ -35,3 +39,16 @@ class WhenUsingEventsDAO(object):
 
         assert Event.query.count() == 2
         assert set(events) == set(events_from_db)
+
+    @freeze_time("2018-01-10T19:00:00")
+    def it_gets_all_future_events(self, db, db_session, sample_event_with_dates, sample_event_type):
+        event = create_event(
+            title='future event',
+            event_type_id=sample_event_type.id,
+            event_dates=[create_event_date(event_datetime='2018-01-20T19:00:00')]
+        )
+        events_from_db = dao_get_future_events()
+
+        assert Event.query.count() == 2
+        assert len(events_from_db) == 1
+        assert events_from_db[0] == event
