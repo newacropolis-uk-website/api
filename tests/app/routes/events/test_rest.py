@@ -106,22 +106,39 @@ class WhenGettingEvents(object):
             event_dates=[create_event_date(event_datetime='2018-01-25T19:00:00')]
         )
 
-        # don't expect to do a join on empty events
-        create_event(
-            title='future event',
-            event_type_id=sample_event_type.id
-        )
-
         response = client.get(
             url_for('events.get_future_events'),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
 
         data = json.loads(response.get_data(as_text=True))
-        assert Event.query.count() == 4
+        assert Event.query.count() == 3
         assert len(data) == 2
         assert data[0]['id'] == str(event_1.id)
         assert data[1]['id'] == str(event_2.id)
+
+    @freeze_time("2018-01-10T19:00:00")
+    def it_returns_past_year_events(self, client, sample_event_with_dates, sample_event_type, db_session):
+        create_event(
+            title='future event',
+            event_type_id=sample_event_type.id,
+            event_dates=[create_event_date(event_datetime='2018-01-20T19:00:00')]
+        )
+        create_event(
+            title='way past year event',
+            event_type_id=sample_event_type.id,
+            event_dates=[create_event_date(event_datetime='2016-01-25T19:00:00')]
+        )
+
+        response = client.get(
+            url_for('events.get_past_year_events'),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        data = json.loads(response.get_data(as_text=True))
+        assert Event.query.count() == 3
+        assert len(data) == 1
+        assert data[0]['id'] == str(sample_event_with_dates.id)
 
     def it_returns_all_events_with_event_dates(self, client, sample_speaker, sample_event_type, db_session):
         event_date_1 = create_event_date(event_datetime="2018-01-03")
