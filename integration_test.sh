@@ -31,6 +31,22 @@ function GetFees {
     -H "Authorization: Bearer $TKN" | jq .
 }
 
+function GetEvents {
+    echo "*** Get events ***"
+
+    curl -X GET $api_server'/events' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
+function GetFutureEvents {
+    echo "*** Get future events ***"
+
+    curl -X GET $api_server'/events/future' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
 function GetEventTypes {
     echo "*** Get event_types ***"
 
@@ -229,18 +245,6 @@ function Logout {
     -H "Authorization: Bearer $TKN" | jq .
 }
 
-# API calls
-# GetFees
-# GetEventTypes
-# PostSpeakers
-# GetSpeakers
-# ImportVenues
-# GetVenues
-# ExtractSpeakers
-# ImportEvents
-# Logout
-# GetFees
-
 # setup 
 setupURLS "$2"
 setupAccessToken
@@ -254,20 +258,36 @@ fi
 case "$arg" in
 
         -a) echo "Run all"
-            GetFees
-            GetEventTypes
+            ExtractSpeakers
             ImportEventTypes
             ImportSpeakers
-            GetSpeakers
             ImportVenues
+            GetFees
+            GetEventTypes
+            GetSpeakers
             GetVenues
-            ExtractSpeakers
             Logout
             GetFees
         ;;
 
+        -es)
+            ExtractSpeakers
+        ;;
+
         -et)
             GetEventTypes
+        ;;
+
+        -e)
+            GetEvents
+        ;;
+
+        -fe)
+            GetFutureEvents
+        ;;
+
+        -s)
+            GetSpeakers
         ;;
 
         -iet)
@@ -278,16 +298,8 @@ case "$arg" in
             ImportVenues
         ;;
 
-        -s)
-            GetSpeakers
-        ;;
-
         -is)
             ImportSpeakers
-        ;;
-
-        -es)
-            ExtractSpeakers
         ;;
 
         -ie)
