@@ -2,9 +2,11 @@ import copy
 import pytest
 from flask import json, url_for
 
+from freezegun import freeze_time
+
 from app.dao.events_dao import dao_update_event
 from app.dao.event_dates_dao import dao_update_event_date
-from app.models import EventDate
+from app.models import EventDate, Event
 
 from tests.conftest import create_authorization_header
 from tests.db import create_event, create_event_date, create_event_type, create_speaker
@@ -90,6 +92,36 @@ class WhenGettingEvents(object):
 
         data = json.loads(response.get_data(as_text=True))
         assert len(data) == 1
+
+    @freeze_time("2018-01-10T19:00:00")
+    def it_returns_all_future_events(self, client, sample_event_with_dates, sample_event_type, db_session):
+        event_1 = create_event(
+            title='future event',
+            event_type_id=sample_event_type.id,
+            event_dates=[create_event_date(event_datetime='2018-01-20T19:00:00')]
+        )
+        event_2 = create_event(
+            title='future event',
+            event_type_id=sample_event_type.id,
+            event_dates=[create_event_date(event_datetime='2018-01-25T19:00:00')]
+        )
+
+        # don't expect to do a join on empty events
+        create_event(
+            title='future event',
+            event_type_id=sample_event_type.id
+        )
+
+        response = client.get(
+            url_for('events.get_future_events'),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        data = json.loads(response.get_data(as_text=True))
+        assert Event.query.count() == 4
+        assert len(data) == 2
+        assert data[0]['id'] == str(event_1.id)
+        assert data[1]['id'] == str(event_2.id)
 
     def it_returns_all_events_with_event_dates(self, client, sample_speaker, sample_event_type, db_session):
         event_date_1 = create_event_date(event_datetime="2018-01-03")
