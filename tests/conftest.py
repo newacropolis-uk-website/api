@@ -78,6 +78,13 @@ def sample_event(db):
 
 
 @pytest.fixture(scope='function')
+def sample_event_with_dates(db, sample_event_date_without_event):
+    return create_event(
+        title='test_title', description='test description', event_dates=[sample_event_date_without_event]
+    )
+
+
+@pytest.fixture(scope='function')
 def sample_event_type(db):
     return create_event_type(event_type='short course')
 
@@ -85,6 +92,11 @@ def sample_event_type(db):
 @pytest.fixture(scope='function')
 def sample_event_date(db, sample_event):
     return create_event_date(event_id=sample_event.id)
+
+
+@pytest.fixture(scope='function')
+def sample_event_date_without_event(db):
+    return create_event_date()
 
 
 @pytest.fixture(scope='function')

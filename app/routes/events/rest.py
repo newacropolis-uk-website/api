@@ -9,7 +9,9 @@ import re
 
 from flask_jwt_extended import jwt_required
 
-from app.dao.events_dao import dao_create_event, dao_get_events, dao_update_event
+from app.dao.events_dao import (
+    dao_create_event, dao_get_events, dao_get_future_events, dao_get_past_year_events, dao_update_event
+)
 from app.dao.event_dates_dao import dao_create_event_date
 from app.dao.event_types_dao import dao_get_event_type_by_old_id
 from app.dao.speakers_dao import dao_get_speaker_by_name
@@ -26,15 +28,35 @@ events_blueprint = Blueprint('events', __name__)
 register_errors(events_blueprint)
 
 
+def extract_startdate(json):
+    if json['event_dates']:
+        return json['event_dates'][0]['event_datetime']
+    else:
+        return 0
+
+
 @events_blueprint.route('/events')
+@jwt_required
 def get_events():
     events = [e.serialize() if e else None for e in dao_get_events()]
 
-    def extract_startdate(json):
-        if json['event_dates']:
-            return json['event_dates'][0]['event_datetime']
-        else:
-            return 0
+    events.sort(key=extract_startdate)
+    return jsonify(events)
+
+
+@events_blueprint.route('/events/future')
+@jwt_required
+def get_future_events():
+    events = [e.serialize() if e else None for e in dao_get_future_events()]
+
+    events.sort(key=extract_startdate)
+    return jsonify(events)
+
+
+@events_blueprint.route('/events/past_year')
+@jwt_required
+def get_past_year_events():
+    events = [e.serialize() if e else None for e in dao_get_past_year_events()]
 
     events.sort(key=extract_startdate)
     return jsonify(events)
