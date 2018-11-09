@@ -115,6 +115,11 @@ class Event(db.Model):
     venue = db.relationship("Venue", backref=db.backref("event", uselist=False))
 
     def serialize(self):
+        def sorted_event_dates():
+            dates = [e.serialize() for e in self.event_dates]
+            dates.sort(key=lambda k: k['event_datetime'])
+            return dates
+
         return {
             'id': self.id,
             'old_id': self.old_id,
@@ -128,7 +133,7 @@ class Event(db.Model):
             'multi_day_fee': self.multi_day_fee,
             'multi_day_conc_fee': self.multi_day_conc_fee,
             'venue': self.venue.serialize() if self.venue else None,
-            'event_dates': [e.serialize() for e in self.event_dates]
+            'event_dates': sorted_event_dates()
         }
 
     def __repr__(self):
