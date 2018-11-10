@@ -1,14 +1,6 @@
 #!/bin/bash
 set +x
 
-if [ -z $TRAVIS_BUILD_DIR ]; then
-    echo "source environment"
-    source environment.sh
-    src=.
-else 
-    src="$TRAVIS_BUILD_DIR"
-fi
-
 if [ -z "$environment" ]; then
     if [ ! -z "$1" ]; then
         environment=$1
@@ -17,6 +9,13 @@ if [ -z "$environment" ]; then
         environment=preview
     fi
 fi 
+
+if [ -z $TRAVIS_BUILD_DIR ]; then
+    source $environment-environment.sh
+    src=.
+else 
+    src="$TRAVIS_BUILD_DIR"
+fi
 
 if [ -z $debug ]; then
     output_params=">&- 2>&- <&- &"
