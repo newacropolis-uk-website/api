@@ -3,9 +3,11 @@ set +e
 
 function setupURLS {
     if [ "$1" = "dev" ]; then
-        export api_server="${API_BASE_URL}/dev"
+        export api_server="${API_BASE_URL}:5000"
     elif [ "$1" = "preview" ]; then
-        export api_server="${API_BASE_URL}/preview"
+        export api_server="${API_BASE_URL}:4000"
+    elif [ "$1" = "live" ]; then
+        export api_server="${API_BASE_URL}:8000"
     else
         export api_server='http://localhost:5000'
     fi
@@ -35,6 +37,14 @@ function GetEvents {
     echo "*** Get events ***"
 
     curl -X GET $api_server'/events' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
+function GetEventsPastYear {
+    echo "*** Get events past year ***"
+
+    curl -X GET $api_server'/events/past_year' \
     -H "Accept: application/json" \
     -H "Authorization: Bearer $TKN"
 }
@@ -280,6 +290,10 @@ case "$arg" in
 
         -e)
             GetEvents
+        ;;
+
+        -ep)
+            GetEventsPastYear
         ;;
 
         -fe)
