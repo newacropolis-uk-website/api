@@ -4,9 +4,7 @@ from flask import json, url_for
 
 from freezegun import freeze_time
 
-from app.dao.events_dao import dao_update_event
-from app.dao.event_dates_dao import dao_update_event_date
-from app.models import EventDate, Event
+from app.models import Event
 
 from tests.conftest import create_authorization_header
 from tests.db import create_event, create_event_date, create_event_type, create_speaker
@@ -182,8 +180,33 @@ class WhenPostingExtractSpeakers(object):
 
 class WhenPostingImportEvents(object):
 
+    @pytest.fixture
+    def mock_config(self, mocker):
+        mocker.patch.dict('app.application.config', {
+            'STORAGE': 'test-store'
+        })
+
+    @pytest.fixture
+    def mock_storage(self, mocker):
+        mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
+        mock_storage_blob_exists = mocker.patch("app.storage.utils.Storage.blob_exists")
+        yield
+        mock_storage.assert_called_with('test-store')
+        mock_storage_blob_exists.assert_called_with('2004/WinterCourse.jpg')
+
+    @pytest.fixture
+    def mock_storage_not_exists(self, mocker):
+        mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
+        mock_storage_blob_exists = mocker.patch("app.storage.utils.Storage.blob_exists", return_value=False)
+        mock_storage_blob_upload = mocker.patch("app.storage.utils.Storage.upload_blob")
+        yield
+        mock_storage.assert_called_with('test-store')
+        mock_storage_blob_exists.assert_called_with('2004/Economics.jpg')
+        mock_storage_blob_upload.assert_called_with('./data/events/2004/Economics.jpg', '2004/Economics.jpg')
+
     def it_creates_events_for_imported_events(
-        self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data
+        self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data,
+        mock_config, mock_storage
     ):
         response = client.post(
             url_for('events.import_events'),
@@ -205,7 +228,8 @@ class WhenPostingImportEvents(object):
             assert json_events[i]["venue"]['directions'] == sample_venue.directions
 
     def it_creates_multiple_speakers_for_imported_events_with_multiple_speakers(
-        self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data
+        self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data,
+        mock_config, mock_storage
     ):
         speaker_1 = create_speaker(name='John Smith')
         sample_data[0]['Speaker'] = "{} and {}".format(sample_speaker.name, speaker_1.name)
@@ -233,7 +257,8 @@ class WhenPostingImportEvents(object):
             sample_speaker.serialize(), speaker_1.serialize()]
 
     def it_ignores_existing_events_for_imported_events(
-        self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_event, sample_data
+        self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_event, sample_data,
+        mock_config, mock_storage
     ):
         response = client.post(
             url_for('events.import_events'),
@@ -254,7 +279,8 @@ class WhenPostingImportEvents(object):
         ('venue', 'venue')
     ])
     def it_adds_errors_to_list_for_a_non_existant_field(
-        self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data, field, desc
+        self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data, field, desc,
+        mock_config, mock_storage_not_exists
     ):
         sample_data[1][field] = "0"
         response = client.post(
