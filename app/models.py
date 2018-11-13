@@ -1,12 +1,8 @@
 import datetime
-import enum
 import uuid
 from app import db
 
-from sqlalchemy.dialects.postgresql import (
-    UUID,
-    JSON
-)
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -213,6 +209,7 @@ class Venue(db.Model):
     name = db.Column(db.String(255))
     address = db.Column(db.String(255))
     directions = db.Column(db.String(255))
+
     default = db.Column(db.Boolean)
 
     def serialize(self):

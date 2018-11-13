@@ -1,7 +1,5 @@
 import json
-from datetime import datetime, timedelta
 
-from iso8601 import iso8601, ParseError
 from jsonschema import (Draft4Validator, ValidationError, FormatChecker)
 
 format_checker = FormatChecker()

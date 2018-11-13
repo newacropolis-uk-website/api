@@ -1,7 +1,7 @@
-from mock import call, Mock, PropertyMock, patch
+from mock import call
 import pytest
 
-from app import create_app, get_root_path, application, configure_logging, LogTruncatingFormatter
+from app import create_app, configure_logging, LogTruncatingFormatter
 from app.config import Development, Preview, Live
 
 

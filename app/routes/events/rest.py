@@ -1,4 +1,3 @@
-import os
 from flask import (
     Blueprint,
     current_app,
@@ -10,14 +9,14 @@ import re
 from flask_jwt_extended import jwt_required
 
 from app.dao.events_dao import (
-    dao_create_event, dao_get_events, dao_get_future_events, dao_get_past_year_events, dao_update_event
+    dao_create_event, dao_get_events, dao_get_future_events, dao_get_past_year_events
 )
 from app.dao.event_dates_dao import dao_create_event_date
 from app.dao.event_types_dao import dao_get_event_type_by_old_id
 from app.dao.speakers_dao import dao_get_speaker_by_name
 from app.dao.venues_dao import dao_get_venue_by_old_id
 
-from app.errors import register_errors, InvalidRequest
+from app.errors import register_errors
 from app.models import Event, EventDate
 
 from app.schema_validation import validate
