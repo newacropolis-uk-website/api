@@ -34,6 +34,7 @@ if [ $port != 'No environment' ]; then
     export ADMIN_CLIENT_ID=$ADMIN_CLIENT_ID
     export ADMIN_CLIENT_SECRET=$ADMIN_CLIENT_SECRET
     export JWT_SECRET=$JWT_SECRET
+    export PROJECT=$PROJECT
     export GOOGLE_STORE=$GOOGLE_STORE
     sudo ./scripts/bootstrap.sh
     ./scripts/run_app.sh $environment gunicorn $output_params"""
