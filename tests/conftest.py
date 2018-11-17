@@ -3,7 +3,6 @@ import subprocess
 import datetime
 
 from bs4 import BeautifulSoup
-from flask import current_app
 
 import pytest
 from alembic.command import upgrade

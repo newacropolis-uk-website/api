@@ -45,6 +45,7 @@ class Development(Config):
     SESSION_PROTECTION = None
     PORT = 5000
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL_development')
+    STORAGE = '{}development'.format(os.environ.get('GOOGLE_STORE'))
 
 
 class Preview(Config):
@@ -54,6 +55,7 @@ class Preview(Config):
     SESSION_PROTECTION = None
     PORT = 4000
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL_preview')
+    STORAGE = '{}preview'.format(os.environ.get('GOOGLE_STORE'))
 
 
 class Live(Config):
@@ -63,6 +65,7 @@ class Live(Config):
     SESSION_PROTECTION = None
     PORT = 8000
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL_live')
+    STORAGE = '{}live'.format(os.environ.get('GOOGLE_STORE'))
 
 
 configs = {

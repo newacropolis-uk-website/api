@@ -3,14 +3,12 @@ import pytest
 from flask import json, url_for, Blueprint, Flask
 from flask_jwt_extended import (
     JWTManager,
-    create_refresh_token,
     jwt_required
 )
 from freezegun import freeze_time
 
-from app.errors import register_errors, NoAuthorizationError
+from app.errors import register_errors
 from tests.conftest import create_authorization_header, create_refresh_header
-from tests.db import create_fee
 
 
 class WhenDoingLogin(object):
@@ -150,7 +148,7 @@ class WhenAccessingAProtectedEndpoint(object):
         app.config['TESTING'] = True
         app.config['JWT_SECRET_KEY'] = 'super-secret'
         app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 1
-        jwt = JWTManager(app)
+        JWTManager(app)
 
         auth_blueprint = Blueprint('authenticated_endpoint', __name__)
         register_errors(auth_blueprint)

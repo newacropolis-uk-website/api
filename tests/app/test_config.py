@@ -1,11 +1,9 @@
-import argparse
-import sys
 from collections import namedtuple
 
 from mock import call
 import pytest
 
-from app.config import main, output, parse_args, Development, Preview, Live
+from app.config import main
 
 
 class WhenGettingPort(object):

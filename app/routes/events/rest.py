@@ -1,4 +1,3 @@
-import os
 from flask import (
     Blueprint,
     current_app,
@@ -10,19 +9,21 @@ import re
 from flask_jwt_extended import jwt_required
 
 from app.dao.events_dao import (
-    dao_create_event, dao_get_events, dao_get_future_events, dao_get_past_year_events, dao_update_event
+    dao_create_event, dao_get_events, dao_get_future_events, dao_get_past_year_events
 )
 from app.dao.event_dates_dao import dao_create_event_date
 from app.dao.event_types_dao import dao_get_event_type_by_old_id
 from app.dao.speakers_dao import dao_get_speaker_by_name
 from app.dao.venues_dao import dao_get_venue_by_old_id
 
-from app.errors import register_errors, InvalidRequest
+from app.errors import register_errors
 from app.models import Event, EventDate
+
+from app.routes.events.schemas import post_import_events_schema
 
 from app.schema_validation import validate
 
-from app.routes.events.schemas import post_import_events_schema
+from app.storage.utils import Storage
 
 events_blueprint = Blueprint('events', __name__)
 register_errors(events_blueprint)
@@ -82,6 +83,8 @@ def import_events():
     data = request.get_json(force=True)
 
     validate(data, post_import_events_schema)
+
+    storage = Storage(current_app.config['STORAGE'])
 
     errors = []
     events = []
@@ -159,6 +162,12 @@ def import_events():
             err = u'event already exists: {} - {}'.format(event.old_id, event.title)
             current_app.logger.info(err)
             errors.append(err)
+
+        if item['ImageFilename'] and item['ImageFilename'] != '../spacer.gif':
+            if not storage.blob_exists(item['ImageFilename']):
+                    storage.upload_blob("./data/events/{}".format(item['ImageFilename']), item['ImageFilename'])
+            else:
+                current_app.logger.info('{} found'.format(item['ImageFilename']))
 
     res = {
         "events": [e.serialize() for e in events]

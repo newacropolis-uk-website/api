@@ -1,4 +1,3 @@
-import os
 from flask import (
     Blueprint,
     current_app,
@@ -6,12 +5,9 @@ from flask import (
     request
 )
 from flask_jwt_extended import jwt_required
-from sqlalchemy import inspect
-
-from app import logging
 
 from app.dao.speakers_dao import dao_get_speakers, dao_get_speaker_by_id, dao_create_speaker, dao_update_speaker
-from app.errors import register_errors, InvalidRequest
+from app.errors import register_errors
 from app.models import Speaker
 from app.schema_validation import validate
 from app.routes.speakers.schemas import (

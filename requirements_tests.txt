@@ -1,0 +1,12 @@
+-r requirements.txt
+
+flake8==3.6.0
+freezegun==0.3.9
+mock==2.0.0
+pycodestyle==2.4.0
+pytest==3.5
+pytest-cov==2.5.1
+pytest-eradicate==0.0.3
+pytest-flake8==1.0.0
+pytest-flask==0.10.0
+pytest-mock==1.10.0
