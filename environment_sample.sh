@@ -1,7 +1,11 @@
+## view README.md for information about env vars
 # environment
 export ENVIRONMENT=
 export DATABASE_URL_development=
 export API_development=
+export PROJECT=
+export GOOGLE_APPLICATION_CREDENTIALS=
+export GOOGLE_STORE=
 
 # authentication
 export ADMIN_CLIENT_ID=
