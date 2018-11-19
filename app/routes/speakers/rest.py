@@ -83,7 +83,7 @@ def import_speakers():
                 speakers.append(speaker)
                 dao_create_speaker(speaker)
             else:
-                err = 'speaker already exists: {}'.format(speaker.name)
+                err = u'speaker already exists: {}'.format(speaker.name)
                 current_app.logger.error(err)
                 errors.append(err)
 
