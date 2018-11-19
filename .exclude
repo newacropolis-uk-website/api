@@ -1,11 +1,12 @@
-venv
-tests
-*.log
 .git
 .cache
+.exclude
+*.log
 *_rsa
 *.pub
 *.enc
+data
+venv
+tests
 deploy.sh
-.exclude
 environment.sh
