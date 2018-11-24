@@ -221,3 +221,14 @@ class Venue(db.Model):
             'directions': self.directions,
             'default': self.default,
         }
+
+
+class Article(db.Model):
+    __tablename__ = 'articles'
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    old_id = db.Column(db.Integer)
+    title = db.Column(db.String(255))
+    author = db.Column(db.String(255))
+    content = db.Column(db.Text())
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
