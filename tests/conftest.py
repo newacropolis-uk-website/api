@@ -13,7 +13,9 @@ import sqlalchemy
 from flask_jwt_extended import create_access_token, create_refresh_token
 
 from app import create_app, db as _db, get_env
-from tests.db import create_event, create_event_date, create_event_type, create_fee, create_speaker, create_venue
+from tests.db import (
+    create_article, create_event, create_event_date, create_event_type, create_fee, create_speaker, create_venue
+)
 
 TEST_DATABASE_URI = "postgresql://localhost/na_api_" + get_env() + '_test'
 
@@ -69,6 +71,11 @@ def db_session(db):
         # if tbl.name not in ["fees"]:
         db.engine.execute(tbl.delete())
     db.session.commit()
+
+
+@pytest.fixture(scope='function')
+def sample_article(db):
+    return create_article(title='Ancient Greece')
 
 
 @pytest.fixture(scope='function')
