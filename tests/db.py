@@ -1,5 +1,6 @@
 from app import db
 
+from app.dao.articles_dao import dao_create_article
 from app.dao.blacklist_dao import store_token
 from app.dao.events_dao import dao_create_event
 from app.dao.event_dates_dao import dao_create_event_date
@@ -7,7 +8,7 @@ from app.dao.event_types_dao import dao_create_event_type
 from app.dao.fees_dao import dao_create_fee
 from app.dao.speakers_dao import dao_create_speaker
 from app.dao.venues_dao import dao_create_venue
-from app.models import Event, EventDate, EventType, Fee, Speaker, Venue
+from app.models import Article, Event, EventDate, EventType, Fee, Speaker, Venue
 
 
 def create_event(
@@ -163,3 +164,21 @@ def create_venue(
 
     dao_create_venue(venue)
     return venue
+
+
+def create_article(
+        old_id=1,
+        title='Egyptians',
+        author='Mrs Black',
+        content='Some info about Egypt\r\n\"Something in quotes\"',
+):
+    data = {
+        'old_id': old_id,
+        'title': title,
+        'author': author,
+        'content': content,
+    }
+    article = Article(**data)
+
+    dao_create_article(article)
+    return article
