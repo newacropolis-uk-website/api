@@ -3,11 +3,11 @@ set +e
 
 function setupURLS {
     if [ "$1" = "dev" ]; then
-        export api_server="${API_BASE_URL}:5000"
+        export api_server="${API_BASE_URL}"
     elif [ "$1" = "preview" ]; then
-        export api_server="${API_BASE_URL}:4000"
+        export api_server="${API_BASE_URL}"
     elif [ "$1" = "live" ]; then
-        export api_server="${API_BASE_URL}:8000"
+        export api_server="${API_BASE_URL}"
     else
         export api_server='http://localhost:5000'
     fi
