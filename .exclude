@@ -9,4 +9,4 @@ data
 venv
 tests
 deploy.sh
-environment.sh
+*environment.sh
