@@ -4,15 +4,21 @@ set +e
 function setupURLS {
     if [ "$1" = "dev" ]; then
         export api_server="${API_BASE_URL}"
+        export username=$ADMIN_CLIENT_ID_development
+        export password=$ADMIN_CLIENT_SECRET_development
     elif [ "$1" = "preview" ]; then
         export api_server="${API_BASE_URL}"
+        export username=$ADMIN_CLIENT_ID_preview
+        export password=$ADMIN_CLIENT_SECRET_preview
     elif [ "$1" = "live" ]; then
         export api_server="${API_BASE_URL}"
+        export username=$ADMIN_CLIENT_ID_live
+        export password=$ADMIN_CLIENT_SECRET_live
     else
         export api_server='http://localhost:5000'
+        export username=$ADMIN_CLIENT_ID
+        export password=$ADMIN_CLIENT_SECRET
     fi
-    export username=$ADMIN_CLIENT_ID
-    export password=$ADMIN_CLIENT_SECRET
 
     echo "*** running on - " $api_server
 }
@@ -318,6 +324,11 @@ case "$arg" in
 
         -ie)
             ImportEvents
+        ;;
+
+        -setup)
+            setupURLS
+            setupAccessToken
         ;;
 
         -x)
