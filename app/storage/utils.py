@@ -15,7 +15,7 @@ class Storage(object):
         else:
             self.storage_client = storage.Client()
 
-        if bucket_name not in self.storage_client.list_buckets():
+        if bucket_name not in [b.name for b in self.storage_client.list_buckets()]:
             self.bucket = self.storage_client.create_bucket(bucket_name)
             current_app.logger.info('Bucket {} created'.format(self.bucket.name))
         else:
