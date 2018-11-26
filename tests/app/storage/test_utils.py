@@ -48,7 +48,7 @@ class MockEmptyStorageClient:
 
 class MockStorageClient:
     def list_buckets(self):
-        return ['test-store']
+        return [MockBucket('test-store')]
 
     def get_bucket(self, bucket_name):
         return MockBucket(bucket_name)
@@ -85,7 +85,7 @@ class WhenUsingStorage:
         assert not mock_google_creds.called
         assert store.storage_client.list_buckets() == ['test-store']
 
-    def it_doesnt_create_the_bucket_if_it_exists_(self, app, mocker):
+    def it_doesnt_create_the_bucket_if_it_exists(self, app, mocker):
         mocker.patch.dict('os.environ', {
             'GOOGLE_APPLICATION_CREDENTIALS': 'path/to/creds'
         })
