@@ -1,4 +1,3 @@
-import os
 from flask import (
     Blueprint,
     current_app,
@@ -7,7 +6,6 @@ from flask import (
 )
 from flask_jwt_extended import jwt_required
 
-from app import logging
 from app.dao.fees_dao import dao_create_fee, dao_get_fees, dao_update_fee, dao_get_fee_by_id
 from app.errors import register_errors
 

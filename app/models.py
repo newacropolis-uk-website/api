@@ -232,3 +232,13 @@ class Article(db.Model):
     author = db.Column(db.String(255))
     content = db.Column(db.Text())
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'old_id': self.old_id,
+            'title': self.title,
+            'author': self.author,
+            'content': self.content,
+            'created_at': self.created_at.strftime('%Y-%m-%d') if self.created_at else None,
+        }

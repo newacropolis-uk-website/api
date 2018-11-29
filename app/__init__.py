@@ -42,6 +42,7 @@ def init_app(app):
 
 def register_blueprint():
     from app.rest import base_blueprint
+    from app.routes.articles.rest import article_blueprint, articles_blueprint
     from app.routes.authentication.rest import auth_blueprint
     from app.routes.events.rest import events_blueprint
     from app.routes.fees.rest import fees_blueprint, fee_blueprint
@@ -51,6 +52,8 @@ def register_blueprint():
     from app.routes.venues.rest import venues_blueprint, venue_blueprint
     application.register_blueprint(base_blueprint)
     application.register_blueprint(auth_blueprint)
+    application.register_blueprint(article_blueprint)
+    application.register_blueprint(articles_blueprint)
     application.register_blueprint(events_blueprint)
     application.register_blueprint(event_date_blueprint)
     application.register_blueprint(event_dates_blueprint)
