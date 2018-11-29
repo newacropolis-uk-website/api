@@ -124,7 +124,6 @@ function ImportSpeakers {
     -d @data/speakers.json
 }
 
-
 function GetVenues {
     echo "*** Get venues ***"
 
@@ -253,6 +252,15 @@ function ImportEvents {
     -d @data/events.json
 }
 
+function ImportArticles {
+    echo "*** Import articles ***"
+
+    curl -X POST $api_server'/articles/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d @data/articles.json
+}
+
 function Logout {
     echo "*** Logout ***"
 
@@ -324,6 +332,10 @@ case "$arg" in
 
         -ie)
             ImportEvents
+        ;;
+
+        -ia)
+            ImportArticles
         ;;
 
         -setup)

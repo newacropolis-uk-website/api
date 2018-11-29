@@ -240,5 +240,5 @@ class Article(db.Model):
             'title': self.title,
             'author': self.author,
             'content': self.content,
-            'created_at': self.created_at.strftime('%Y-%m-%d'),
+            'created_at': self.created_at.strftime('%Y-%m-%d') if self.created_at else None,
         }
