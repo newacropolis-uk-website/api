@@ -13,6 +13,7 @@ class WhenInitializingApp(object):
         ('', Development)
     ])
     def it_has_correct_environment(self, mocker, returnval, config_class):
+        mocker.patch("os.environ", {})
         mocker.patch.dict('app.application.config', {'SQLALCHEMY_DATABASE_URI': 'db://localhost/test_db'})
         mocker.patch("app.get_root_path", return_value=returnval)
         mocked_config = mocker.patch("app.application.config.from_object", return_value={})
