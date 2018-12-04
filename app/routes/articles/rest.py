@@ -43,7 +43,7 @@ def get_articles_summary():
     return jsonify(articles)
 
 
-@article_blueprint.route('/articl/<uuid:article_id>', methods=['GET'])
+@article_blueprint.route('/article/<uuid:article_id>', methods=['GET'])
 @jwt_required
 def get_article_by_id(article_id):
     current_app.logger.info('get_article: {}'.format(article_id))
