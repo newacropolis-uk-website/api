@@ -242,3 +242,10 @@ class Article(db.Model):
             'content': self.content,
             'created_at': self.created_at.strftime('%Y-%m-%d') if self.created_at else None,
         }
+
+    def serialize_summary(self):
+            return {
+                'id': str(self.id),
+                'title': self.title,
+                'author': self.author,
+            }

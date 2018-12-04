@@ -39,6 +39,18 @@ class WhenGettingArticles:
         assert len(data) == 1
         assert data[0]['id'] == str(sample_article.id)
 
+    def it_returns_all_articles_summary(self, client, sample_article, db_session):
+        response = client.get(
+            url_for('articles.get_articles_summary'),
+            headers=[create_authorization_header()]
+        )
+        assert response.status_code == 200
+
+        data = json.loads(response.get_data(as_text=True))
+
+        assert len(data) == 1
+        assert data[0]['id'] == str(sample_article.id)
+
 
 class WhenGettingArticleByID:
 
