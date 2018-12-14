@@ -261,6 +261,22 @@ function ImportArticles {
     -d @data/articles.json
 }
 
+function GetArticles {
+    echo "*** Get articles ***"
+
+    curl -X GET $api_server'/articles' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
+function GetArticlesSummary {
+    echo "*** Get articles summary ***"
+
+    curl -X GET $api_server'/articles/summary' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
 function Logout {
     echo "*** Logout ***"
 
@@ -336,6 +352,14 @@ case "$arg" in
 
         -ia)
             ImportArticles
+        ;;
+
+        -ga)
+            GetArticles
+        ;;
+
+        -gas)
+            GetArticlesSummary
         ;;
 
         -setup)
