@@ -29,7 +29,7 @@ env_variables:
   export JWT_SECRET=<secret key>
   export PROJECT=<google project name>
   export GOOGLE_APPLICATION_CREDENTIALS=<location of google credentials>
-  export GOOGLE_STORE=<name of google storeage>
+  export GOOGLE_STORE=<name of google storage>
 ```
 
 Run `source environment.sh` to make the parameters available
@@ -61,11 +61,38 @@ Where ENV is -
 `development - port 5000`
 `https://<new acropolis url>/dev/`
 
-`preview - port 4000`
+`preview`
 `https://<new acropolis url>/preview/`
 
-`live - port 8000`
+`live`
 `https://<new acropolis url>/`
+
+## Running imports
+
+Imports can be run via `integration_test.sh`
+
+### Import order
+
+```
+# import venues
+./integration.sh -iv
+# import speakers
+./integration.sh -is
+# import event types
+./integration.sh -iet
+# import events
+./integration.sh -ie
+# import articles
+./integration.sh -ia
+```
+
+### Importing images
+
+Images have to be uploaded from the dev machine, after which they can be copied to other storage buckets using `gsutil` and `rsync`:
+
+```
+gsutil -m rsync -r -d -p gs://<dev storage name> gs://<target storage name>
+```
 
 ## Logging
 
