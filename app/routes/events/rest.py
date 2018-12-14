@@ -19,6 +19,7 @@ from app.dao.venues_dao import dao_get_venue_by_old_id
 from app.errors import register_errors
 from app.models import Event, EventDate
 
+from app.routes import is_running_locally
 from app.routes.events.schemas import post_import_events_schema
 
 from app.schema_validation import validate
@@ -83,8 +84,6 @@ def import_events():
     data = request.get_json(force=True)
 
     validate(data, post_import_events_schema)
-
-    storage = Storage(current_app.config['STORAGE'])
 
     errors = []
     events = []
@@ -163,7 +162,9 @@ def import_events():
             current_app.logger.info(err)
             errors.append(err)
 
-        if item['ImageFilename'] and item['ImageFilename'] != '../spacer.gif':
+        if is_running_locally() and item['ImageFilename'] and item['ImageFilename'] != '../spacer.gif':
+            storage = Storage(current_app.config['STORAGE'])
+
             if not storage.blob_exists(item['ImageFilename']):
                     storage.upload_blob("./data/events/{}".format(item['ImageFilename']), item['ImageFilename'])
             else:
