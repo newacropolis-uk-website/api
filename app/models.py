@@ -244,8 +244,17 @@ class Article(db.Model):
         }
 
     def serialize_summary(self):
-            return {
-                'id': str(self.id),
-                'title': self.title,
-                'author': self.author,
-            }
+        def get_short_content(num_words):
+            content_arr = self.content.split(' ')
+            if len(content_arr) > num_words:
+                find_words = " ".join([content_arr[num_words - 2], content_arr[num_words - 1], content_arr[num_words]])
+                return self.content[0:self.content.index(find_words) + len(find_words)]
+            else:
+                return self.content
+
+        return {
+            'id': str(self.id),
+            'title': self.title,
+            'author': self.author,
+            'short_content': get_short_content(num_words=200)
+        }
