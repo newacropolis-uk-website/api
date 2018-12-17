@@ -1,5 +1,5 @@
 from app.models import Event, Fee, Speaker
-from tests.db import create_event, create_fee, create_speaker
+from tests.db import create_article, create_event, create_fee, create_speaker
 
 
 class WhenUsingEventModel(object):
@@ -42,3 +42,33 @@ class WhenUsingSpeakerModel(object):
         speaker = create_speaker(name='John Smith')
 
         assert speaker.last_name == 'Smith'
+
+
+class WhenUsingArticleModel(object):
+
+    def it_shows_article_summary_json_on_serialize(self, db, db_session):
+        article = create_article()
+
+        assert article.serialize_summary() == {
+            'id': str(article.id),
+            'author': article.author,
+            'title': article.title,
+            'short_content': article.content
+        }
+
+    def it_shows_shortened_content_article_summary_json_on_serialize_long_content(self, db_session):
+        long_content = ''
+        short_content_length = 0
+        for i in range(210):
+            long_content += '{}some-text '.format(i)
+            if i == 200:
+                short_content_length = len(long_content) - 1
+
+        article = create_article(content=long_content)
+
+        assert article.serialize_summary() == {
+            'id': str(article.id),
+            'author': article.author,
+            'title': article.title,
+            'short_content': long_content[:short_content_length]
+        }
