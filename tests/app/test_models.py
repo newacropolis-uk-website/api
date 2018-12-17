@@ -70,5 +70,5 @@ class WhenUsingArticleModel(object):
             'id': str(article.id),
             'author': article.author,
             'title': article.title,
-            'short_content': long_content[:short_content_length]
+            'short_content': long_content[:short_content_length] + '...'
         }

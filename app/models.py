@@ -248,7 +248,7 @@ class Article(db.Model):
             content_arr = self.content.split(' ')
             if len(content_arr) > num_words:
                 find_words = " ".join([content_arr[num_words - 2], content_arr[num_words - 1], content_arr[num_words]])
-                return self.content[0:self.content.index(find_words) + len(find_words)]
+                return self.content[0:self.content.index(find_words) + len(find_words)] + '...'
             else:
                 return self.content
 
