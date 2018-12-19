@@ -72,3 +72,22 @@ class WhenUsingArticleModel(object):
             'title': article.title,
             'short_content': long_content[:short_content_length] + '...'
         }
+
+    def it_removes_html_tags_on_article_summary(self, db_session):
+        long_content_with_tags = '<h1>'
+        clean_long_content = ''
+        clean_short_content_length = 0
+        for i in range(210):
+            long_content_with_tags += '{}<div>text</div> '.format(i)
+            clean_long_content += '{}text '.format(i)
+            if i == 200:
+                clean_short_content_length = len(clean_long_content) - 1
+
+        article = create_article(content=long_content_with_tags)
+
+        assert article.serialize_summary() == {
+            'id': str(article.id),
+            'author': article.author,
+            'title': article.title,
+            'short_content': clean_long_content[:clean_short_content_length] + '...'
+        }

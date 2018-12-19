@@ -1,10 +1,12 @@
 import datetime
 import uuid
-from app import db
+import re
 
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.hybrid import hybrid_property
+
+from app import db
 
 
 class TokenBlacklist(db.Model):
@@ -245,12 +247,15 @@ class Article(db.Model):
 
     def serialize_summary(self):
         def get_short_content(num_words):
-            content_arr = self.content.split(' ')
+            html_tag_pattern = r'<.*?>'
+            clean_content = re.sub(html_tag_pattern, '', self.content)
+
+            content_arr = clean_content.split(' ')
             if len(content_arr) > num_words:
                 find_words = " ".join([content_arr[num_words - 2], content_arr[num_words - 1], content_arr[num_words]])
-                return self.content[0:self.content.index(find_words) + len(find_words)] + '...'
+                return clean_content[0:clean_content.index(find_words) + len(find_words)] + '...'
             else:
-                return self.content
+                return clean_content
 
         return {
             'id': str(self.id),
