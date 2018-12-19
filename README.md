@@ -20,16 +20,15 @@ Run `Make` to list available commands
 Copy `environment_sample.sh` and create an `environment.sh` file and fill in the env vars
 
 ```
-env_variables:
-  export DATABASE_URL_development=<postgres url>
-  export API_development=<development endpoint, defaults to localhost:5000>
-  export ADMIN_CLIENT_ID=<admin client id>
-  export ADMIN_PASSWORD=<admin client password>
-  export ADMIN_CLIENT_SECRET=<admin client secret>
-  export JWT_SECRET=<secret key>
-  export PROJECT=<google project name>
-  export GOOGLE_APPLICATION_CREDENTIALS=<location of google credentials>
-  export GOOGLE_STORE=<name of google storage>
+export DATABASE_URL_development=<postgres url>
+export API_development=<development endpoint, defaults to localhost:5000>
+export ADMIN_CLIENT_ID=<admin client id>
+export ADMIN_PASSWORD=<admin client password>
+export ADMIN_CLIENT_SECRET=<admin client secret>
+export JWT_SECRET=<secret key>
+export PROJECT=<google project name>
+export GOOGLE_APPLICATION_CREDENTIALS=<location of google credentials>
+export GOOGLE_STORE=<name of google storage>
 ```
 
 Run `source environment.sh` to make the parameters available
