@@ -49,6 +49,7 @@ if [ "$2" = "gunicorn" -o "$1" = "gunicorn" ]; then
   USER=root
   GROUP=root
   NUM_WORKERS=3
+  TIMEOUT=240
   
   echo "Starting $NAME"
   
@@ -61,11 +62,13 @@ if [ "$2" = "gunicorn" -o "$1" = "gunicorn" ]; then
     --access-logfile logs/gunicorn.log \
     --error-logfile logs/gunicorn.error.log \
     --name $NAME \
+    --timeout $TIMEOUT \
     --workers $NUM_WORKERS \
     # --user=$USER --group=$GROUP \
     # --bind=unix:$SOCKFILE
     --log-level DEBUG \
-    --reload
+    --reload \
+    --worker-class gevent
 else
   export APP_SERVER=flask
   python app_start.py runserver --port $port
