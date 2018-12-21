@@ -252,6 +252,20 @@ function ImportEvents {
     -d @data/events.json
 }
 
+function ImportTargetEvents {
+    if [ -z $EVENT_TARGET ]; then
+        echo "*** No Target Event Specified ***"
+        exit
+    fi
+
+    echo "*** Import Target Event $EVENT_TARGET.json ***"
+
+    curl -X POST $api_server'/events/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d @data/$EVENT_TARGET.json
+}
+
 function ImportArticles {
     echo "*** Import articles ***"
 
@@ -348,6 +362,10 @@ case "$arg" in
 
         -ie)
             ImportEvents
+        ;;
+
+        -ite)
+            ImportTargetEvents
         ;;
 
         -ia)
