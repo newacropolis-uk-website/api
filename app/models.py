@@ -98,6 +98,7 @@ class Event(db.Model):
     old_id = db.Column(db.Integer)
     duration = db.Column(db.Integer, nullable=True)
     event_type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_types.id'), nullable=False)
+    event_type = db.relationship("EventType", backref=db.backref("event", uselist=False))
     title = db.Column(db.String(255))
     sub_title = db.Column(db.String(255))
     description = db.Column(db.String())
@@ -121,6 +122,7 @@ class Event(db.Model):
         return {
             'id': self.id,
             'old_id': self.old_id,
+            'event_type': self.event_type.event_type,
             'title': self.title,
             'sub_title': self.sub_title,
             'description': self.description,
