@@ -265,3 +265,30 @@ class Article(db.Model):
             'author': self.author,
             'short_content': get_short_content(num_words=110)
         }
+
+
+class User(db.Model):
+    __tablename__ = "users"
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=True)
+    active = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow())
+    last_login = db.Column(db.DateTime)
+    access_area = db.Column(db.String(), nullable=False)
+    session_id = db.Column(db.String())
+    ip = db.Column(db.String())
+    UniqueConstraint('email', name='uix_user_emails')
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'email': self.email,
+            'name': self.name,
+            'active': self.active,
+            'created_at': self.created_at,
+            'last_login': self.last_login,
+            'access_area': self.access_area,
+            'session_id': self.session_id,
+            'ip': self.ip
+        }

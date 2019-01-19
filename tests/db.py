@@ -7,8 +7,9 @@ from app.dao.event_dates_dao import dao_create_event_date
 from app.dao.event_types_dao import dao_create_event_type
 from app.dao.fees_dao import dao_create_fee
 from app.dao.speakers_dao import dao_create_speaker
+from app.dao.users_dao import dao_create_user
 from app.dao.venues_dao import dao_create_venue
-from app.models import Article, Event, EventDate, EventType, Fee, Speaker, Venue
+from app.models import Article, Event, EventDate, EventType, Fee, Speaker, User, Venue
 
 
 def create_event(
@@ -182,3 +183,17 @@ def create_article(
 
     dao_create_article(article)
     return article
+
+
+def create_user(email='test@example.com', name='First Mid Last-name'):
+    data = {
+        'email': email,
+        'name': name,
+        'active': True,
+        'access_area': ',email,event,report,article,',
+    }
+
+    user = User(**data)
+
+    dao_create_user(user)
+    return user

@@ -14,7 +14,14 @@ from flask_jwt_extended import create_access_token, create_refresh_token
 
 from app import create_app, db as _db, get_env
 from tests.db import (
-    create_article, create_event, create_event_date, create_event_type, create_fee, create_speaker, create_venue
+    create_article,
+    create_event,
+    create_event_date,
+    create_event_type,
+    create_fee,
+    create_speaker,
+    create_user,
+    create_venue
 )
 
 TEST_DATABASE_URI = "postgresql://localhost/na_api_" + get_env() + '_test'
@@ -113,6 +120,11 @@ def sample_fee(db, sample_event_type):
 @pytest.fixture(scope='function')
 def sample_speaker(db):
     return create_speaker(name='Paul White')
+
+
+@pytest.fixture(scope='function')
+def sample_user(db):
+    return create_user(email='test_user@example.com', name='Test User')
 
 
 @pytest.fixture(scope='function')
