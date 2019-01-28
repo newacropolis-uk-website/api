@@ -1,6 +1,7 @@
 import json
 
 from app.dao.users_dao import (
+    dao_get_admin_user,
     dao_create_user,
     dao_update_user,
     dao_get_users,
@@ -50,3 +51,15 @@ class WhenUsingUsersDAO(object):
 
         fetched_user = dao_get_user_by_email(user.email)
         assert fetched_user == user
+
+    def it_gets_admin_user(self, db, db_session, sample_user):
+        user = create_user(email='admin@example.com', name='Sam Black', access_area='admin')
+
+        admin_user = dao_get_admin_user()
+        assert admin_user == user
+        assert admin_user.is_admin()
+
+    def it_does_not_get_admin_user_if_no_admin(self, db, db_session, sample_user):
+        admin_user = dao_get_admin_user()
+
+        assert not admin_user

@@ -1,7 +1,8 @@
 import pytest
 from flask import json, url_for
 from tests.conftest import create_authorization_header
-from app.models import User
+from app.models import User, USER_ADMIN
+from app.dao.users_dao import dao_get_admin_user
 from tests.db import create_user
 
 
@@ -19,11 +20,38 @@ class WhenGettingUsers(object):
         assert len(data) == 1
 
 
-class WhenGettingUserByID(object):
+class WhenCheckingIfAdminUser:
+
+    def it_returns_true_for_admin_user(self, client, sample_admin_user, db_session):
+        response = client.get(
+            url_for('user.is_admin', email=sample_admin_user.email),
+            headers=[create_authorization_header()]
+        )
+        assert response.status_code == 200
+
+        data = json.loads(response.get_data(as_text=True))
+
+        assert data['is_admin']
+        assert data['email'] == sample_admin_user.email
+
+    def it_returns_false_if_not_admin(self, client, sample_user, db_session):
+        response = client.get(
+            url_for('user.is_admin', email=sample_user.email),
+            headers=[create_authorization_header()]
+        )
+        assert response.status_code == 200
+
+        data = json.loads(response.get_data(as_text=True))
+
+        assert not data['is_admin']
+        assert data['email'] == sample_user.email
+
+
+class WhenGettingUserByEmail(object):
 
     def it_returns_correct_user(self, client, sample_user, db_session):
         response = client.get(
-            url_for('user.get_user_by_email', email=str(sample_user.email)),
+            url_for('user.get_user_by_email', email=sample_user.email),
             headers=[create_authorization_header()]
         )
         assert response.status_code == 200
@@ -34,11 +62,21 @@ class WhenGettingUserByID(object):
 
 class WhenPostingUser(object):
 
-    @pytest.mark.parametrize('data', [
-        {'email': 'sarah@example.com', 'name': 'Sarah Black', 'access_area': ',email,'},
-        {'email': 'diane@example.com', 'access_area': ',email,'}
-    ])
-    def it_creates_a_user_on_valid_post_data(self, client, data, db_session):
+    def it_creates_admin_user_if_email_is_admin_in_env_var(self, client, db_session):
+        data = {'email': 'admin@example.com', 'name': 'Admin User', 'access_area': ',email,'}
+        response = client.post(
+            url_for('user.create_user'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 201
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['access_area'] == USER_ADMIN
+        assert dao_get_admin_user().email == data['email']
+
+    def it_does_not_create_admin_user_if_email_is_not_admin_in_env_var(self, client, db_session):
+        data = {'email': 'gary@example.com', 'name': 'Gary Blue', 'access_area': ',email,'}
         response = client.post(
             url_for('user.create_user'),
             data=json.dumps(data),
@@ -49,6 +87,35 @@ class WhenPostingUser(object):
         json_resp = json.loads(response.get_data(as_text=True))
         for key in data.keys():
             assert data[key] == json_resp[key]
+        assert json_resp['access_area'] == ',email,'
+
+    @pytest.mark.parametrize('data', [
+        {'email': 'sarah@example.com', 'name': 'Sarah Black', 'access_area': ',email,'},
+        {'email': 'diane@example.com', 'access_area': ',email,'}
+    ])
+    def it_creates_a_user_on_valid_post_data(self, client, data, db_session, sample_admin_user):
+        response = client.post(
+            url_for('user.create_user'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 201
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        for key in data.keys():
+            assert data[key] == json_resp[key]
+
+    def it_raises_an_error_on_invalid_access_area(self, client, db_session, sample_admin_user):
+        data = {'email': 'sarah@example.com', 'name': 'Sarah Black', 'access_area': ',invalid,'}
+        response = client.post(
+            url_for('user.create_user'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        json_resp = json.loads(response.get_data(as_text=True))
+
+        assert response.status_code == 400
+        assert json_resp['message'] == 'invalid not supported access area'
 
     @pytest.mark.parametrize('data,error_msg', [
         ({'email': 'bob@example.com'}, ['access_area is a required property']),

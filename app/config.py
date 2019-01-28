@@ -36,6 +36,7 @@ class Config(object):
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET')
     JWT_BLACKLIST_ENABLED = True
     JWT_BLACKLIST_TOKEN_CHECKS = ['access', 'refresh']
+    ADMIN_USERS = os.environ.get('ADMIN_USERS')
 
 
 class Development(Config):
@@ -46,6 +47,7 @@ class Development(Config):
     PORT = 5000
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL_development')
     STORAGE = '{}development'.format(os.environ.get('GOOGLE_STORE'))
+    ADMIN_USERS = os.environ.get('ADMIN_USERS_development')
 
 
 class Preview(Config):
@@ -56,6 +58,7 @@ class Preview(Config):
     PORT = 4000
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL_preview')
     STORAGE = '{}preview'.format(os.environ.get('GOOGLE_STORE'))
+    ADMIN_USERS = os.environ.get('ADMIN_USERS_preview')
 
 
 class Live(Config):
@@ -66,6 +69,7 @@ class Live(Config):
     PORT = 8000
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL_live')
     STORAGE = '{}live'.format(os.environ.get('GOOGLE_STORE'))
+    ADMIN_USERS = os.environ.get('ADMIN_USERS_live')
 
 
 configs = {
