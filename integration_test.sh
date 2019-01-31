@@ -291,6 +291,28 @@ function GetArticlesSummary {
     -H "Authorization: Bearer $TKN"
 }
 
+admin_user=$(cat  << EOF
+    {"email":"$ADMIN_USER","access_area":",email,","name":"Admin","active":true}
+EOF
+)
+
+function CreateAdminUser {
+    echo "*** Create admin user ***"
+
+    curl -X POST $api_server'/user' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$admin_user"
+}
+
+function GetUsers {
+    echo "*** Get users ***"
+
+    curl -X GET $api_server'/users' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" 
+}
+
 function Logout {
     echo "*** Logout ***"
 
@@ -378,6 +400,14 @@ case "$arg" in
 
         -gas)
             GetArticlesSummary
+        ;;
+
+        -cau)
+            CreateAdminUser
+        ;;
+
+        -gu)
+            GetUsers
         ;;
 
         -setup)
