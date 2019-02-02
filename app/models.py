@@ -279,7 +279,7 @@ class User(db.Model):
     active = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow())
     last_login = db.Column(db.DateTime)
-    access_area = db.Column(db.String(), nullable=False)
+    access_area = db.Column(db.String())
     session_id = db.Column(db.String())
     ip = db.Column(db.String())
     UniqueConstraint('email', name='uix_user_emails')
