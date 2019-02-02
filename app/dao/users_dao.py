@@ -27,4 +27,8 @@ def dao_get_user_by_id(user_id):
 
 
 def dao_get_user_by_email(email):
-    return User.query.filter_by(email=email).one()
+    return User.query.filter_by(email=email).first()
+
+
+def dao_get_admin_user():
+    return User.query.filter_by(access_area='admin').first()

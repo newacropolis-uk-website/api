@@ -25,6 +25,7 @@ from tests.db import (
 )
 
 TEST_DATABASE_URI = "postgresql://localhost/na_api_" + get_env() + '_test'
+TEST_ADMIN_USER = 'admin@example.com'
 
 
 @pytest.yield_fixture(scope='session')
@@ -36,7 +37,9 @@ def app():
         'ADMIN_CLIENT_ID': 'testadmin',
         'ADMIN_CLIENT_SECRET': 'testsecret',
         'TOKEN_EXPIRY': 1,
-        'JWT_SECRET_KEY': 'secret'
+        'JWT_SECRET_KEY': 'secret',
+        'ADMIN_USERS': [TEST_ADMIN_USER],
+        'EMAIL_DOMAIN': 'example.com',
     })
 
     ctx = _app.app_context()
@@ -125,6 +128,11 @@ def sample_speaker(db):
 @pytest.fixture(scope='function')
 def sample_user(db):
     return create_user(email='test_user@example.com', name='Test User')
+
+
+@pytest.fixture(scope='function')
+def sample_admin_user(db):
+    return create_user(email=TEST_ADMIN_USER, name='Admin User', access_area='admin')
 
 
 @pytest.fixture(scope='function')

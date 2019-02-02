@@ -267,6 +267,10 @@ class Article(db.Model):
         }
 
 
+ACCESS_AREAS = ['email', 'event', 'report', 'article']
+USER_ADMIN = 'admin'
+
+
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -292,3 +296,6 @@ class User(db.Model):
             'session_id': self.session_id,
             'ip': self.ip
         }
+
+    def is_admin(self):
+        return self.access_area == USER_ADMIN

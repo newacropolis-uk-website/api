@@ -7,14 +7,18 @@ from flask import (
 from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError
 
-from app.dao.users_dao import dao_get_users, dao_get_user_by_email, dao_get_user_by_id, dao_create_user, dao_update_user
-from app.errors import register_errors
-from app.models import User
+from app.dao.users_dao import (
+    dao_get_users,
+    dao_get_user_by_email,
+    dao_get_user_by_id,
+    dao_create_user,
+    dao_update_user
+)
+from app.errors import register_errors, InvalidRequest
+from app.models import User, ACCESS_AREAS, USER_ADMIN
 from app.schema_validation import validate
 from app.routes.users.schemas import (
     post_create_user_schema,
-    # post_create_users_schema,
-    # post_import_users_schema,
     post_update_user_schema
 )
 
@@ -39,12 +43,31 @@ def get_user_by_email(email):
     return jsonify(user.serialize())
 
 
+@user_blueprint.route('/user/<email>/is_admin', methods=['GET'])
+@jwt_required
+def is_admin(email):
+    return jsonify({
+        'email': email,
+        'is_admin': email in current_app.config['ADMIN_USERS']
+    })
+
+
 @user_blueprint.route('/user', methods=['POST'])
 @jwt_required
 def create_user():
     data = request.get_json(force=True)
 
     validate(data, post_create_user_schema)
+
+    if data['email'].split('@')[1] != current_app.config['EMAIL_DOMAIN']:
+        raise InvalidRequest("{} not in correct domain".format(data['email']), 400)
+
+    if data['email'] in current_app.config['ADMIN_USERS']:
+        data['access_area'] = USER_ADMIN
+    else:
+        for area in data['access_area'].split(','):
+            if area and area not in ACCESS_AREAS:
+                raise InvalidRequest("{} not supported access area".format(area), 400)
 
     user = User(**data)
 

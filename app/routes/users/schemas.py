@@ -8,7 +8,7 @@ post_create_user_schema = {
     "properties": {
         'email': {"type": "string"},
         'name': {"type": "string"},
-        'active': {"type": ["boolean", "false"]},
+        'active': {"type": "boolean"},
         'access_area': {"type": "string"},
     },
     "required": ['email', 'access_area']

@@ -27,6 +27,7 @@ if [ $port != 'No environment' ]; then
     eval "DATABASE_URL_ENV=\${DATABASE_URL_$environment}"
     eval "ADMIN_CLIENT_ID=\${ADMIN_CLIENT_ID_$environment}"
     eval "ADMIN_CLIENT_SECRET=\${ADMIN_CLIENT_SECRET_$environment}"
+    eval "ADMIN_USERS=\${ADMIN_USERS_$environment}"
 
     echo starting app $environment on port $port
     ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
@@ -38,6 +39,8 @@ if [ $port != 'No environment' ]; then
     export JWT_SECRET=$JWT_SECRET
     export PROJECT=$PROJECT
     export GOOGLE_STORE=$GOOGLE_STORE
+    export ADMIN_USERS=$ADMIN_USERS
+    export EMAIL_DOMAIN=$EMAIL_DOMAIN
     sudo ./scripts/bootstrap.sh
     ./scripts/run_app.sh $environment gunicorn $output_params"""
 

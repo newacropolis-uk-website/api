@@ -185,12 +185,12 @@ def create_article(
     return article
 
 
-def create_user(email='test@example.com', name='First Mid Last-name'):
+def create_user(email='test@example.com', name='First Mid Last-name', access_area=',email,event,report,article,'):
     data = {
         'email': email,
         'name': name,
         'active': True,
-        'access_area': ',email,event,report,article,',
+        'access_area': access_area,
     }
 
     user = User(**data)
