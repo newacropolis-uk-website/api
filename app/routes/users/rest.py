@@ -59,6 +59,9 @@ def create_user():
 
     validate(data, post_create_user_schema)
 
+    if data['email'].split('@')[1] != current_app.config['EMAIL_DOMAIN']:
+        raise InvalidRequest("{} not in correct domain".format(data['email']), 400)
+
     if data['email'] in current_app.config['ADMIN_USERS']:
         data['access_area'] = USER_ADMIN
     else:

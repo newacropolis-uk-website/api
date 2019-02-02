@@ -40,6 +40,7 @@ if [ $port != 'No environment' ]; then
     export PROJECT=$PROJECT
     export GOOGLE_STORE=$GOOGLE_STORE
     export ADMIN_USERS=$ADMIN_USERS
+    export EMAIL_DOMAIN=$EMAIL_DOMAIN
     sudo ./scripts/bootstrap.sh
     ./scripts/run_app.sh $environment gunicorn $output_params"""
 

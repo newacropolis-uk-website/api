@@ -37,6 +37,7 @@ class Config(object):
     JWT_BLACKLIST_ENABLED = True
     JWT_BLACKLIST_TOKEN_CHECKS = ['access', 'refresh']
     ADMIN_USERS = os.environ.get('ADMIN_USERS')
+    EMAIL_DOMAIN = os.environ.get('EMAIL_DOMAIN')
 
 
 class Development(Config):

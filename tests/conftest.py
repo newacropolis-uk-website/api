@@ -39,6 +39,7 @@ def app():
         'TOKEN_EXPIRY': 1,
         'JWT_SECRET_KEY': 'secret',
         'ADMIN_USERS': [TEST_ADMIN_USER],
+        'EMAIL_DOMAIN': 'example.com',
     })
 
     ctx = _app.app_context()
