@@ -64,10 +64,12 @@ def create_user():
 
     if data['email'] in current_app.config['ADMIN_USERS']:
         data['access_area'] = USER_ADMIN
-    else:
+    elif data.get('access_area'):
         for area in data['access_area'].split(','):
             if area and area not in ACCESS_AREAS:
                 raise InvalidRequest("{} not supported access area".format(area), 400)
+
+    data['active'] = True
 
     user = User(**data)
 
