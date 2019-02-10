@@ -19,7 +19,6 @@ post_update_user_schema = {
     "description": "POST schema for updating user",
     "type": "object",
     "properties": {
-        'email': {"format": "email", "type": "string"},
         'name': {"type": "string"},
         'active': {"type": "boolean"},
         'access_area': {"type": "string"},
@@ -27,5 +26,5 @@ post_update_user_schema = {
         'session_id': {"type": "string"},
         'ip': {"type": "string"},
     },
-    "required": ['email']
+    "required": []
 }

@@ -59,6 +59,16 @@ class WhenGettingUserByEmail(object):
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['id'] == str(sample_user.id)
 
+    def it_raises_404_if_user_not_exist(self, client, db_session):
+        response = client.get(
+            url_for('user.get_user_by_email', email='other@example.com'),
+            headers=[create_authorization_header()]
+        )
+        assert response.status_code == 404
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp == {'result': 'error', 'message': 'other@example.com not found'}
+
 
 class WhenPostingUser(object):
 
