@@ -313,6 +313,14 @@ function GetUsers {
     -H "Authorization: Bearer $TKN" 
 }
 
+function GetUserByEmail {
+    echo "*** Get user by email ***"
+
+    curl -X GET $api_server'/user/'$OTHER_USER \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" 
+}
+
 function Logout {
     echo "*** Logout ***"
 
@@ -408,6 +416,10 @@ case "$arg" in
 
         -gu)
             GetUsers
+        ;;
+
+        -gue)
+            GetUserByEmail
         ;;
 
         -setup)
