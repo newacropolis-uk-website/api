@@ -11,7 +11,7 @@ post_create_user_schema = {
         'active': {"type": "boolean"},
         'access_area': {"type": "string"},
     },
-    "required": ['email', 'access_area']
+    "required": ['email']
 }
 
 post_update_user_schema = {

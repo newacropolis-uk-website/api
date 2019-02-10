@@ -91,7 +91,8 @@ class WhenPostingUser(object):
 
     @pytest.mark.parametrize('data', [
         {'email': 'sarah@example.com', 'name': 'Sarah Black', 'access_area': ',email,'},
-        {'email': 'diane@example.com', 'access_area': ',email,'}
+        {'email': 'diane@example.com', 'access_area': ',email,'},
+        {'email': 'diane@example.com'}
     ])
     def it_creates_a_user_on_valid_post_data(self, mocker, client, data, db_session, sample_admin_user):
         response = client.post(
@@ -104,6 +105,8 @@ class WhenPostingUser(object):
         json_resp = json.loads(response.get_data(as_text=True))
         for key in data.keys():
             assert data[key] == json_resp[key]
+
+        assert json_resp['active']
 
     def it_raises_an_error_on_invalid_access_area(self, mocker, client, db_session, sample_admin_user):
         data = {'email': 'sarah@example.com', 'name': 'Sarah Black', 'access_area': ',invalid,'}
@@ -118,9 +121,7 @@ class WhenPostingUser(object):
         assert json_resp['message'] == 'invalid not supported access area'
 
     @pytest.mark.parametrize('data,error_msg', [
-        ({'email': 'bob@example.com'}, ['access_area is a required property']),
         ({'name': 'Sophia Grey', 'access_area': ',email,'}, ['email is a required property']),
-        ({'name': 'Sophia Grey'}, ['email is a required property', 'access_area is a required property']),
     ])
     def it_returns_400_on_invalid_post_user_data(self, mocker, client, data, error_msg, db_session):
         response = client.post(
