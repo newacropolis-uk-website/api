@@ -40,7 +40,9 @@ def get_users():
 @jwt_required
 def get_user_by_email(email):
     user = dao_get_user_by_email(email)
-    return jsonify(user.serialize())
+    if user:
+        return jsonify(user.serialize())
+    raise InvalidRequest("{} not found".format(email), 404)
 
 
 @user_blueprint.route('/user/<email>/is_admin', methods=['GET'])
@@ -59,6 +61,8 @@ def create_user():
 
     validate(data, post_create_user_schema)
 
+    current_app.logger.info('Creating user {}'.format(data['email']))
+
     if data['email'].split('@')[1] != current_app.config['EMAIL_DOMAIN']:
         raise InvalidRequest("{} not in correct domain".format(data['email']), 400)
 
@@ -74,6 +78,9 @@ def create_user():
     user = User(**data)
 
     dao_create_user(user)
+
+    current_app.logger.info('Created user {}'.format(user.email))
+
     return jsonify(user.serialize()), 201
 
 
