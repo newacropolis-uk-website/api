@@ -282,7 +282,6 @@ class User(db.Model):
     access_area = db.Column(db.String())
     session_id = db.Column(db.String())
     ip = db.Column(db.String())
-    UniqueConstraint('email', name='uix_user_emails')
 
     def serialize(self):
         return {
