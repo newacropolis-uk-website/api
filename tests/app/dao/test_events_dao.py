@@ -1,7 +1,12 @@
 from freezegun import freeze_time
 
 from app.dao.events_dao import (
-    dao_create_event, dao_update_event, dao_get_events, dao_get_future_events, dao_get_past_year_events
+    dao_create_event,
+    dao_update_event,
+    dao_get_events,
+    dao_get_future_events,
+    dao_get_past_year_events,
+    dao_get_events_in_year,
 )
 from app.models import Event
 
@@ -70,3 +75,28 @@ class WhenUsingEventsDAO(object):
         assert Event.query.count() == 3
         assert len(events_from_db) == 1
         assert events_from_db[0] == sample_event_with_dates
+
+    def it_gets_events_in_year(self, db, db_session, sample_event_with_dates, sample_event_type):
+        event_2 = create_event(
+            title='2018 event',
+            event_type_id=sample_event_type.id,
+            event_dates=[create_event_date(event_datetime='2018-12-31T23:59:00')]
+        )
+        create_event(
+            title='2017 event',
+            event_type_id=sample_event_type.id,
+            event_dates=[create_event_date(event_datetime='2017-12-31T23:59:59')]
+        )
+        create_event(
+            title='2019 event',
+            event_type_id=sample_event_type.id,
+            event_dates=[create_event_date(event_datetime='2019-01-01T00:00:01')]
+        )
+        events_from_db = dao_get_events_in_year(2018)
+
+        for e in events_from_db:
+            print(e.serialize())
+
+        assert len(events_from_db) == 2
+        assert events_from_db[0].title == sample_event_with_dates.title
+        assert events_from_db[1] == event_2
