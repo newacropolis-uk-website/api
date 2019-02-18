@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 
+from sqlalchemy import and_
+
 from app import db
 from app.dao.decorators import transactional
 from app.models import Event, EventDate
@@ -21,6 +23,15 @@ def dao_get_events():
     return Event.query.order_by(Event.id).all()
 
 
+def dao_get_events_in_year(year):
+    return Event.query.filter(
+        and_(
+            EventDate.event_datetime >= "{}-01-01".format(year),
+            EventDate.event_datetime < "{}-01-01".format(year + 1)
+        )
+    ).join(Event.event_dates).order_by(EventDate.event_datetime).all()
+
+
 def dao_get_future_events():
     return Event.query.join(EventDate).filter(
         EventDate.event_datetime >= datetime.today()
@@ -28,7 +39,9 @@ def dao_get_future_events():
 
 
 def dao_get_past_year_events():
-    return Event.query.join(EventDate).filter(
-        EventDate.event_datetime < datetime.today(),
-        EventDate.event_datetime > datetime.today() - timedelta(days=365)
-    ).order_by(Event.id).all()
+    return Event.query.filter(
+        and_(
+            EventDate.event_datetime < datetime.today(),
+            EventDate.event_datetime > datetime.today() - timedelta(days=365)
+        )
+    ).join(Event.event_dates).order_by(EventDate.event_datetime).all()
