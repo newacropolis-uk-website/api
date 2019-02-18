@@ -40,6 +40,7 @@ def app():
         'JWT_SECRET_KEY': 'secret',
         'ADMIN_USERS': [TEST_ADMIN_USER],
         'EMAIL_DOMAIN': 'example.com',
+        'EVENTS_MAX': 2,
     })
 
     ctx = _app.app_context()

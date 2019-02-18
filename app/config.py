@@ -38,6 +38,7 @@ class Config(object):
     JWT_BLACKLIST_TOKEN_CHECKS = ['access', 'refresh']
     ADMIN_USERS = os.environ.get('ADMIN_USERS')
     EMAIL_DOMAIN = os.environ.get('EMAIL_DOMAIN')
+    EVENTS_MAX = 30
 
 
 class Development(Config):

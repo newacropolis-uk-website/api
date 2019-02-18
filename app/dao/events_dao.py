@@ -32,6 +32,12 @@ def dao_get_events_in_year(year):
     ).join(Event.event_dates).order_by(EventDate.event_datetime).all()
 
 
+def dao_get_limited_events(num):
+    return Event.query.join(
+        Event.event_dates).order_by(
+            EventDate.event_datetime.desc(), EventDate.event_datetime.desc()).limit(num).all()
+
+
 def dao_get_future_events():
     return Event.query.join(EventDate).filter(
         EventDate.event_datetime >= datetime.today()
