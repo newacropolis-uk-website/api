@@ -11,16 +11,17 @@ from flask_jwt_extended import jwt_required
 from app.dao.events_dao import (
     dao_create_event,
     dao_get_events,
-    dao_get_future_events,
-    dao_get_past_year_events,
     dao_get_events_in_year,
+    dao_get_future_events,
+    dao_get_limited_events,
+    dao_get_past_year_events,
 )
 from app.dao.event_dates_dao import dao_create_event_date
 from app.dao.event_types_dao import dao_get_event_type_by_old_id
 from app.dao.speakers_dao import dao_get_speaker_by_name
 from app.dao.venues_dao import dao_get_venue_by_old_id
 
-from app.errors import register_errors
+from app.errors import register_errors, InvalidRequest
 from app.models import Event, EventDate
 
 from app.routes import is_running_locally
@@ -50,12 +51,23 @@ def get_events():
     return jsonify(events)
 
 
-@events_blueprint.route('/events/<int:year>')
+@events_blueprint.route('/events/year/<int:year>')
 @jwt_required
 def get_events_in_year(year):
     events = [e.serialize() if e else None for e in dao_get_events_in_year(year)]
 
     events.sort(key=extract_startdate)
+    return jsonify(events)
+
+
+@events_blueprint.route('/events/limit/<int:limit>')
+@jwt_required
+def get_limited_events(limit):
+    if limit > current_app.config['EVENTS_MAX']:
+        raise InvalidRequest("{} is greater than events max".format(limit), 400)
+
+    events = [e.serialize() if e else None for e in dao_get_limited_events(limit)]
+
     return jsonify(events)
 
 
