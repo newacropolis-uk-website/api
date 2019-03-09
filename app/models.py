@@ -263,7 +263,8 @@ class Article(db.Model):
             'id': str(self.id),
             'title': self.title,
             'author': self.author,
-            'short_content': get_short_content(num_words=110)
+            'short_content': get_short_content(num_words=110),
+            'very_short_content': get_short_content(num_words=30),
         }
 
 
