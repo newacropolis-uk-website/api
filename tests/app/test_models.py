@@ -53,14 +53,18 @@ class WhenUsingArticleModel(object):
             'id': str(article.id),
             'author': article.author,
             'title': article.title,
-            'short_content': article.content
+            'short_content': article.content,
+            'very_short_content': article.content,
         }
 
     def it_shows_shortened_content_article_summary_json_on_serialize_long_content(self, db_session):
         long_content = ''
         short_content_length = 0
+        very_short_content_length = 0
         for i in range(120):
             long_content += '{}some-text '.format(i)
+            if i == 30:
+                very_short_content_length = len(long_content) - 1
             if i == 110:
                 short_content_length = len(long_content) - 1
 
@@ -70,16 +74,20 @@ class WhenUsingArticleModel(object):
             'id': str(article.id),
             'author': article.author,
             'title': article.title,
-            'short_content': long_content[:short_content_length] + '...'
+            'short_content': long_content[:short_content_length] + '...',
+            'very_short_content': long_content[:very_short_content_length] + '...'
         }
 
     def it_removes_html_tags_on_article_summary(self, db_session):
         long_content_with_tags = '<h1>'
         clean_long_content = ''
+        clean_very_short_content_length = 0
         clean_short_content_length = 0
         for i in range(120):
             long_content_with_tags += '{}<div>text</div> '.format(i)
             clean_long_content += '{}text '.format(i)
+            if i == 30:
+                clean_very_short_content_length = len(clean_long_content) - 1
             if i == 110:
                 clean_short_content_length = len(clean_long_content) - 1
 
@@ -89,5 +97,6 @@ class WhenUsingArticleModel(object):
             'id': str(article.id),
             'author': article.author,
             'title': article.title,
-            'short_content': clean_long_content[:clean_short_content_length] + '...'
+            'short_content': clean_long_content[:clean_short_content_length] + '...',
+            'very_short_content': clean_long_content[:clean_very_short_content_length] + '...',
         }
