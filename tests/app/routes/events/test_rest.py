@@ -80,7 +80,7 @@ def sample_data(sample_speaker):
     return data
 
 
-class WhenGettingEvents(object):
+class WhenGettingEvents:
 
     def it_returns_all_events(self, client, sample_event, db_session):
         response = client.get(
@@ -231,7 +231,7 @@ class WhenGettingEvents(object):
         assert data[0]['event_dates'][0]['event_datetime'] == str(event_date_earliest.event_datetime)[0:-3]
 
 
-class WhenPostingExtractSpeakers(object):
+class WhenPostingExtractSpeakers:
 
     def it_extracts_unique_speakers_from_events_json(self, client, db_session, sample_data):
         event = copy.deepcopy(sample_data[0])
@@ -369,3 +369,138 @@ class WhenPostingImportEvents(object):
         assert len(json_resp['errors']) == 1
         assert str(json_resp['events'][0]["old_id"]) == str(sample_data[0]["id"])
         assert json_resp['errors'][0] == "{} {} not found: 0".format(sample_data[1]["id"], desc)
+
+
+@pytest.fixture
+def sample_req_event_data(sample_event_type, sample_venue, sample_speaker):
+    return {
+        'event_type': sample_event_type,
+        'venue': sample_venue,
+        'speaker': sample_speaker
+    }
+
+
+class WhenCreatingAnEvent:
+
+    def it_creates_an_event_via_rest(self, client, db_session, sample_req_event_data):
+        data = {
+            "event_type_id": sample_req_event_data['event_type'].id,
+            "title": "Test title",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "test_img.png",
+            "event_dates": [
+                {
+                    "event_date": "2019-03-01 19:00:00",
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data['speaker'].id}
+                    ]
+                },
+                {
+                    "event_date": "2019-03-02 19:00:00",
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data['speaker'].id}
+                    ]
+                }
+            ],
+            "venue_id": sample_req_event_data['venue'].id,
+            "fee": 15,
+            "conc_fee": 12,
+        }
+
+        response = client.post(
+            url_for('events.create_event'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 201
+
+        json_events = json.loads(response.get_data(as_text=True))
+        assert json_events["title"] == data["title"]
+        assert len(json_events["event_dates"]) == 2
+        assert len(json_events["event_dates"][0]["speakers"]) == 1
+        assert len(json_events["event_dates"][1]["speakers"]) == 1
+        assert json_events["event_dates"][0]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
+        assert json_events["event_dates"][1]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
+
+    def it_creates_an_event_without_speakers_via_rest(self, client, db_session, sample_req_event_data):
+        data = {
+            "event_type_id": sample_req_event_data['event_type'].id,
+            "title": "Test title",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "test_img.png",
+            "event_dates": [
+                {
+                    "event_date": "2019-03-01 19:00:00",
+                },
+                {
+                    "event_date": "2019-03-02 19:00:00",
+                }
+            ],
+            "venue_id": sample_req_event_data['venue'].id,
+            "fee": 15,
+            "conc_fee": 12,
+        }
+
+        response = client.post(
+            url_for('events.create_event'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 201
+
+        json_events = json.loads(response.get_data(as_text=True))
+        assert json_events["title"] == data["title"]
+        assert len(json_events["event_dates"]) == 2
+        assert len(json_events["event_dates"][0]["speakers"]) == 0
+        assert len(json_events["event_dates"][1]["speakers"]) == 0
+
+    def it_raises_400_when_missing_required_fields(self, client):
+        response = client.post(
+            url_for('events.create_event'),
+            data='{}',
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+
+        data = json.loads(response.get_data(as_text=True))['errors']
+
+        assert len(data) == 5
+        assert data == [
+            {"message": "event_type_id is a required property", "error": "ValidationError"},
+            {"message": "title is a required property", "error": "ValidationError"},
+            {"message": "description is a required property", "error": "ValidationError"},
+            {"message": "event_dates is a required property", "error": "ValidationError"},
+            {"message": "venue_id is a required property", "error": "ValidationError"}
+        ]
+
+    def it_raises_400_when_missing_event_date(self, client, db_session, sample_req_event_data):
+        data = {
+            "event_type_id": sample_req_event_data['event_type'].id,
+            "title": "Test title",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "test_img.png",
+            "event_dates": [],
+            "venue_id": sample_req_event_data['venue'].id,
+            "fee": 15,
+            "conc_fee": 12,
+        }
+        response = client.post(
+            url_for('events.create_event'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+
+        data = json.loads(response.get_data(as_text=True))['errors']
+
+        assert len(data) == 1
+        assert data == [
+            {"message": "event_dates [] is too short", "error": "ValidationError"},
+        ]
