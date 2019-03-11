@@ -1,17 +1,57 @@
-from app.schema_validation.definitions import uuid, datetime, number
+from app.schema_validation.definitions import datetime, number, uuid, nullable
+
+
+event_date_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for event_dates",
+    "type": "object",
+    "properties": {
+        "event_date": {"type": "string", "format": "date-time"},
+        "speakers": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "speaker_id": uuid,
+                }
+            },
+        },
+    },
+    "required": ["event_date"]
+}
 
 
 post_create_event_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "POST schema for creating venue",
+    "description": "POST schema for creating event",
     "type": "object",
     "properties": {
-        "name": {"type": "string"},
-        "address": {"type": "string"},
-        "directions": {"type": ["string", "null"]},
-        "default": {"type": ["boolean", "false"]},
+        "event_type_id": uuid,
+        "title": {"type": "string"},
+        "sub_title": {"type": ["string", "null"]},
+        "description": {"type": "string"},
+        "booking_code": {"type": ["string", "null"]},
+        "image_filename": {"type": ["string", "null"]},
+        "image_data": {"type": ["string", "null"]},
+        "fee": {"type": ["integer", "null"]},
+        "conc_fee": {"type": ["integer", "null"]},
+        "multi_day_fee": {"type": ["integer", "null"]},
+        "multi_day_conc_fee": {"type": ["integer", "null"]},
+        "event_dates": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "$ref": "#/definitions/event_date",
+            },
+            "minItems": 1,
+        },
+        "venue_id": {"type": "string"}
     },
-    "required": ["name", "address"]
+    "definitions": {
+        "type": "object",
+        "event_date": event_date_schema,
+    },
+    "required": ["event_type_id", "title", "description", "event_dates", "venue_id"]
 }
 
 

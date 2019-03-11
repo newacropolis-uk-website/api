@@ -15,3 +15,15 @@ number = {
     "pattern": "^[0-9]+$",
     "validationMessage": "is not a number",
 }
+
+
+def nullable(schema_type):
+    return {
+        "oneOf": [
+            {"type": "null"},
+            {
+                "format": schema_type,
+                "type": "string"
+            }
+        ]
+    }

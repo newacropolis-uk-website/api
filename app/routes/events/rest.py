@@ -17,15 +17,15 @@ from app.dao.events_dao import (
     dao_get_past_year_events,
 )
 from app.dao.event_dates_dao import dao_create_event_date
-from app.dao.event_types_dao import dao_get_event_type_by_old_id
-from app.dao.speakers_dao import dao_get_speaker_by_name
-from app.dao.venues_dao import dao_get_venue_by_old_id
+from app.dao.event_types_dao import dao_get_event_type_by_old_id, dao_get_event_type_by_id
+from app.dao.speakers_dao import dao_get_speaker_by_name, dao_get_speaker_by_id
+from app.dao.venues_dao import dao_get_venue_by_old_id, dao_get_venue_by_id
 
 from app.errors import register_errors, InvalidRequest
 from app.models import Event, EventDate
 
 from app.routes import is_running_locally
-from app.routes.events.schemas import post_import_events_schema
+from app.routes.events.schemas import post_create_event_schema, post_import_events_schema
 
 from app.schema_validation import validate
 
@@ -40,6 +40,61 @@ def extract_startdate(json):
         return json['event_dates'][0]['event_datetime']
     else:
         return 0
+
+
+@events_blueprint.route('/event', methods=['POST'])
+@jwt_required
+def create_event():
+    data = request.get_json(force=True)
+
+    validate(data, post_create_event_schema)
+
+    err = ''
+    errors = []
+
+    event_type = dao_get_event_type_by_id(data['event_type_id'])
+    if not event_type:
+        err = 'event type not found: {}'.format(data['event_type_id'])
+        current_app.logger.info(err)
+        errors.append(err)
+
+    venue = dao_get_venue_by_id(data['venue_id'])
+    if not venue:
+        err = 'venue not found: {}'.format(data['id'], data['venue_id'])
+        current_app.logger.info(err)
+        errors.append(err)
+
+    event = Event(
+        event_type_id=event_type.id,
+        title=data['title'],
+        sub_title=data.get('sub_title'),
+        description=data['description'],
+        booking_code='',
+        image_filename=data.get('image_filename'),
+        fee=data.get('fee'),
+        conc_fee=data.get('conc_fee'),
+        multi_day_fee=data.get('multi_day_fee'),
+        multi_day_conc_fee=data.get('multi_day_conc_fee'),
+        venue_id=data.get('venue_id')
+    )
+
+    for event_date in data.get('event_dates'):
+        speakers = []
+        for s in event_date.get('speakers', []):
+            speaker = dao_get_speaker_by_id(s['speaker_id'])
+            speakers.append(speaker)
+
+        e = EventDate(
+            event_datetime=event_date['event_date'],
+            speakers=speakers
+        )
+
+        dao_create_event_date(e)
+        event.event_dates.append(e)
+
+    dao_create_event(event)
+
+    return jsonify(event.serialize()), 201
 
 
 @events_blueprint.route('/events')
