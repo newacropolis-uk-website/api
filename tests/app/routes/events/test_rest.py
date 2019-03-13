@@ -372,7 +372,7 @@ class WhenPostingImportEvents(object):
 
 
 @pytest.fixture
-def sample_req_event_data(sample_event_type, sample_venue, sample_speaker):
+def sample_req_event_data(db_session, sample_event_type, sample_venue, sample_speaker):
     return {
         'event_type': sample_event_type,
         'venue': sample_venue,
@@ -381,8 +381,43 @@ def sample_req_event_data(sample_event_type, sample_venue, sample_speaker):
 
 
 class WhenCreatingAnEvent:
+    base64img = (
+        'iVBORw0KGgoAAAANSUhEUgAAADgAAAAsCAYAAAAwwXuTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEMElEQVRoge2ZTUxcVRTH'
+        '/+fed9+bDxFEQUCmDLWbtibWDE2MCYGa6rabykITA7pV6aruNGlcGFe6c2ui7k1cmZp0YGdR2pjqoklBpkCVykem8/'
+        'HeffceF8MgIC3YvDczNP0ls5l3cuf8cuee++65wGMe09LQQQP5xkkXJ4rpjYU40zkY7UcA/NZWopM3gv1iHyg4M5NTuRPrPf5'
+        '6cJ4ETgsHg1ZHludDIxQQBphLpOiasfTrtVvPXB4a+nnPzO4rWFnOjroJO25CfkF5UAgBrTm+rP8nyiHAAzgALNNsCHzjdXZdI'
+        'dop+h/BmzePeYPd+lXW9pIj4eqAwa3jtSeuV9PQhvKqKC7S4Hy1/myHIHNfSq84nyqXR7Tf+mK7cdMEU6G89O2HlLldAQCxPSD'
+        '4U55TaRoJqodPDgCCEkOmaMR38HH9uy3B4tLAceViUt8zzckuInTJwE3QmerikbPApuDaXLbDk3yBCMnDOHPbYQYISEiJC7x6t'
+        'F0AQNrzn1dpejnwD7ndJoHPcBKc0WX/uACAkOUr7Ntm5xUp2mdYQR8RAPBa5vqjMnvbceTmGoxajqj2aTah2bVNRAIB1pBmrm3'
+        'AzfaMXNBNEqQU3wp2Jo2lWVKbok0yjWUGjWGjeuevyM6Fd2HxgbW4Kh1qiqgT07gEAEQwwO08M6bDu9lhhnnbcWiIBNCod9y4B'
+        'HdABAvM55kxFa5khtmIcaVsDhS/aEME6xCBgcIUgCm9lBlmBxNKUQ4UfSWvE/0aPCCqrzDtdhfeCUO8pzX94qp/jz1R0jTBOqq'
+        '7MO12L0xUfXq/WsWsktEWoqYL1kn2FaaSvYXxUlVOWkNhVJINXYMPggGqLg+MSrJvMlhGVXhaQlCvDJzRlicSyr5YKzjRjd00Q'
+        'WbI8E7/MEkxIaU9BQkEQfSVtOGCvJDps2l6w6ziNSFtRiiObYsAGihYWhnoVYbHNPF5pfhJ6zMMA2HMx7S4BLeyvvdXtsexdgz'
+        'WjqkU2sIKIyjH9Kt7EL0gA5aRKC4f61LQ47DmnJdCm26wWB0CAP9O//UoR+TaPqbdJJLN7q/GMoNCsgPACar7RseOAGq9iyhhR'
+        'ss0jgUAaI3FVuihRI3rUU1QWL6kYniTbyauR/Cr+FIAgEp5v4dVKsRxXGkGShECjT88Nl8JAKDOWxvG4HNmVB6FvyolBIyhr6l'
+        'vqbx1XEo8t3BZB/hCPRFxxWkwtSs0zid7wu+BXedB91nznSlx3k0fzml00wTjU75QFBeJlsrAHje8PJdN6Db7mZI8AsTXK4kSI'
+        'QBH0f43vHWYc8pfXRl1gLcE8UukAF1uPVGVItgKw0oqGiM/8bqe/nHfO/rtzMzk1Kmjd8+SNKd1hV4nQKIVPAlgwKgk/6DL8qp'
+        'nwp+of/Hv+4QejLW5bEeHsLQRXZoPTTuAdSv4qcH59f1i/wGycsTRKGME7gAAAABJRU5ErkJggg=='
+    )
 
-    def it_creates_an_event_via_rest(self, client, db_session, sample_req_event_data):
+    @pytest.fixture
+    def mock_config(self, mocker):
+        mocker.patch.dict('app.application.config', {
+            'STORAGE': 'test-store'
+        })
+
+    @pytest.fixture
+    def mock_storage(self, mocker):
+        mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
+        mock_storage_blob_upload = mocker.patch("app.storage.utils.Storage.upload_blob_from_base64string")
+        yield
+        mock_storage.assert_called_with('test-store')
+        event = Event.query.one()
+        mock_storage_blob_upload.assert_called_with(
+            'test_img.png', '2019/{}.png'.format(str(event.id)), self.base64img)
+
+    def it_creates_an_event_via_rest(self, mocker, client, db_session, sample_req_event_data):
+        mocker.patch("app.storage.utils.Storage.blob_exists", return_value=True)
         data = {
             "event_type_id": sample_req_event_data['event_type'].id,
             "title": "Test title",
@@ -424,7 +459,8 @@ class WhenCreatingAnEvent:
         assert json_events["event_dates"][0]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
         assert json_events["event_dates"][1]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
 
-    def it_creates_an_event_without_speakers_via_rest(self, client, db_session, sample_req_event_data):
+    def it_creates_an_event_without_speakers_via_rest(self, mocker, client, db_session, sample_req_event_data):
+        mocker.patch("app.storage.utils.Storage.blob_exists", return_value=True)
         data = {
             "event_type_id": sample_req_event_data['event_type'].id,
             "title": "Test title",
@@ -504,3 +540,98 @@ class WhenCreatingAnEvent:
         assert data == [
             {"message": "event_dates [] is too short", "error": "ValidationError"},
         ]
+
+    def it_raises_400_when_supply_invalid_event_type_id(self, client, sample_req_event_data, sample_uuid):
+        data = {
+            "event_type_id": sample_uuid,
+            "title": "Test title",
+            "description": "Test description",
+            "event_dates": [{"event_date": "2019-03-01 19:00:00"}],
+            "venue_id": sample_req_event_data['venue'].id,
+        }
+
+        response = client.post(
+            url_for('events.create_event'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+        data = json.loads(response.get_data(as_text=True))
+
+        assert data == {"message": "event type not found: {}".format(sample_uuid), "result": "error"}
+
+    def it_raises_400_when_supply_invalid_venue_id(self, client, sample_req_event_data, sample_uuid):
+        data = {
+            "event_type_id": sample_req_event_data['event_type'].id,
+            "title": "Test title",
+            "description": "Test description",
+            "event_dates": [{"event_date": "2019-03-01 19:00:00"}],
+            "venue_id": sample_uuid,
+        }
+
+        response = client.post(
+            url_for('events.create_event'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+        data = json.loads(response.get_data(as_text=True))
+
+        assert data == {"message": "venue not found: {}".format(sample_uuid), "result": "error"}
+
+    @freeze_time("2019-03-01T23:10:00")
+    def it_stores_the_image_in_google_store(
+        self, client, db_session, sample_req_event_data, mock_config, mock_storage
+    ):
+        data = {
+            "event_type_id": sample_req_event_data['event_type'].id,
+            "title": "Test title",
+            "description": "Test description",
+            "image_filename": "test_img.png",
+            "image_data": self.base64img,
+            "event_dates": [
+                {
+                    "event_date": "2019-03-01 19:00:00",
+                },
+            ],
+            "venue_id": sample_req_event_data['venue'].id,
+        }
+
+        response = client.post(
+            url_for('events.create_event'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 201
+
+    def it_raises_400_if_image_filename_not_found(
+        self, mocker, client, db_session, sample_req_event_data, mock_config
+    ):
+        mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
+        mocker.patch("app.storage.utils.Storage.blob_exists", return_value=False)
+        data = {
+            "event_type_id": sample_req_event_data['event_type'].id,
+            "title": "Test title",
+            "description": "Test description",
+            "image_filename": "test_img.png",
+            "event_dates": [
+                {
+                    "event_date": "2019-03-01 19:00:00",
+                },
+            ],
+            "venue_id": sample_req_event_data['venue'].id,
+        }
+
+        response = client.post(
+            url_for('events.create_event'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+        data = json.loads(response.get_data(as_text=True))
+
+        assert data == {"message": "test_img.png does not exist", "result": "error"}

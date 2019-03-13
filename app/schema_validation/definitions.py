@@ -26,4 +26,4 @@ def nullable(schema_type):
                 "type": "string"
             }
         ]
-    }
+    }  # pragma: no cover

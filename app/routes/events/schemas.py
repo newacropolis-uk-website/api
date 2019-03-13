@@ -32,7 +32,13 @@ post_create_event_schema = {
         "description": {"type": "string"},
         "booking_code": {"type": ["string", "null"]},
         "image_filename": {"type": ["string", "null"]},
-        "image_data": {"type": ["string", "null"]},
+        "image_data": {
+            "type": ["string", "null"],
+            "media": {
+                "binaryEncoding": "base64",
+                "type": "image/png"
+            }
+        },
         "fee": {"type": ["integer", "null"]},
         "conc_fee": {"type": ["integer", "null"]},
         "multi_day_fee": {"type": ["integer", "null"]},
