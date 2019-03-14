@@ -255,12 +255,6 @@ class WhenPostingExtractSpeakers:
 class WhenPostingImportEvents(object):
 
     @pytest.fixture
-    def mock_config(self, mocker):
-        mocker.patch.dict('app.application.config', {
-            'STORAGE': 'test-store'
-        })
-
-    @pytest.fixture
     def mock_storage(self, mocker):
         mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
         mock_storage_blob_exists = mocker.patch("app.storage.utils.Storage.blob_exists")
@@ -280,7 +274,7 @@ class WhenPostingImportEvents(object):
 
     def it_creates_events_for_imported_events(
         self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data,
-        mock_config, mock_storage
+        mock_storage
     ):
         response = client.post(
             url_for('events.import_events'),
@@ -302,8 +296,7 @@ class WhenPostingImportEvents(object):
             assert json_events[i]["venue"]['directions'] == sample_venue.directions
 
     def it_creates_multiple_speakers_for_imported_events_with_multiple_speakers(
-        self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data,
-        mock_config, mock_storage
+        self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data, mock_storage
     ):
         speaker_1 = create_speaker(name='John Smith')
         sample_data[0]['Speaker'] = "{} and {}".format(sample_speaker.name, speaker_1.name)
@@ -332,7 +325,7 @@ class WhenPostingImportEvents(object):
 
     def it_ignores_existing_events_for_imported_events(
         self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_event, sample_data,
-        mock_config, mock_storage
+        mock_storage
     ):
         response = client.post(
             url_for('events.import_events'),
@@ -354,7 +347,7 @@ class WhenPostingImportEvents(object):
     ])
     def it_adds_errors_to_list_for_a_non_existant_field(
         self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data, field, desc,
-        mock_config, mock_storage_not_exists
+        mock_storage_not_exists
     ):
         sample_data[1][field] = "0"
         response = client.post(
@@ -401,10 +394,9 @@ class WhenCreatingAnEvent:
     )
 
     @pytest.fixture
-    def mock_config(self, mocker):
-        mocker.patch.dict('app.application.config', {
-            'STORAGE': 'test-store'
-        })
+    def mock_storage_without_asserts(self, mocker):
+        mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
+        mock_storage_blob_upload = mocker.patch("app.storage.utils.Storage.upload_blob_from_base64string")
 
     @pytest.fixture
     def mock_storage(self, mocker):
@@ -416,7 +408,9 @@ class WhenCreatingAnEvent:
         mock_storage_blob_upload.assert_called_with(
             'test_img.png', '2019/{}.png'.format(str(event.id)), self.base64img)
 
-    def it_creates_an_event_via_rest(self, mocker, client, db_session, sample_req_event_data):
+    def it_creates_an_event_via_rest(
+        self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts
+    ):
         mocker.patch("app.storage.utils.Storage.blob_exists", return_value=True)
         data = {
             "event_type_id": sample_req_event_data['event_type'].id,
@@ -459,7 +453,9 @@ class WhenCreatingAnEvent:
         assert json_events["event_dates"][0]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
         assert json_events["event_dates"][1]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
 
-    def it_creates_an_event_without_speakers_via_rest(self, mocker, client, db_session, sample_req_event_data):
+    def it_creates_an_event_without_speakers_via_rest(
+        self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts
+    ):
         mocker.patch("app.storage.utils.Storage.blob_exists", return_value=True)
         data = {
             "event_type_id": sample_req_event_data['event_type'].id,
@@ -583,7 +579,7 @@ class WhenCreatingAnEvent:
 
     @freeze_time("2019-03-01T23:10:00")
     def it_stores_the_image_in_google_store(
-        self, client, db_session, sample_req_event_data, mock_config, mock_storage
+        self, client, db_session, sample_req_event_data, mock_storage
     ):
         data = {
             "event_type_id": sample_req_event_data['event_type'].id,
@@ -608,7 +604,7 @@ class WhenCreatingAnEvent:
         assert response.status_code == 201
 
     def it_raises_400_if_image_filename_not_found(
-        self, mocker, client, db_session, sample_req_event_data, mock_config
+        self, mocker, client, db_session, sample_req_event_data
     ):
         mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
         mocker.patch("app.storage.utils.Storage.blob_exists", return_value=False)
