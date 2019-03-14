@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import (
     Blueprint,
     current_app,
@@ -7,6 +8,7 @@ from flask import (
 import re
 
 from flask_jwt_extended import jwt_required
+from sqlalchemy.orm.exc import NoResultFound
 
 from app.dao.events_dao import (
     dao_create_event,
@@ -15,6 +17,7 @@ from app.dao.events_dao import (
     dao_get_future_events,
     dao_get_limited_events,
     dao_get_past_year_events,
+    dao_update_event,
 )
 from app.dao.event_dates_dao import dao_create_event_date
 from app.dao.event_types_dao import dao_get_event_type_by_old_id, dao_get_event_type_by_id
@@ -46,31 +49,26 @@ def extract_startdate(json):
 @jwt_required
 def create_event():
     data = request.get_json(force=True)
+    event_year = None
 
     validate(data, post_create_event_schema)
 
-    err = ''
-    errors = []
+    try:
+        dao_get_event_type_by_id(data['event_type_id'])
+    except NoResultFound:
+        raise InvalidRequest('event type not found: {}'.format(data['event_type_id']), 400)
 
-    event_type = dao_get_event_type_by_id(data['event_type_id'])
-    if not event_type:
-        err = 'event type not found: {}'.format(data['event_type_id'])
-        current_app.logger.info(err)
-        errors.append(err)
-
-    venue = dao_get_venue_by_id(data['venue_id'])
-    if not venue:
-        err = 'venue not found: {}'.format(data['id'], data['venue_id'])
-        current_app.logger.info(err)
-        errors.append(err)
+    try:
+        dao_get_venue_by_id(data['venue_id'])
+    except NoResultFound:
+        raise InvalidRequest('venue not found: {}'.format(data['venue_id']), 400)
 
     event = Event(
-        event_type_id=event_type.id,
+        event_type_id=data['event_type_id'],
         title=data['title'],
         sub_title=data.get('sub_title'),
         description=data['description'],
         booking_code='',
-        image_filename=data.get('image_filename'),
         fee=data.get('fee'),
         conc_fee=data.get('conc_fee'),
         multi_day_fee=data.get('multi_day_fee'),
@@ -79,6 +77,8 @@ def create_event():
     )
 
     for event_date in data.get('event_dates'):
+        if not event_year:
+            event_year = event_date['event_date'].split('-')[0]
         speakers = []
         for s in event_date.get('speakers', []):
             speaker = dao_get_speaker_by_id(s['speaker_id'])
@@ -93,6 +93,25 @@ def create_event():
         event.event_dates.append(e)
 
     dao_create_event(event)
+
+    source_image_filename = data.get('image_filename')
+    image_data = data.get('image_data')
+
+    storage = Storage(current_app.config['STORAGE'])
+
+    if image_data:
+        ext = source_image_filename.split('.')[1]
+        image_filename = '{}/{}.{}'.format(event_year, str(event.id), ext)
+
+        storage.upload_blob_from_base64string(source_image_filename, image_filename, image_data)
+    elif source_image_filename:
+        image_filename = source_image_filename
+
+        if not storage.blob_exists(image_filename):
+            raise InvalidRequest('{} does not exist'.format(image_filename), 400)
+
+    event.image_filename = image_filename
+    dao_update_event(event.id, image_filename=image_filename)
 
     return jsonify(event.serialize()), 201
 
@@ -246,7 +265,7 @@ def import_events():
             storage = Storage(current_app.config['STORAGE'])
 
             if not storage.blob_exists(item['ImageFilename']):
-                    storage.upload_blob("./data/events/{}".format(item['ImageFilename']), item['ImageFilename'])
+                storage.upload_blob("./data/events/{}".format(item['ImageFilename']), item['ImageFilename'])
             else:
                 current_app.logger.info('{} found'.format(item['ImageFilename']))
 

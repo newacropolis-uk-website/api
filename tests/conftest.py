@@ -41,6 +41,8 @@ def app():
         'ADMIN_USERS': [TEST_ADMIN_USER],
         'EMAIL_DOMAIN': 'example.com',
         'EVENTS_MAX': 2,
+        'PROJECT': 'test-project',
+        'STORAGE': 'test-store',
     })
 
     ctx = _app.app_context()
