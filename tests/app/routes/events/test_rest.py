@@ -369,11 +369,17 @@ def sample_req_event_data(db_session, sample_event_type, sample_venue, sample_sp
     return {
         'event_type': sample_event_type,
         'venue': sample_venue,
-        'speaker': sample_speaker
+        'speaker': sample_speaker,
     }
 
 
-class WhenCreatingAnEvent:
+@pytest.fixture
+def sample_req_event_data_with_event(db_session, sample_req_event_data, sample_event):
+    sample_req_event_data['event'] = sample_event
+    return sample_req_event_data
+
+
+class WhenPostingCreatingAnEvent:
     base64img = (
         'iVBORw0KGgoAAAANSUhEUgAAADgAAAAsCAYAAAAwwXuTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEMElEQVRoge2ZTUxcVRTH'
         '/+fed9+bDxFEQUCmDLWbtibWDE2MCYGa6rabykITA7pV6aruNGlcGFe6c2ui7k1cmZp0YGdR2pjqoklBpkCVykem8/'
@@ -404,12 +410,13 @@ class WhenCreatingAnEvent:
         mock_storage_blob_upload = mocker.patch("app.storage.utils.Storage.upload_blob_from_base64string")
         yield
         mock_storage.assert_called_with('test-store')
-        event = Event.query.one()
-        mock_storage_blob_upload.assert_called_with(
-            'test_img.png', '2019/{}'.format(str(event.id)), self.base64img)
+        for event in Event.query.all():
+            if event.image_filename:
+                mock_storage_blob_upload.assert_called_with(
+                    'test_img.png', '2019/{}'.format(str(event.id)), self.base64img)
 
     def it_creates_an_event_via_rest(
-        self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts
+        self, mocker, client, db_session, sample_req_event_data
     ):
         mocker.patch("app.storage.utils.Storage.blob_exists", return_value=True)
 
@@ -669,3 +676,54 @@ class WhenDeletingEvent:
         data = json.loads(response.get_data(as_text=True))
 
         assert data['message'] == '{} was not deleted'.format(sample_event.id)
+
+
+class WhenPostingUpdatingAnEvent:
+
+    @pytest.fixture
+    def mock_storage(self, mocker):
+        mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
+        mock_storage_blob_exists = mocker.patch("app.storage.utils.Storage.blob_exists")
+        mock_storage_blob_upload = mocker.patch("app.storage.utils.Storage.upload_blob_from_base64string")
+        yield
+        mock_storage_blob_exists.assert_called_with('2019/test_img.png')
+        mock_storage.assert_called_with('test-store')
+        event = Event.query.one()
+        mock_storage_blob_upload.assert_called_with(
+            'test_img.png', '2019/{}'.format(str(event.id)), self.base64img)
+
+    def it_updates_an_event_via_rest(self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage):
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "2019/test_img.png",
+            "event_dates": [
+                {
+                    "event_date": "2019-03-01 19:00:00",
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ]
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "fee": 15,
+            "conc_fee": 12,
+        }
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 201
+
+        json_events = json.loads(response.get_data(as_text=True))
+        assert json_events["title"] == data["title"]
+        assert len(json_events["event_dates"]) == 2
+        assert len(json_events["event_dates"][0]["speakers"]) == 1
+        assert len(json_events["event_dates"][1]["speakers"]) == 1
+        assert json_events["event_dates"][0]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
+        assert json_events["event_dates"][1]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']

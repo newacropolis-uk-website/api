@@ -39,6 +39,8 @@ class Config(object):
     ADMIN_USERS = os.environ.get('ADMIN_USERS')
     EMAIL_DOMAIN = os.environ.get('EMAIL_DOMAIN')
     EVENTS_MAX = 30
+    PROJECT = os.environ.get('PROJECT')
+    STORAGE = os.environ.get('GOOGLE_STORE')
 
 
 class Development(Config):
