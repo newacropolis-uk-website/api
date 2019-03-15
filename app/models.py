@@ -109,7 +109,7 @@ class Event(db.Model):
     multi_day_fee = db.Column(db.Integer, nullable=True)
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    event_dates = db.relationship("EventDate", backref=db.backref("events"))
+    event_dates = db.relationship("EventDate", backref=db.backref("events"), cascade="all,delete,delete-orphan")
     venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'))
     venue = db.relationship("Venue", backref=db.backref("event", uselist=False))
 
@@ -193,7 +193,8 @@ class EventDate(db.Model):
     speakers = db.relationship(
         'Speaker',
         secondary=event_date_to_speaker,
-        backref=db.backref('event_date_to_speaker', lazy='dynamic')
+        backref=db.backref('event_date_to_speaker', lazy='dynamic'),
+        cascade="delete"
     )
 
     def serialize(self):

@@ -13,6 +13,12 @@ def dao_create_event(event):
 
 
 @transactional
+def dao_delete_event(event_id):
+    event = Event.query.filter_by(id=event_id).one()
+    db.session.delete(event)
+
+
+@transactional
 def dao_update_event(event_id, **kwargs):
     return Event.query.filter_by(id=event_id).update(
         kwargs
