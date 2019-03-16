@@ -4,6 +4,7 @@ from app.dao.events_dao import (
     dao_create_event,
     dao_delete_event,
     dao_update_event,
+    dao_get_event,
     dao_get_events,
     dao_get_events_in_year,
     dao_get_future_events,
@@ -65,6 +66,11 @@ class WhenUsingEventsDAO(object):
 
         assert Event.query.count() == 2
         assert set(events) == set(events_from_db)
+
+    def it_gets_an_event(self, db, db_session, sample_event):
+        event = dao_get_event(sample_event.id)
+
+        assert event == sample_event
 
     @freeze_time("2018-01-10T19:00:00")
     def it_gets_all_future_events(self, db, db_session, sample_event_with_dates, sample_event_type):

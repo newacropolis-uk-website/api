@@ -25,6 +25,10 @@ def dao_update_event(event_id, **kwargs):
     )
 
 
+def dao_get_event(event_id):
+    return Event.query.filter_by(id=event_id).first()
+
+
 def dao_get_events():
     return Event.query.order_by(Event.id).all()
 
