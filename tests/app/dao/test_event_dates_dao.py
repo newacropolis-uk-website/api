@@ -2,6 +2,7 @@ from datetime import datetime
 
 from app.dao.event_dates_dao import (
     dao_create_event_date,
+    dao_delete_event_date,
     dao_update_event_date,
     dao_get_event_dates,
     dao_get_event_date_by_id
@@ -20,12 +21,28 @@ class WhenUsingEventDatesDAO(object):
         event_date_from_db = EventDate.query.first()
         assert event_date == event_date_from_db
 
+    def it_deletes_an_event_date(self, db, db_session):
+        event_date = create_event_date()
+
+        assert EventDate.query.count() == 1
+
+        dao_delete_event_date(event_date.id)
+
+        assert EventDate.query.count() == 0
+
     def it_creates_an_event_date_with_speaker(self, db, db_session, sample_speaker):
         create_event_date(speakers=[sample_speaker])
 
         assert EventDate.query.count() == 1
         event_date_from_db = EventDate.query.first()
         assert event_date_from_db.speakers[0] == sample_speaker
+
+    def it_deletes_an_event_date_with_speaker(self, db, db_session, sample_speaker):
+        event_date = create_event_date(speakers=[sample_speaker])
+
+        assert EventDate.query.count() == 1
+
+        dao_delete_event_date(event_date.id)
 
     def it_updates_an_event_date_dao(self, db, db_session, sample_event_date):
         event_from_db = EventDate.query.filter(EventDate.id == sample_event_date.id).first()

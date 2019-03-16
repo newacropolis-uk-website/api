@@ -12,6 +12,8 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app.dao.events_dao import (
     dao_create_event,
+    dao_delete_event,
+    dao_get_event,
     dao_get_events,
     dao_get_events_in_year,
     dao_get_future_events,
@@ -114,6 +116,18 @@ def create_event():
     dao_update_event(event.id, image_filename=image_filename)
 
     return jsonify(event.serialize()), 201
+
+
+@events_blueprint.route('/event/<uuid:event_id>', methods=['DELETE'])
+@jwt_required
+def delete_event(event_id):
+    dao_delete_event(event_id)
+
+    event = dao_get_event(event_id)
+    if event:
+        raise InvalidRequest("{} was not deleted".format(event_id), 500)
+    current_app.logger.info('{} deleted'.format(event_id))
+    return '', 200
 
 
 @events_blueprint.route('/events')

@@ -47,6 +47,22 @@ function GetEvents {
     -H "Authorization: Bearer $TKN"
 }
 
+function GetLimitedEvents {
+    echo "*** Get limited events ***"
+
+    curl -X GET $api_server'/events/limit/20' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
+function DeleteEvent {
+    echo "*** Delete event ***"
+
+    curl -X DELETE $api_server'/event/'$event_id \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
 function GetEventsPastYear {
     echo "*** Get events past year ***"
 
@@ -386,6 +402,14 @@ case "$arg" in
 
         -e)
             GetEvents
+        ;;
+
+        -le)
+            GetLimitedEvents
+        ;;
+
+        -de)
+            DeleteEvent
         ;;
 
         -ep)

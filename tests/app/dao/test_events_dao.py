@@ -2,7 +2,9 @@ from freezegun import freeze_time
 
 from app.dao.events_dao import (
     dao_create_event,
+    dao_delete_event,
     dao_update_event,
+    dao_get_event,
     dao_get_events,
     dao_get_events_in_year,
     dao_get_future_events,
@@ -23,6 +25,15 @@ class WhenUsingEventsDAO(object):
         event_from_db = Event.query.first()
         assert event == event_from_db
 
+    def it_deletes_an_event(self, db, db_session):
+        event = create_event()
+
+        assert Event.query.count() == 1
+
+        dao_delete_event(event.id)
+
+        assert Event.query.count() == 0
+
     def it_creates_an_event_with_event_dates(self, db, db_session):
         event_date = create_event_date()
         event = create_event(event_dates=[event_date])
@@ -31,6 +42,16 @@ class WhenUsingEventsDAO(object):
         event_from_db = Event.query.first()
         assert event == event_from_db
         assert event_from_db.event_dates[0] == event_date
+
+    def it_deletes_an_event_with_event_dates(self, db, db_session):
+        event_date = create_event_date()
+        event = create_event(event_dates=[event_date])
+
+        assert Event.query.count() == 1
+
+        dao_delete_event(event.id)
+
+        assert Event.query.count() == 0
 
     def it_updates_an_event_dao(self, db, db_session, sample_event):
         dao_update_event(sample_event.id, title='new title')
@@ -45,6 +66,11 @@ class WhenUsingEventsDAO(object):
 
         assert Event.query.count() == 2
         assert set(events) == set(events_from_db)
+
+    def it_gets_an_event(self, db, db_session, sample_event):
+        event = dao_get_event(sample_event.id)
+
+        assert event == sample_event
 
     @freeze_time("2018-01-10T19:00:00")
     def it_gets_all_future_events(self, db, db_session, sample_event_with_dates, sample_event_type):
