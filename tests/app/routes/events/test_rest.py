@@ -631,3 +631,26 @@ class WhenCreatingAnEvent:
         data = json.loads(response.get_data(as_text=True))
 
         assert data == {"message": "test_img.png does not exist", "result": "error"}
+
+
+class WhenDeletingEvent:
+
+    def it_deletes_an_event(self, client, sample_event, db_session):
+        client.delete(
+            url_for('events.delete_event', event_id=sample_event.id),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert Event.query.count() == 0
+
+    def it_raises_500_if_deletion_fails_on_event(self, client, mocker, sample_event, db_session):
+        mocker.patch("app.routes.events.rest.dao_delete_event")
+        response = client.delete(
+            url_for('events.delete_event', event_id=sample_event.id),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 500
+        data = json.loads(response.get_data(as_text=True))
+
+        assert data['message'] == '{} was not deleted'.format(sample_event.id)
