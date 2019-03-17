@@ -7,6 +7,7 @@ event_date_schema = {
     "type": "object",
     "properties": {
         "event_date": {"type": "string", "format": "date-time"},
+        "end_time": {"type": "string", "format": "time"},
         "speakers": {
             "type": "array",
             "items": {

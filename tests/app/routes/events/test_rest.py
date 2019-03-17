@@ -395,8 +395,8 @@ class WhenCreatingAnEvent:
 
     @pytest.fixture
     def mock_storage_without_asserts(self, mocker):
-        mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
-        mock_storage_blob_upload = mocker.patch("app.storage.utils.Storage.upload_blob_from_base64string")
+        mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
+        mocker.patch("app.storage.utils.Storage.upload_blob_from_base64string")
 
     @pytest.fixture
     def mock_storage(self, mocker):
@@ -406,7 +406,7 @@ class WhenCreatingAnEvent:
         mock_storage.assert_called_with('test-store')
         event = Event.query.one()
         mock_storage_blob_upload.assert_called_with(
-            'test_img.png', '2019/{}.png'.format(str(event.id)), self.base64img)
+            'test_img.png', '2019/{}'.format(str(event.id)), self.base64img)
 
     def it_creates_an_event_via_rest(
         self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts
@@ -421,12 +421,14 @@ class WhenCreatingAnEvent:
             "event_dates": [
                 {
                     "event_date": "2019-03-01 19:00:00",
+                    "end_time": "21:00:00",
                     "speakers": [
                         {"speaker_id": sample_req_event_data['speaker'].id}
                     ]
                 },
                 {
                     "event_date": "2019-03-02 19:00:00",
+                    "end_time": "21:00:00",
                     "speakers": [
                         {"speaker_id": sample_req_event_data['speaker'].id}
                     ]
@@ -450,8 +452,14 @@ class WhenCreatingAnEvent:
         assert len(json_events["event_dates"]) == 2
         assert len(json_events["event_dates"][0]["speakers"]) == 1
         assert len(json_events["event_dates"][1]["speakers"]) == 1
+        assert json_events["event_dates"][0]["end_time"] == '21:00'
+        assert json_events["event_dates"][1]["end_time"] == '21:00'
         assert json_events["event_dates"][0]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
         assert json_events["event_dates"][1]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
+
+        event = Event.query.one()
+        assert event.event_dates[0].end_time.strftime('%H:%M') == '21:00'
+        assert event.event_dates[1].end_time.strftime('%H:%M') == '21:00'
 
     def it_creates_an_event_without_speakers_via_rest(
         self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts
@@ -602,6 +610,8 @@ class WhenCreatingAnEvent:
         )
 
         assert response.status_code == 201
+        data = json.loads(response.get_data(as_text=True))
+        assert data['image_filename'] == '2019/{}'.format(data['id'])
 
     def it_raises_400_if_image_filename_not_found(
         self, mocker, client, db_session, sample_req_event_data

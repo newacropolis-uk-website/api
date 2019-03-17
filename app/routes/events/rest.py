@@ -88,6 +88,7 @@ def create_event():
 
         e = EventDate(
             event_datetime=event_date['event_date'],
+            end_time=event_date.get('end_time'),
             speakers=speakers
         )
 
@@ -96,19 +97,19 @@ def create_event():
 
     dao_create_event(event)
 
-    source_image_filename = data.get('image_filename')
+    image_filename = data.get('image_filename')
+
     image_data = data.get('image_data')
 
     storage = Storage(current_app.config['STORAGE'])
 
     if image_data:
-        ext = source_image_filename.split('.')[1]
-        image_filename = '{}/{}.{}'.format(event_year, str(event.id), ext)
+        target_image_filename = '{}/{}'.format(event_year, str(event.id))
 
-        storage.upload_blob_from_base64string(source_image_filename, image_filename, image_data)
-    elif source_image_filename:
-        image_filename = source_image_filename
+        storage.upload_blob_from_base64string(image_filename, target_image_filename, image_data)
 
+        image_filename = target_image_filename
+    elif image_filename:
         if not storage.blob_exists(image_filename):
             raise InvalidRequest('{} does not exist'.format(image_filename), 400)
 
@@ -127,7 +128,7 @@ def delete_event(event_id):
     if event:
         raise InvalidRequest("{} was not deleted".format(event_id), 500)
     current_app.logger.info('{} deleted'.format(event_id))
-    return '', 200
+    return jsonify({'message': '{} deleted'.format(event_id)}), 200
 
 
 @events_blueprint.route('/events')
