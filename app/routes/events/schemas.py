@@ -1,4 +1,4 @@
-from app.schema_validation.definitions import datetime, number, uuid, nullable
+from app.schema_validation.definitions import datetime, number, uuid, nullable, time
 
 
 event_date_schema = {
@@ -6,8 +6,8 @@ event_date_schema = {
     "description": "POST schema for event_dates",
     "type": "object",
     "properties": {
-        "event_date": {"type": "string", "format": "date-time"},
-        "end_time": {"type": "string", "format": "time"},
+        "event_date": datetime,
+        "end_time": time,
         "speakers": {
             "type": "array",
             "items": {

@@ -420,15 +420,15 @@ class WhenCreatingAnEvent:
             "image_filename": "test_img.png",
             "event_dates": [
                 {
-                    "event_date": "2019-03-01 19:00:00",
-                    "end_time": "21:00:00",
+                    "event_date": "2019-03-01 19:00",
+                    "end_time": "21:00",
                     "speakers": [
                         {"speaker_id": sample_req_event_data['speaker'].id}
                     ]
                 },
                 {
                     "event_date": "2019-03-02 19:00:00",
-                    "end_time": "21:00:00",
+                    "end_time": "21:00",
                     "speakers": [
                         {"speaker_id": sample_req_event_data['speaker'].id}
                     ]
