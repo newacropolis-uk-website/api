@@ -123,6 +123,7 @@ class Event(db.Model):
             'id': self.id,
             'old_id': self.old_id,
             'event_type': self.event_type.event_type,
+            'event_type_id': self.event_type.id,
             'title': self.title,
             'sub_title': self.sub_title,
             'description': self.description,
@@ -179,6 +180,7 @@ class EventDate(db.Model):
     event_id = db.Column(UUID(as_uuid=True), db.ForeignKey('events.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     event_datetime = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    end_time = db.Column(db.Time, nullable=True)
     duration = db.Column(db.Integer, nullable=True)
     soldout = db.Column(db.Boolean, default=False)
     repeat = db.Column(db.Integer, nullable=True)
@@ -202,6 +204,7 @@ class EventDate(db.Model):
             'id': str(self.id),
             'event_id': str(self.event_id),
             'event_datetime': self.event_datetime.strftime('%Y-%m-%d %H:%M'),
+            'end_time': self.end_time.strftime('%H:%M') if self.end_time else None,
             'speakers': [s.serialize() for s in self.speakers]
         }
 
