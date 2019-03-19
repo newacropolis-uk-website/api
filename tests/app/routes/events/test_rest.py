@@ -412,6 +412,9 @@ class WhenCreatingAnEvent:
         self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts
     ):
         mocker.patch("app.storage.utils.Storage.blob_exists", return_value=True)
+
+        speaker = create_speaker(name='Fred White')
+
         data = {
             "event_type_id": sample_req_event_data['event_type'].id,
             "title": "Test title",
@@ -430,7 +433,8 @@ class WhenCreatingAnEvent:
                     "event_date": "2019-03-02 19:00:00",
                     "end_time": "21:00",
                     "speakers": [
-                        {"speaker_id": sample_req_event_data['speaker'].id}
+                        {"speaker_id": sample_req_event_data['speaker'].id},
+                        {"speaker_id": speaker.id}
                     ]
                 }
             ],
@@ -451,11 +455,12 @@ class WhenCreatingAnEvent:
         assert json_events["title"] == data["title"]
         assert len(json_events["event_dates"]) == 2
         assert len(json_events["event_dates"][0]["speakers"]) == 1
-        assert len(json_events["event_dates"][1]["speakers"]) == 1
+        assert len(json_events["event_dates"][1]["speakers"]) == 2
         assert json_events["event_dates"][0]["end_time"] == '21:00'
         assert json_events["event_dates"][1]["end_time"] == '21:00'
         assert json_events["event_dates"][0]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
         assert json_events["event_dates"][1]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
+        assert json_events["event_dates"][1]["speakers"][1]['id'] == speaker.serialize()['id']
 
         event = Event.query.one()
         assert event.event_dates[0].end_time.strftime('%H:%M') == '21:00'
