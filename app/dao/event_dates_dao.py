@@ -36,3 +36,7 @@ def dao_get_event_date_by_id(event_date_id):
 def dao_has_event_id_and_datetime(event_id, datetime):
     return EventDate.query.filter_by(
         event_id=event_id, event_datetime=datetime).first() != None  # noqa E711 SqlAlchemy syntax
+
+
+def dao_get_event_dates_by_event_id(event_id):
+    return EventDate.query.filter_by(event_id=event_id).all()
