@@ -20,10 +20,22 @@ def dao_delete_event(event_id):
 
 @transactional
 def dao_update_event(event_id, **kwargs):
-    print(kwargs)
-    return Event.query.filter_by(id=event_id).update(
-        kwargs
-    )
+    if 'event_dates' in kwargs.keys():
+        event_dates = kwargs.pop('event_dates')
+    else:
+        event_dates = None
+
+    event_query = Event.query.filter_by(id=event_id)
+
+    if kwargs:
+        res = event_query.update(kwargs)
+    else:
+        res = None
+
+    if event_dates is not None:
+        event_query.one().event_dates = event_dates
+
+    return res
 
 
 def dao_get_events():
