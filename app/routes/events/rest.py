@@ -124,10 +124,13 @@ def create_event():
 def delete_event(event_id):
     dao_delete_event(event_id)
 
-    event = dao_get_event_by_id(event_id)
-    if event:
-        raise InvalidRequest("{} was not deleted".format(event_id), 500)
-    current_app.logger.info('{} deleted'.format(event_id))
+    try:
+        event = dao_get_event_by_id(event_id)
+        if event:
+            raise InvalidRequest("{} was not deleted".format(event_id), 500)
+    except NoResultFound:
+        current_app.logger.info('{} deleted'.format(event_id))
+
     return jsonify({'message': '{} deleted'.format(event_id)}), 200
 
 
