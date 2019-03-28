@@ -13,15 +13,15 @@ from sqlalchemy.orm.exc import NoResultFound
 from app.dao.events_dao import (
     dao_create_event,
     dao_delete_event,
-    dao_get_event,
     dao_get_events,
+    dao_get_event_by_id,
     dao_get_events_in_year,
     dao_get_future_events,
     dao_get_limited_events,
     dao_get_past_year_events,
     dao_update_event,
 )
-from app.dao.event_dates_dao import dao_create_event_date
+from app.dao.event_dates_dao import dao_create_event_date, dao_get_event_date_by_id
 from app.dao.event_types_dao import dao_get_event_type_by_old_id, dao_get_event_type_by_id
 from app.dao.speakers_dao import dao_get_speaker_by_name, dao_get_speaker_by_id
 from app.dao.venues_dao import dao_get_venue_by_old_id, dao_get_venue_by_id
@@ -124,11 +124,99 @@ def create_event():
 def delete_event(event_id):
     dao_delete_event(event_id)
 
-    event = dao_get_event(event_id)
-    if event:
-        raise InvalidRequest("{} was not deleted".format(event_id), 500)
-    current_app.logger.info('{} deleted'.format(event_id))
+    try:
+        event = dao_get_event_by_id(event_id)
+        if event:
+            raise InvalidRequest("{} was not deleted".format(event_id), 500)
+    except NoResultFound:
+        current_app.logger.info('{} deleted'.format(event_id))
+
     return jsonify({'message': '{} deleted'.format(event_id)}), 200
+
+
+@events_blueprint.route('/event/<uuid:event_id>', methods=['POST'])
+@jwt_required
+def update_event(event_id):
+    data = request.get_json(force=True)
+
+    validate(data, post_create_event_schema)
+
+    try:
+        event = dao_get_event_by_id(event_id)
+    except NoResultFound:
+        raise InvalidRequest('event not found: {}'.format(event_id), 400)
+
+    data_event_dates = data.get('event_dates')
+
+    serialized_event_dates = event.serialize_event_dates()
+
+    data_event_dates__dates = [e['event_date'] for e in data_event_dates]
+    serialized_event_dates__dates = [e['event_datetime'] for e in serialized_event_dates]
+
+    diff_add = set(data_event_dates__dates).difference(serialized_event_dates__dates)
+    intersect = set(data_event_dates__dates).intersection(serialized_event_dates__dates)
+
+    dates_to_add = [e for e in data_event_dates if e['event_date'] in diff_add]
+    dates_to_update = [e for e in data_event_dates if e['event_date'] in intersect]
+
+    event_dates = []
+    for _date in dates_to_add:
+        speakers = []
+        for s in _date.get('speakers', []):
+            speaker = dao_get_speaker_by_id(s['speaker_id'])
+            speakers.append(speaker)
+
+        e = EventDate(
+            event_id=event_id,
+            event_datetime=_date['event_date'],
+            speakers=speakers
+        )
+        dao_create_event_date(e)
+        event_dates.append(e)
+
+    for _date in dates_to_update:
+        serialized_event_date = [e for e in serialized_event_dates if e['event_datetime'] == _date['event_date']][0]
+        db_speakers = set([s['speaker_id'] for s in serialized_event_date['speakers']])
+        data_speakers = set([s['speaker_id'] for s in _date['speakers']])
+
+        if db_speakers != data_speakers:
+            diff_add = set(data_speakers).difference(db_speakers)
+            speakers = []
+            if diff_add:
+                for s in diff_add:
+                    speaker = dao_get_speaker_by_id(s)
+                    speakers.append(speaker)
+            db_event_date = [e for e in event.event_dates if str(e.event_datetime) == _date['event_date']][0]
+            db_event_date.speakers = speakers
+            event_dates.append(db_event_date)
+
+    image_data = data.get('image_data')
+
+    image_filename = data.get('image_filename')
+
+    storage = Storage(current_app.config['STORAGE'])
+    if image_data:
+        event_year = str(event.event_dates[0].event_datetime).split('-')[0]
+        target_image_filename = '{}/{}'.format(event_year, str(event_id))
+
+        storage.upload_blob_from_base64string(image_filename, target_image_filename, image_data)
+    elif image_filename:
+        if not storage.blob_exists(image_filename):
+            raise InvalidRequest('{} does not exist'.format(image_filename), 400)
+
+    event_data = {}
+    for k in data.keys():
+        if hasattr(Event, k):
+            event_data[k] = data[k]
+
+    event_data['event_dates'] = event_dates
+
+    res = dao_update_event(event_id, **event_data)
+
+    if res:
+        return jsonify(event.serialize()), 200
+
+    raise InvalidRequest('{} did not update'.format(event_id), 400)
 
 
 @events_blueprint.route('/events')

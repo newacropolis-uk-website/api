@@ -5,11 +5,12 @@ from app.dao.event_dates_dao import (
     dao_delete_event_date,
     dao_update_event_date,
     dao_get_event_dates,
-    dao_get_event_date_by_id
+    dao_get_event_date_by_id,
+    dao_get_event_dates_by_event_id
 )
 from app.models import EventDate
 
-from tests.db import create_event_date, create_fee
+from tests.db import create_event_date, create_event, create_fee
 
 
 class WhenUsingEventDatesDAO(object):
@@ -73,3 +74,12 @@ class WhenUsingEventDatesDAO(object):
         event_date = dao_get_event_date_by_id(str(sample_event_date.id))
 
         assert event_date.id == sample_event_date.id
+
+    def it_gets_event_dates_by_event_id(self, db_session, sample_event_date, sample_event_type):
+        event = create_event(event_type_id=sample_event_type.id)
+        create_event_date(event_id=event.id)
+
+        assert len(EventDate.query.all()) == 2
+
+        event_dates = dao_get_event_dates_by_event_id(sample_event_date.event_id)
+        assert len(event_dates) == 1

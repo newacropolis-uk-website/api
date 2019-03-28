@@ -12,7 +12,7 @@ class Storage(object):
     def __init__(self, bucket_name):
         if not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
             credentials = compute_engine.Credentials()
-            self.storage_client = storage.Client(credentials=credentials, project=os.environ['PROJECT'])
+            self.storage_client = storage.Client(credentials=credentials, project=current_app.config['PROJECT'])
         else:
             self.storage_client = storage.Client()
 

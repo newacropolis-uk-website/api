@@ -1,19 +1,21 @@
 from freezegun import freeze_time
 
+from app.dao.event_dates_dao import dao_get_event_date_by_id
+
 from app.dao.events_dao import (
     dao_create_event,
     dao_delete_event,
     dao_update_event,
-    dao_get_event,
     dao_get_events,
+    dao_get_event_by_id,
     dao_get_events_in_year,
     dao_get_future_events,
     dao_get_limited_events,
     dao_get_past_year_events,
 )
-from app.models import Event
+from app.models import Event, EventDate
 
-from tests.db import create_event, create_event_date
+from tests.db import create_event, create_event_date, create_speaker
 
 
 class WhenUsingEventsDAO(object):
@@ -60,6 +62,45 @@ class WhenUsingEventsDAO(object):
 
         assert sample_event.title == event_from_db.title
 
+    def it_updates_an_event_dao_with_new_event_date(self, db, db_session, sample_event):
+        speaker = create_speaker(name='John Brown')
+        event_date = create_event_date(event_datetime='2018-01-20T19:00:00', speakers=[speaker])
+
+        dao_update_event(sample_event.id, event_dates=[event_date])
+
+        event_from_db = Event.query.filter(Event.id == sample_event.id).first()
+
+        assert sample_event.event_dates[0] == event_from_db.event_dates[0]
+
+        event_date2 = create_event_date(event_datetime='2018-02-20T19:00:00', speakers=[speaker])
+
+        dao_update_event(sample_event.id, event_dates=[event_date2])
+
+        event_dates = EventDate.query.all()
+
+        assert len(event_dates) == 1
+
+    def it_updates_an_event_dao_with_new_speaker(self, db, db_session):
+        speaker = create_speaker(name='John Brown')
+        event_date = create_event_date(event_datetime='2018-01-20T19:00:00', speakers=[speaker])
+        event = create_event(event_dates=[event_date])
+
+        speaker2 = create_speaker(name='Jim Blue')
+
+        db_event_date = dao_get_event_date_by_id(event_date.id)
+
+        db_event_date.speakers = [speaker, speaker2]
+
+        dao_update_event(event.id, event_dates=[db_event_date])
+
+        event_from_db = Event.query.filter(Event.id == event.id).first()
+
+        assert event.event_dates[0] == event_from_db.event_dates[0]
+
+        event_dates = EventDate.query.all()
+
+        assert len(event_dates) == 1
+
     def it_gets_all_events(self, db, db_session, sample_event, sample_event_type):
         events = [create_event(title='test title 2', event_type_id=sample_event_type.id), sample_event]
         events_from_db = dao_get_events()
@@ -67,10 +108,12 @@ class WhenUsingEventsDAO(object):
         assert Event.query.count() == 2
         assert set(events) == set(events_from_db)
 
-    def it_gets_an_event(self, db, db_session, sample_event):
-        event = dao_get_event(sample_event.id)
+    def it_gets_event_by_id(self, db, db_session, sample_event, sample_event_type):
+        create_event(title='test title 2', event_type_id=sample_event_type.id)
+        event_from_db = dao_get_event_by_id(sample_event.id)
 
-        assert event == sample_event
+        assert Event.query.count() == 2
+        assert event_from_db == sample_event
 
     @freeze_time("2018-01-10T19:00:00")
     def it_gets_all_future_events(self, db, db_session, sample_event_with_dates, sample_event_type):
