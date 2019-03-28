@@ -113,6 +113,27 @@ class Event(db.Model):
     venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'))
     venue = db.relationship("Venue", backref=db.backref("event", uselist=False))
 
+    def serialize_event_dates(self):
+        def serialize_speakers(speakers):
+            _speakers = []
+            for s in speakers:
+                _speakers.append({
+                    'speaker_id': s.id
+                })
+
+            return _speakers
+
+        event_dates = []
+        for e in self.event_dates:
+            event_dates.append(
+                {
+                    'event_datetime': str(e.event_datetime),
+                    'end_time': e.end_time,
+                    'speakers': serialize_speakers(e.speakers)
+                }
+            )
+        return event_dates
+
     def serialize(self):
         def sorted_event_dates():
             dates = [e.serialize() for e in self.event_dates]
@@ -196,7 +217,6 @@ class EventDate(db.Model):
         'Speaker',
         secondary=event_date_to_speaker,
         backref=db.backref('event_date_to_speaker', lazy='dynamic'),
-        cascade="delete"
     )
 
     def serialize(self):
