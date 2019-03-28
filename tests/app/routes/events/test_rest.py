@@ -4,6 +4,7 @@ import pytest
 from flask import json, url_for
 
 from freezegun import freeze_time
+from sqlalchemy.orm.exc import NoResultFound
 
 from app.models import Event, EventDate
 
@@ -111,8 +112,29 @@ def sample_req_event_data(db_session, sample_event_type, sample_venue, sample_sp
 
 @pytest.fixture
 def sample_req_event_data_with_event(db_session, sample_req_event_data, sample_event, sample_event_date):
+    data = {
+        "event_type_id": sample_req_event_data['event_type'].id,
+        "title": "Test title new",
+        "sub_title": "Test sub title",
+        "description": "Test description",
+        "image_filename": "2019/test_img.png",
+        "event_dates": [
+            {
+                "event_date": str(sample_event.event_dates[0].event_datetime),
+                "speakers": [
+                    {"speaker_id": sample_req_event_data['speaker'].id}
+                ]
+            },
+        ],
+        "venue_id": sample_req_event_data['venue'].id,
+        "fee": 15,
+        "conc_fee": 12,
+    }
+
     sample_event_date.speakers = [sample_req_event_data['speaker']]
     sample_req_event_data['event'] = sample_event
+    sample_req_event_data['data'] = data
+
     return sample_req_event_data
 
 
@@ -660,11 +682,15 @@ class WhenPostingCreatingAnEvent:
 class WhenDeletingEvent:
 
     def it_deletes_an_event(self, client, sample_event, db_session):
-        client.delete(
+        response = client.delete(
             url_for('events.delete_event', event_id=sample_event.id),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
 
+        assert response.status_code == 200
+        data = json.loads(response.get_data(as_text=True))
+
+        assert data['message'] == "{} deleted".format(sample_event.id)
         assert Event.query.count() == 0
 
     def it_raises_500_if_deletion_fails_on_event(self, client, mocker, sample_event, db_session):
@@ -902,28 +928,9 @@ class WhenPostingUpdatingAnEvent:
     def it_raises_error_if_file_not_found(
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_not_exist
     ):
-        data = {
-            "event_type_id": sample_req_event_data_with_event['event_type'].id,
-            "title": "Test title new",
-            "sub_title": "Test sub title",
-            "description": "Test description",
-            "image_filename": "2019/test_img.png",
-            "event_dates": [
-                {
-                    "event_date": str(sample_req_event_data_with_event['event'].event_dates[0].event_datetime),
-                    "speakers": [
-                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
-                    ]
-                },
-            ],
-            "venue_id": sample_req_event_data_with_event['venue'].id,
-            "fee": 15,
-            "conc_fee": 12,
-        }
-
         response = client.post(
             url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
-            data=json.dumps(data),
+            data=json.dumps(sample_req_event_data_with_event['data']),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
 
@@ -937,28 +944,9 @@ class WhenPostingUpdatingAnEvent:
     ):
         mocker.patch('app.routes.events.rest.dao_update_event', return_value=False)
 
-        data = {
-            "event_type_id": sample_req_event_data_with_event['event_type'].id,
-            "title": "Test title new",
-            "sub_title": "Test sub title",
-            "description": "Test description",
-            "image_filename": "2019/test_img.png",
-            "event_dates": [
-                {
-                    "event_date": str(sample_req_event_data_with_event['event'].event_dates[0].event_datetime),
-                    "speakers": [
-                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
-                    ]
-                },
-            ],
-            "venue_id": sample_req_event_data_with_event['venue'].id,
-            "fee": 15,
-            "conc_fee": 12,
-        }
-
         response = client.post(
             url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
-            data=json.dumps(data),
+            data=json.dumps(sample_req_event_data_with_event['data']),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
 
@@ -966,3 +954,20 @@ class WhenPostingUpdatingAnEvent:
 
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['message'] == '{} did not update'.format(sample_req_event_data_with_event['event'].id)
+
+    def it_raises_error_if_event_not_found(
+        self, mocker, client, db_session, sample_req_event_data_with_event, sample_uuid
+    ):
+        mocker.patch('app.routes.events.rest.dao_get_event_by_id', side_effect=NoResultFound())
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_uuid),
+            data=json.dumps(sample_req_event_data_with_event['data']),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+
+        json_resp = json.loads(response.get_data(as_text=True))
+
+        assert json_resp['message'] == 'event not found: {}'.format(sample_uuid)
