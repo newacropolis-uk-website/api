@@ -1,13 +1,33 @@
 import copy
+from datetime import timedelta
 import pytest
 from flask import json, url_for
 
 from freezegun import freeze_time
 
-from app.models import Event
+from app.models import Event, EventDate
 
 from tests.conftest import create_authorization_header
 from tests.db import create_event, create_event_date, create_event_type, create_speaker
+
+base64img = (
+    'iVBORw0KGgoAAAANSUhEUgAAADgAAAAsCAYAAAAwwXuTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEMElEQVRoge2ZTUxcVRTH'
+    '/+fed9+bDxFEQUCmDLWbtibWDE2MCYGa6rabykITA7pV6aruNGlcGFe6c2ui7k1cmZp0YGdR2pjqoklBpkCVykem8/'
+    'HeffceF8MgIC3YvDczNP0ls5l3cuf8cuee++65wGMe09LQQQP5xkkXJ4rpjYU40zkY7UcA/NZWopM3gv1iHyg4M5NTuRPrPf5'
+    '6cJ4ETgsHg1ZHludDIxQQBphLpOiasfTrtVvPXB4a+nnPzO4rWFnOjroJO25CfkF5UAgBrTm+rP8nyiHAAzgALNNsCHzjdXZdI'
+    'dop+h/BmzePeYPd+lXW9pIj4eqAwa3jtSeuV9PQhvKqKC7S4Hy1/myHIHNfSq84nyqXR7Tf+mK7cdMEU6G89O2HlLldAQCxPSD'
+    '4U55TaRoJqodPDgCCEkOmaMR38HH9uy3B4tLAceViUt8zzckuInTJwE3QmerikbPApuDaXLbDk3yBCMnDOHPbYQYISEiJC7x6t'
+    'F0AQNrzn1dpejnwD7ndJoHPcBKc0WX/uACAkOUr7Ntm5xUp2mdYQR8RAPBa5vqjMnvbceTmGoxajqj2aTah2bVNRAIB1pBmrm3'
+    'AzfaMXNBNEqQU3wp2Jo2lWVKbok0yjWUGjWGjeuevyM6Fd2HxgbW4Kh1qiqgT07gEAEQwwO08M6bDu9lhhnnbcWiIBNCod9y4B'
+    'HdABAvM55kxFa5khtmIcaVsDhS/aEME6xCBgcIUgCm9lBlmBxNKUQ4UfSWvE/0aPCCqrzDtdhfeCUO8pzX94qp/jz1R0jTBOqq'
+    '7MO12L0xUfXq/WsWsktEWoqYL1kn2FaaSvYXxUlVOWkNhVJINXYMPggGqLg+MSrJvMlhGVXhaQlCvDJzRlicSyr5YKzjRjd00Q'
+    'WbI8E7/MEkxIaU9BQkEQfSVtOGCvJDps2l6w6ziNSFtRiiObYsAGihYWhnoVYbHNPF5pfhJ6zMMA2HMx7S4BLeyvvdXtsexdgz'
+    'WjqkU2sIKIyjH9Kt7EL0gA5aRKC4f61LQ47DmnJdCm26wWB0CAP9O//UoR+TaPqbdJJLN7q/GMoNCsgPACar7RseOAGq9iyhhR'
+    'ss0jgUAaI3FVuihRI3rUU1QWL6kYniTbyauR/Cr+FIAgEp5v4dVKsRxXGkGShECjT88Nl8JAKDOWxvG4HNmVB6FvyolBIyhr6l'
+    'vqbx1XEo8t3BZB/hCPRFxxWkwtSs0zid7wu+BXedB91nznSlx3k0fzml00wTjU75QFBeJlsrAHje8PJdN6Db7mZI8AsTXK4kSI'
+    'QBH0f43vHWYc8pfXRl1gLcE8UukAF1uPVGVItgKw0oqGiM/8bqe/nHfO/rtzMzk1Kmjd8+SNKd1hV4nQKIVPAlgwKgk/6DL8qp'
+    'nwp+of/Hv+4QejLW5bEeHsLQRXZoPTTuAdSv4qcH59f1i/wGycsTRKGME7gAAAABJRU5ErkJggg=='
+)
 
 
 @pytest.fixture
@@ -78,6 +98,22 @@ def sample_data(sample_speaker):
     ]
 
     return data
+
+
+@pytest.fixture
+def sample_req_event_data(db_session, sample_event_type, sample_venue, sample_speaker):
+    return {
+        'event_type': sample_event_type,
+        'venue': sample_venue,
+        'speaker': sample_speaker,
+    }
+
+
+@pytest.fixture
+def sample_req_event_data_with_event(db_session, sample_req_event_data, sample_event, sample_event_date):
+    sample_event_date.speakers = [sample_req_event_data['speaker']]
+    sample_req_event_data['event'] = sample_event
+    return sample_req_event_data
 
 
 class WhenGettingEvents:
@@ -364,41 +400,7 @@ class WhenPostingImportEvents(object):
         assert json_resp['errors'][0] == "{} {} not found: 0".format(sample_data[1]["id"], desc)
 
 
-@pytest.fixture
-def sample_req_event_data(db_session, sample_event_type, sample_venue, sample_speaker):
-    return {
-        'event_type': sample_event_type,
-        'venue': sample_venue,
-        'speaker': sample_speaker,
-    }
-
-
-@pytest.fixture
-def sample_req_event_data_with_event(db_session, sample_req_event_data, sample_event):
-    sample_req_event_data['event'] = sample_event
-    return sample_req_event_data
-
-
 class WhenPostingCreatingAnEvent:
-    base64img = (
-        'iVBORw0KGgoAAAANSUhEUgAAADgAAAAsCAYAAAAwwXuTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEMElEQVRoge2ZTUxcVRTH'
-        '/+fed9+bDxFEQUCmDLWbtibWDE2MCYGa6rabykITA7pV6aruNGlcGFe6c2ui7k1cmZp0YGdR2pjqoklBpkCVykem8/'
-        'HeffceF8MgIC3YvDczNP0ls5l3cuf8cuee++65wGMe09LQQQP5xkkXJ4rpjYU40zkY7UcA/NZWopM3gv1iHyg4M5NTuRPrPf5'
-        '6cJ4ETgsHg1ZHludDIxQQBphLpOiasfTrtVvPXB4a+nnPzO4rWFnOjroJO25CfkF5UAgBrTm+rP8nyiHAAzgALNNsCHzjdXZdI'
-        'dop+h/BmzePeYPd+lXW9pIj4eqAwa3jtSeuV9PQhvKqKC7S4Hy1/myHIHNfSq84nyqXR7Tf+mK7cdMEU6G89O2HlLldAQCxPSD'
-        '4U55TaRoJqodPDgCCEkOmaMR38HH9uy3B4tLAceViUt8zzckuInTJwE3QmerikbPApuDaXLbDk3yBCMnDOHPbYQYISEiJC7x6t'
-        'F0AQNrzn1dpejnwD7ndJoHPcBKc0WX/uACAkOUr7Ntm5xUp2mdYQR8RAPBa5vqjMnvbceTmGoxajqj2aTah2bVNRAIB1pBmrm3'
-        'AzfaMXNBNEqQU3wp2Jo2lWVKbok0yjWUGjWGjeuevyM6Fd2HxgbW4Kh1qiqgT07gEAEQwwO08M6bDu9lhhnnbcWiIBNCod9y4B'
-        'HdABAvM55kxFa5khtmIcaVsDhS/aEME6xCBgcIUgCm9lBlmBxNKUQ4UfSWvE/0aPCCqrzDtdhfeCUO8pzX94qp/jz1R0jTBOqq'
-        '7MO12L0xUfXq/WsWsktEWoqYL1kn2FaaSvYXxUlVOWkNhVJINXYMPggGqLg+MSrJvMlhGVXhaQlCvDJzRlicSyr5YKzjRjd00Q'
-        'WbI8E7/MEkxIaU9BQkEQfSVtOGCvJDps2l6w6ziNSFtRiiObYsAGihYWhnoVYbHNPF5pfhJ6zMMA2HMx7S4BLeyvvdXtsexdgz'
-        'WjqkU2sIKIyjH9Kt7EL0gA5aRKC4f61LQ47DmnJdCm26wWB0CAP9O//UoR+TaPqbdJJLN7q/GMoNCsgPACar7RseOAGq9iyhhR'
-        'ss0jgUAaI3FVuihRI3rUU1QWL6kYniTbyauR/Cr+FIAgEp5v4dVKsRxXGkGShECjT88Nl8JAKDOWxvG4HNmVB6FvyolBIyhr6l'
-        'vqbx1XEo8t3BZB/hCPRFxxWkwtSs0zid7wu+BXedB91nznSlx3k0fzml00wTjU75QFBeJlsrAHje8PJdN6Db7mZI8AsTXK4kSI'
-        'QBH0f43vHWYc8pfXRl1gLcE8UukAF1uPVGVItgKw0oqGiM/8bqe/nHfO/rtzMzk1Kmjd8+SNKd1hV4nQKIVPAlgwKgk/6DL8qp'
-        'nwp+of/Hv+4QejLW5bEeHsLQRXZoPTTuAdSv4qcH59f1i/wGycsTRKGME7gAAAABJRU5ErkJggg=='
-    )
-
     @pytest.fixture
     def mock_storage_without_asserts(self, mocker):
         mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
@@ -413,10 +415,10 @@ class WhenPostingCreatingAnEvent:
         for event in Event.query.all():
             if event.image_filename:
                 mock_storage_blob_upload.assert_called_with(
-                    'test_img.png', '2019/{}'.format(str(event.id)), self.base64img)
+                    'test_img.png', '2019/{}'.format(str(event.id)), base64img)
 
     def it_creates_an_event_via_rest(
-        self, mocker, client, db_session, sample_req_event_data
+        self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts
     ):
         mocker.patch("app.storage.utils.Storage.blob_exists", return_value=True)
 
@@ -427,7 +429,7 @@ class WhenPostingCreatingAnEvent:
             "title": "Test title",
             "sub_title": "Test sub title",
             "description": "Test description",
-            "image_filename": "test_img.png",
+            "image_filename": "2019/test_img.png",
             "event_dates": [
                 {
                     "event_date": "2019-03-01 19:00",
@@ -606,7 +608,7 @@ class WhenPostingCreatingAnEvent:
             "title": "Test title",
             "description": "Test description",
             "image_filename": "test_img.png",
-            "image_data": self.base64img,
+            "image_data": base64img,
             "event_dates": [
                 {
                     "event_date": "2019-03-01 19:00:00",
@@ -684,24 +686,231 @@ class WhenPostingUpdatingAnEvent:
     def mock_storage(self, mocker):
         mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
         mock_storage_blob_exists = mocker.patch("app.storage.utils.Storage.blob_exists")
+        yield
+        mock_storage.assert_called_with('test-store')
+        mock_storage_blob_exists.assert_called_with('2019/test_img.png')
+
+    @pytest.fixture
+    def mock_storage_not_exist(self, mocker):
+        mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
+        mock_storage_blob_exists = mocker.patch("app.storage.utils.Storage.blob_exists", return_value=False)
+        yield
+        mock_storage.assert_called_with('test-store')
+        mock_storage_blob_exists.assert_called_with('2019/test_img.png')
+
+    @pytest.fixture
+    def mock_storage_upload(self, mocker):
+        mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
         mock_storage_blob_upload = mocker.patch("app.storage.utils.Storage.upload_blob_from_base64string")
         yield
-        mock_storage_blob_exists.assert_called_with('2019/test_img.png')
         mock_storage.assert_called_with('test-store')
-        event = Event.query.one()
-        mock_storage_blob_upload.assert_called_with(
-            'test_img.png', '2019/{}'.format(str(event.id)), self.base64img)
+        for event in Event.query.all():
+            if event.image_filename:
+                mock_storage_blob_upload.assert_called_with(
+                    'test_img.png', '2018/{}'.format(str(event.id)), base64img)
 
     def it_updates_an_event_via_rest(self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage):
         data = {
             "event_type_id": sample_req_event_data_with_event['event_type'].id,
-            "title": "Test title",
+            "title": "Test title new",
             "sub_title": "Test sub title",
             "description": "Test description",
             "image_filename": "2019/test_img.png",
             "event_dates": [
                 {
-                    "event_date": "2019-03-01 19:00:00",
+                    "event_date": "2019-02-10 19:00:00",
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ]
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "fee": 15,
+            "conc_fee": 12,
+        }
+
+        old_event_date_id = sample_req_event_data_with_event['event'].event_dates[0].id
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 200
+
+        json_events = json.loads(response.get_data(as_text=True))
+        assert json_events["title"] == data["title"]
+        assert json_events["image_filename"] == data["image_filename"]
+        assert len(json_events["event_dates"]) == 1
+        assert len(json_events["event_dates"][0]["speakers"]) == 1
+        assert json_events["event_dates"][0]["speakers"][0]['id'] == (
+            sample_req_event_data_with_event['speaker'].serialize()['id'])
+
+        event_dates = EventDate.query.all()
+
+        assert len(event_dates) == 1
+        # use existing event date
+        assert event_dates[0].id != old_event_date_id
+
+    def it_updates_an_event_remove_speakers_via_rest(
+        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage
+    ):
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "2019/test_img.png",
+            "event_dates": [
+                {
+                    "event_date": str(sample_req_event_data_with_event['event'].event_dates[0].event_datetime),
+                    "speakers": []
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "fee": 15,
+            "conc_fee": 12,
+        }
+
+        old_event_date_id = sample_req_event_data_with_event['event'].event_dates[0].id
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 200
+
+        json_events = json.loads(response.get_data(as_text=True))
+        assert json_events["title"] == data["title"]
+        assert json_events["image_filename"] == data["image_filename"]
+        assert len(json_events["event_dates"]) == 1
+        assert len(json_events["event_dates"][0]["speakers"]) == 0
+
+        event_dates = EventDate.query.all()
+
+        assert len(event_dates) == 1
+        assert event_dates[0].speakers == []
+        # use existing event date
+        assert event_dates[0].id == old_event_date_id
+
+    def it_updates_an_event_add_speakers_via_rest(
+        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_upload
+    ):
+        speaker = create_speaker(name='Julie White')
+
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "test_img.png",
+            "image_data": base64img,
+            "event_dates": [
+                {
+                    "event_date": str(sample_req_event_data_with_event['event'].event_dates[0].event_datetime),
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id},
+                        {"speaker_id": speaker.id}
+                    ]
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "fee": 15,
+            "conc_fee": 12,
+        }
+
+        old_event_date_id = sample_req_event_data_with_event['event'].event_dates[0].id
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 200
+
+        json_events = json.loads(response.get_data(as_text=True))
+        assert json_events["title"] == data["title"]
+        assert json_events["image_filename"] == data["image_filename"]
+        assert len(json_events["event_dates"]) == 1
+        assert len(json_events["event_dates"][0]["speakers"]) == 2
+
+        event_dates = EventDate.query.all()
+
+        assert len(event_dates) == 1
+        assert len(event_dates[0].speakers) == 2
+        # use existing event date
+        assert event_dates[0].id == old_event_date_id
+
+    def it_updates_an_event_add_event_dates_via_rest(
+        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_upload
+    ):
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "test_img.png",
+            "image_data": base64img,
+            "event_dates": [
+                {
+                    "event_date": str(sample_req_event_data_with_event['event'].event_dates[0].event_datetime),
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ]
+                },
+                {
+                    "event_date": str(
+                        sample_req_event_data_with_event['event'].event_dates[0].event_datetime + timedelta(days=1)
+                    ),
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ]
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "fee": 15,
+            "conc_fee": 12,
+        }
+
+        old_event_date_id = sample_req_event_data_with_event['event'].event_dates[0].id
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 200
+
+        json_events = json.loads(response.get_data(as_text=True))
+        assert json_events["title"] == data["title"]
+        assert json_events["image_filename"] == data["image_filename"]
+        assert len(json_events["event_dates"]) == 2
+        assert len(json_events["event_dates"][0]["speakers"]) == 1
+
+        event_dates = EventDate.query.all()
+
+        assert len(event_dates) == 2
+        assert len(event_dates[0].speakers) == 1
+        # use existing event date
+        assert event_dates[0].id == old_event_date_id
+
+    def it_raises_error_if_file_not_found(
+        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_not_exist
+    ):
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "2019/test_img.png",
+            "event_dates": [
+                {
+                    "event_date": str(sample_req_event_data_with_event['event'].event_dates[0].event_datetime),
                     "speakers": [
                         {"speaker_id": sample_req_event_data_with_event['speaker'].id}
                     ]
@@ -718,12 +927,42 @@ class WhenPostingUpdatingAnEvent:
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
 
-        assert response.status_code == 201
+        assert response.status_code == 400
 
-        json_events = json.loads(response.get_data(as_text=True))
-        assert json_events["title"] == data["title"]
-        assert len(json_events["event_dates"]) == 2
-        assert len(json_events["event_dates"][0]["speakers"]) == 1
-        assert len(json_events["event_dates"][1]["speakers"]) == 1
-        assert json_events["event_dates"][0]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
-        assert json_events["event_dates"][1]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['message'] == '2019/test_img.png does not exist'
+
+    def it_raises_error_if_event_not_updated(
+        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage
+    ):
+        mocker.patch('app.routes.events.rest.dao_update_event', return_value=False)
+
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "2019/test_img.png",
+            "event_dates": [
+                {
+                    "event_date": str(sample_req_event_data_with_event['event'].event_dates[0].event_datetime),
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ]
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "fee": 15,
+            "conc_fee": 12,
+        }
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['message'] == '{} did not update'.format(sample_req_event_data_with_event['event'].id)
