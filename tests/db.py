@@ -21,11 +21,21 @@ def create_event(
     multi_day_fee=12,
     multi_day_conc_fee=10,
     old_id=1,
-    event_dates=None
+    event_dates=None,
+    venue_id=None
 ):
     if not event_type_id:
-        event_type = create_event_type(event_type='workshop')
+        event_type = EventType.query.filter_by(event_type='workshop').first()
+        if not event_type:
+            event_type = create_event_type(event_type='workshop')
         event_type_id = str(event_type.id)
+
+    if not venue_id:
+        venue = Venue.query.first()
+        if not venue:
+            venue = create_venue()
+        venue_id = str(venue.id)
+
     data = {
         'old_id': old_id,
         'event_type_id': event_type_id,
@@ -35,6 +45,7 @@ def create_event(
         'conc_fee': conc_fee,
         'multi_day_fee': multi_day_fee,
         'multi_day_conc_fee': multi_day_conc_fee,
+        'venue_id': venue_id,
     }
     event = Event(**data)
 
