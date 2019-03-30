@@ -174,21 +174,14 @@ def update_event(event_id):
         dao_create_event_date(e)
         event_dates.append(e)
 
-    for _date in dates_to_update:
-        serialized_event_date = [e for e in serialized_event_dates if e['event_datetime'] == _date['event_date']][0]
-        db_speakers = set([s['speaker_id'] for s in serialized_event_date['speakers']])
-        data_speakers = set([s['speaker_id'] for s in _date['speakers']])
-
-        if db_speakers != data_speakers:
-            diff_add = set(data_speakers).difference(db_speakers)
-            speakers = []
-            if diff_add:
-                for s in diff_add:
-                    speaker = dao_get_speaker_by_id(s)
-                    speakers.append(speaker)
-            db_event_date = [e for e in event.event_dates if str(e.event_datetime) == _date['event_date']][0]
-            db_event_date.speakers = speakers
-            event_dates.append(db_event_date)
+    for _date in sorted(dates_to_update, key=lambda k: k['event_date']):
+        speakers = []
+        for s in _date['speakers']:
+            speaker = dao_get_speaker_by_id(s['speaker_id'])
+            speakers.append(speaker)
+        db_event_date = [e for e in event.event_dates if str(e.event_datetime) == _date['event_date']][0]
+        db_event_date.speakers = speakers
+        event_dates.append(db_event_date)
 
     image_data = data.get('image_data')
 

@@ -822,6 +822,78 @@ class WhenPostingUpdatingAnEvent:
         # use existing event date
         assert event_dates[0].id == old_event_date_id
 
+    def it_updates_an_event_remove_a_speaker_via_rest(
+        self, mocker, client, db_session, mock_storage
+    ):
+        speakers = [
+            create_speaker(name='John Red'),
+            create_speaker(name='Jane White')
+        ]
+        event_dates = [
+            create_event_date(
+                event_datetime='2019-02-01 19:00',
+                speakers=speakers
+            ),
+            create_event_date(
+                event_datetime='2019-02-02 19:00',
+                speakers=speakers
+            )
+        ]
+        event = create_event(
+            event_dates=event_dates,
+        )
+
+        data = {
+            "event_type_id": str(event.event_type_id),
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "2019/test_img.png",
+            "event_dates": [
+                {
+                    "event_date": "2019-02-01 19:00:00",
+                    "speakers": [
+                        {"speaker_id": str(event.event_dates[0].speakers[1].id)},
+                    ]
+                },
+                {
+                    "event_date": "2019-02-02 19:00:00",
+                    "speakers": [
+                        {"speaker_id": str(event.event_dates[1].speakers[0].id)},
+                        {"speaker_id": str(event.event_dates[1].speakers[1].id)},
+                    ]
+                },
+            ],
+            "venue_id": str(event.venue_id),
+            "fee": 15,
+            "conc_fee": 12,
+        }
+
+        old_event_date_id = event.event_dates[0].id
+
+        response = client.post(
+            url_for('events.update_event', event_id=event.id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 200
+
+        json_events = json.loads(response.get_data(as_text=True))
+
+        assert json_events["title"] == data["title"]
+        assert json_events["image_filename"] == data["image_filename"]
+        assert len(json_events["event_dates"]) == 2
+        assert len(json_events["event_dates"][0]["speakers"]) == 1
+        assert len(json_events["event_dates"][1]["speakers"]) == 2
+
+        event_dates = EventDate.query.all()
+
+        assert len(event_dates) == 2
+        assert event_dates[0].speakers[0].id == event.event_dates[0].speakers[0].id
+        # use existing event date
+        assert event_dates[0].id == old_event_date_id
+
     def it_updates_an_event_add_speakers_via_rest(
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_upload
     ):
