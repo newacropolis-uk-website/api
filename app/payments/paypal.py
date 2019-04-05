@@ -115,6 +115,8 @@ class PayPal:
             data['L_OPTION0SELECT{}'.format(index)] = 'Member'
             data['L_OPTION0PRICE{}'.format(index)] = '0.01'
 
+        current_app.logger.info('Paypal process: {}'.format(data))
+
         response = requests.post(
             self.paypal_url,
             data=data,

@@ -359,6 +359,14 @@ function GetUserByEmail {
     -H "Authorization: Bearer $TKN" 
 }
 
+function TestPaypal {
+    echo "*** Test paypal ***"
+
+    curl -X POST $api_server'/paypal/42111e2a-c990-4d38-a785-394277bbc30c' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" 
+}
+
 function Logout {
     echo "*** Logout ***"
 
@@ -474,6 +482,10 @@ case "$arg" in
 
         -gue)
             GetUserByEmail
+        ;;
+
+        -pay)
+            TestPaypal
         ;;
 
         -setup)
