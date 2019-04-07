@@ -28,6 +28,10 @@ if [ $port != 'No environment' ]; then
     eval "ADMIN_CLIENT_ID=\${ADMIN_CLIENT_ID_$environment}"
     eval "ADMIN_CLIENT_SECRET=\${ADMIN_CLIENT_SECRET_$environment}"
     eval "ADMIN_USERS=\${ADMIN_USERS_$environment}"
+    eval "PAYPAL_URL=\${PAYPAL_URL_$environment}"
+    eval "PAYPAL_USER=\${PAYPAL_USER_$environment}"
+    eval "PAYPAL_PASSWORD=\${PAYPAL_PASSWORD_$environment}"
+    eval "PAYPAL_SIG=\${PAYPAL_SIG_$environment}"
 
     echo starting app $environment on port $port
     ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
@@ -41,6 +45,10 @@ if [ $port != 'No environment' ]; then
     export GOOGLE_STORE=$GOOGLE_STORE
     export ADMIN_USERS=$ADMIN_USERS
     export EMAIL_DOMAIN=$EMAIL_DOMAIN
+    export PAYPAL_URL=$PAYPAL_URL
+    export PAYPAL_USER=$PAYPAL_USER
+    export PAYPAL_PASSWORD=$PAYPAL_PASSWORD
+    export PAYPAL_SIG=$PAYPAL_SIG
     sudo ./scripts/bootstrap.sh
     ./scripts/run_app.sh $environment gunicorn $output_params"""
 
