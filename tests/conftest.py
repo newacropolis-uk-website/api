@@ -43,6 +43,11 @@ def app():
         'EVENTS_MAX': 2,
         'PROJECT': 'test-project',
         'STORAGE': 'test-store',
+        'PAYPAL_URL': 'https://test.paypal',
+        'PAYPAL_USER': 'seller@test.com',
+        'PAYPAL_PASSWORD': 'test pass',
+        'PAYPAL_SIG': 'paypal signature'
+
     })
 
     ctx = _app.app_context()

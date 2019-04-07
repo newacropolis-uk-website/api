@@ -51,6 +51,10 @@ class Development(Config):
     PORT = 5000
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL_development')
     STORAGE = '{}development'.format(os.environ.get('GOOGLE_STORE'))
+    PAYPAL_URL = os.getenv('PAYPAL_URL')
+    PAYPAL_USER = os.getenv('PAYPAL_USER')
+    PAYPAL_PASSWORD = os.getenv('PAYPAL_PASSWORD')
+    PAYPAL_SIG = os.getenv('PAYPAL_SIG')
 
 
 class Preview(Config):

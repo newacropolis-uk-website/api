@@ -34,6 +34,7 @@ from app.routes.events.schemas import post_create_event_schema, post_import_even
 
 from app.schema_validation import validate
 
+from app.payments.paypal import PayPal
 from app.storage.utils import Storage
 
 events_blueprint = Blueprint('events', __name__)
@@ -45,6 +46,18 @@ def extract_startdate(json):
         return json['event_dates'][0]['event_datetime']
     else:
         return 0
+
+
+@events_blueprint.route('/paypal/<item_id>', methods=['POST'])
+@jwt_required
+def create_test_paypal(item_id):
+    if current_app.config['ENVIRONMENT'] == 'live':
+        return 'Cannot test paypal on live environment'
+
+    p = PayPal()
+    button_id = p.create_update_paypal_button(item_id, 'test paypal')
+
+    return button_id
 
 
 @events_blueprint.route('/event', methods=['POST'])
@@ -77,6 +90,15 @@ def create_event():
         multi_day_conc_fee=data.get('multi_day_conc_fee'),
         venue_id=data.get('venue_id')
     )
+
+    if event.fee:
+        event_type = dao_get_event_type_by_id(event.event_type_id)
+        p = PayPal()
+        event.booking_code = p.create_update_paypal_button(
+            event.id, event.title,
+            event.fee, event.conc_fee, event.multi_day_fee, event.multi_day_conc_fee,
+            True if event_type.event_type == 'Talk' else False
+        )
 
     for event_date in data.get('event_dates'):
         if not event_year:
@@ -141,6 +163,8 @@ def update_event(event_id):
 
     validate(data, post_create_event_schema)
 
+    current_app.logger.info('Update event: {}'.format(data))
+
     try:
         event = dao_get_event_by_id(event_id)
     except NoResultFound:
@@ -203,6 +227,16 @@ def update_event(event_id):
             event_data[k] = data[k]
 
     event_data['event_dates'] = event_dates
+
+    if event_data.get('fee'):
+        event_type = dao_get_event_type_by_id(event.event_type_id)
+        p = PayPal()
+        event_data['booking_code'] = p.create_update_paypal_button(
+            event_id, event_data.get('title'),
+            event_data.get('fee'), event_data.get('conc_fee'),
+            event_data.get('multi_day_fee'), event_data.get('multi_day_conc_fee'),
+            True if event_type.event_type == 'Talk' else False
+        )
 
     res = dao_update_event(event_id, **event_data)
 

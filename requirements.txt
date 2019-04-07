@@ -13,3 +13,4 @@ iso8601==0.1.12
 jsonschema==2.6.0
 psycopg2-binary==2.7.5
 pyOpenSSL==18.0.0
+requests>=2.0.0
