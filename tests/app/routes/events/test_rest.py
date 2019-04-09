@@ -1065,6 +1065,7 @@ class WhenPostingUpdatingAnEvent:
             "venue_id": sample_req_event_data['venue'].id,
             "fee": 15,
             "conc_fee": 12,
+            "booking_code": "test booking"
         }
 
         response = client.post(
@@ -1079,7 +1080,7 @@ class WhenPostingUpdatingAnEvent:
         assert json_events["title"] == data["title"]
         assert json_events['booking_code'] == "test booking code"
         assert mock_paypal.call_args == call(
-            event.id, u'Test title', 15, 12, None, None, False)
+            event.id, u'Test title', 15, 12, None, None, False, booking_code='test booking')
 
     def it_raises_error_if_file_not_found(
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_not_exist
@@ -1131,13 +1132,16 @@ class WhenPostingUpdatingAnEvent:
 
 class WhenTestingPaypal:
 
-    def it_creates_a_paypal_button_in_preview(self, client, sample_uuid, mock_paypal):
+    def it_creates_a_paypal_button_in_preview(self, mocker, client, sample_uuid, mock_paypal):
+        mocker.patch.dict('app.routes.events.rest.current_app.config', {'ENVIRONMENT': 'test'})
         response = client.post(
             url_for('events.create_test_paypal', item_id=sample_uuid),
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
         assert mock_paypal.call_args == call(sample_uuid, 'test paypal')
-        assert response.get_data(as_text=True) == 'test booking code'
+        resp_text = response.get_data(as_text=True)
+        print(resp_text)
+        assert resp_text == 'test booking code'
 
     def it_does_not_create_a_paypal_button_in_live(self, mocker, client, sample_uuid, mock_paypal):
         mocker.patch.dict('app.routes.events.rest.current_app.config', {'ENVIRONMENT': 'live'})
