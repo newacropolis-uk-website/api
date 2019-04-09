@@ -92,3 +92,20 @@ class WhenCreatingPaypalButton:
 
         with pytest.raises(expected_exception=InvalidRequest):
             p.create_update_paypal_button('152', 'test title')
+
+
+class WhenUpdatingPaypalButton:
+
+    def it_calls_paypal_apis_to_update_button(self, app, mocker):
+        mocker.patch('app.payments.paypal.requests', MockRequests())
+
+        p = PayPal()
+        button_id = p.create_update_paypal_button(mock_item_id, 'test title')
+        assert button_id == mock_update_button_id
+
+    def it_raises_an_error_if_no_item_found(self, app, mocker, sample_uuid):
+        mocker.patch('app.payments.paypal.requests', MockRequests())
+
+        p = PayPal()
+        with pytest.raises(expected_exception=InvalidRequest):
+            p.create_update_paypal_button(sample_uuid, 'test title', booking_code='test booking code')

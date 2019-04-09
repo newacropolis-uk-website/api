@@ -229,14 +229,31 @@ def update_event(event_id):
     event_data['event_dates'] = event_dates
 
     if event_data.get('fee'):
-        event_type = dao_get_event_type_by_id(event.event_type_id)
-        p = PayPal()
-        event_data['booking_code'] = p.create_update_paypal_button(
-            event_id, event_data.get('title'),
-            event_data.get('fee'), event_data.get('conc_fee'),
-            event_data.get('multi_day_fee'), event_data.get('multi_day_conc_fee'),
-            True if event_type.event_type == 'Talk' else False
-        )
+        update_data = {
+            'fee': event_data.get('fee'),
+            'conc_fee': event_data.get('conc_fee'),
+            'nulti_day_fee': event_data.get('nulti_day_fee'),
+            'multi_day_conc_fee': event_data.get('multi_day_conc_fee'),
+            'event_type_id': event_data.get('event_type'),
+        }
+        db_data = {
+            'fee': event.fee,
+            'conc_fee': event.conc_fee,
+            'nulti_day_fee': event.multi_day_fee,
+            'multi_day_conc_fee': event.multi_day_conc_fee,
+            'event_type': event.event_type,
+        }
+
+        if update_data != db_data:
+            event_type = dao_get_event_type_by_id(event_data.get('event_type_id'))
+            p = PayPal()
+            event_data['booking_code'] = p.create_update_paypal_button(
+                event_id, event_data.get('title'),
+                event_data.get('fee'), event_data.get('conc_fee'),
+                event_data.get('multi_day_fee'), event_data.get('multi_day_conc_fee'),
+                True if event_type.event_type == 'Talk' else False,
+                booking_code=event_data.get('booking_code')
+            )
 
     res = dao_update_event(event_id, **event_data)
 

@@ -21,7 +21,7 @@ class PayPal:
         self.paypal_url = current_app.config['PAYPAL_URL']
 
     def create_update_paypal_button(
-        self, item_id, title, fee=5, conc_fee=3, all_fee=None, all_conc_fee=None, members_free=False
+        self, item_id, title, fee=5, conc_fee=3, all_fee=None, all_conc_fee=None, members_free=False, booking_code=None
     ):
         search_data = self.base_data.copy()
         search_data.update({
@@ -39,41 +39,45 @@ class PayPal:
 
         search_resp = parse_qs(response.content)
 
-        for key in [k for k in search_resp.keys() if k.startswith('L_HOSTEDBUTTONID')]:
-            get_data = self.base_data.copy()
-            get_data.update({
-                'METHOD': 'BMGetButtonDetails',
-                'HOSTEDBUTTONID': search_resp[key]
-            })
+        if item_id:
+            for key in [k for k in search_resp.keys() if k.startswith('L_HOSTEDBUTTONID')]:
+                get_data = self.base_data.copy()
+                get_data.update({
+                    'METHOD': 'BMGetButtonDetails',
+                    'HOSTEDBUTTONID': search_resp[key]
+                })
 
-            response = requests.post(
-                self.paypal_url,
-                data=get_data,
-                headers={'content-type': 'application/x-www-form-urlencoded'}
-            )
-
-            response.raise_for_status()
-
-            get_resp = parse_qs(response.content)
-
-            _item_id = get_resp['L_BUTTONVAR6'][0].split('=')[1]
-            _item_id = _item_id[:-1]
-
-            current_app.logger.info(
-                'Button compare: {} - {} = {}'.format(item_id, _item_id, str(item_id) == str(_item_id)))
-
-            if str(item_id) == _item_id:
-                current_app.logger.info('Update paypal button: {}'.format(item_id))
-                return self.paypal_button_process(
-                    'BMUpdateButton', search_resp[key], title, item_id,
-                    fee, conc_fee, all_fee, all_conc_fee, members_free
+                response = requests.post(
+                    self.paypal_url,
+                    data=get_data,
+                    headers={'content-type': 'application/x-www-form-urlencoded'}
                 )
 
-        current_app.logger.info('Create paypal button: {}'.format(item_id))
-        return self.paypal_button_process(
-            'BMCreateButton', 'New', title, item_id,
-            fee, conc_fee, all_fee, all_conc_fee, members_free
-        )
+                response.raise_for_status()
+
+                get_resp = parse_qs(response.content)
+
+                _item_id = get_resp['L_BUTTONVAR6'][0].split('=')[1]
+                _item_id = _item_id[:-1]
+
+                current_app.logger.info(
+                    'Button compare: {} - {} = {}'.format(item_id, _item_id, str(item_id) == str(_item_id)))
+
+                if str(item_id) == _item_id:
+                    current_app.logger.info('Update paypal button: {}'.format(item_id))
+                    return self.paypal_button_process(
+                        'BMUpdateButton', search_resp[key], title, item_id,
+                        fee, conc_fee, all_fee, all_conc_fee, members_free
+                    )
+
+        if booking_code:
+            raise InvalidRequest('Paypal error: button for {} not found'.format(item_id), 500)
+        else:
+            current_app.logger.info('Create paypal button: {}'.format(item_id))
+            return self.paypal_button_process(
+                'BMCreateButton', 'New', title, item_id,
+                fee, conc_fee, all_fee, all_conc_fee, members_free
+            )
 
     def paypal_button_process(
         self, method, button_id, title, item_id, fee, conc_fee, all_fee, all_conc_fee, members_free
