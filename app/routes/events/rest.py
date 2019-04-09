@@ -91,15 +91,6 @@ def create_event():
         venue_id=data.get('venue_id')
     )
 
-    if event.fee:
-        event_type = dao_get_event_type_by_id(event.event_type_id)
-        p = PayPal()
-        event.booking_code = p.create_update_paypal_button(
-            event.id, event.title,
-            event.fee, event.conc_fee, event.multi_day_fee, event.multi_day_conc_fee,
-            True if event_type.event_type == 'Talk' else False
-        )
-
     for event_date in data.get('event_dates'):
         if not event_year:
             event_year = event_date['event_date'].split('-')[0]
@@ -118,6 +109,17 @@ def create_event():
         event.event_dates.append(e)
 
     dao_create_event(event)
+
+    if event.fee:
+        event_type = dao_get_event_type_by_id(event.event_type_id)
+        p = PayPal()
+        booking_code = p.create_update_paypal_button(
+            str(event.id), event.title,
+            event.fee, event.conc_fee, event.multi_day_fee, event.multi_day_conc_fee,
+            True if event_type.event_type == 'Talk' else False
+        )
+
+        dao_update_event(event.id, booking_code=booking_code)
 
     image_filename = data.get('image_filename')
 

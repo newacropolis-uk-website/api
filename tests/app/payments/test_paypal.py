@@ -7,7 +7,7 @@ from app.payments.paypal import PayPal
 
 mock_create_button_id = '5T455H4BBKU3W'
 mock_update_button_id = 'U4EU53ARMDPUU'
-mock_item_id = uuid.uuid4()
+mock_item_id = str(uuid.uuid4())
 
 mock_get_resp_content = (
     'L_HOSTEDBUTTONID0=U4EU53ARMDPUU&L_HOSTEDBUTTONID1=JL69Y2PB6J5BQ&L_HOSTEDBUTTONID2={}&'

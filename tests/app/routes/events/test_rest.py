@@ -489,6 +489,16 @@ class WhenPostingCreatingAnEvent:
         assert response.status_code == 201
 
         json_events = json.loads(response.get_data(as_text=True))
+
+        assert mock_paypal.call_args == call(
+            json_events['id'],
+            data['title'],
+            data['fee'],
+            data['conc_fee'],
+            None,
+            None,
+            False
+        )
         assert json_events["title"] == data["title"]
         assert json_events["booking_code"] == 'test booking code'
         assert len(json_events["event_dates"]) == 2
