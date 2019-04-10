@@ -184,3 +184,31 @@ class WhenUsingEventsDAO(object):
         assert len(events_from_db) == 2
         assert events_from_db[0] == event_2
         assert events_from_db[1] == sample_event_with_dates
+
+
+    @freeze_time("2019-04-01T00:00:00")
+    def it_is_a_future_event(self, db, db_session, sample_event_type):
+        event = create_event(
+            title='in future',
+            event_type_id=sample_event_type.id,
+            event_dates=[create_event_date(event_datetime='2019-05-01T00:00:00')]
+        )
+        assert event.is_in_future()
+
+    @freeze_time("2019-04-01T00:00:00")
+    def it_is_a_future_event_multiple_dates(self, db, db_session, sample_event_type):
+        event = create_event(
+            title='in future',
+            event_type_id=sample_event_type.id,
+            event_dates=[create_event_date(event_datetime='2019-03-01T00:00:00'), create_event_date(event_datetime='2019-05-01T00:00:00')]
+        )
+        assert event.is_in_future()
+
+    @freeze_time("2019-04-01T00:00:00")
+    def it_is_a_past_event(self, db, db_session, sample_event_type):
+        event = create_event(
+            title='in past',
+            event_type_id=sample_event_type.id,
+            event_dates=[create_event_date(event_datetime='2019-03-01T00:00:00')]
+        )
+        assert not event.is_in_future()

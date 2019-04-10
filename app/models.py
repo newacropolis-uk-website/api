@@ -113,6 +113,13 @@ class Event(db.Model):
     venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'))
     venue = db.relationship("Venue", backref=db.backref("event", uselist=False))
 
+    def is_in_future(self):
+        for date in self.event_dates:
+            if date.event_datetime > datetime.datetime.today():
+                return True
+
+        return False
+
     def serialize_event_dates(self):
         def serialize_speakers(speakers):
             _speakers = []
