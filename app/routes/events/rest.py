@@ -110,7 +110,7 @@ def create_event():
 
     dao_create_event(event)
 
-    if event.fee:
+    if event.fee and event.event_in_future():
         event_type = dao_get_event_type_by_id(event.event_type_id)
         p = PayPal()
         booking_code = p.create_update_paypal_button(
@@ -230,7 +230,7 @@ def update_event(event_id):
 
     event_data['event_dates'] = event_dates
 
-    if event_data.get('fee'):
+    if event_data.get('fee') and event_data.get('booking_code'):
         update_data = {
             'fee': event_data.get('fee'),
             'conc_fee': event_data.get('conc_fee'),

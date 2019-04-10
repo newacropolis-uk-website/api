@@ -445,6 +445,7 @@ class WhenPostingCreatingAnEvent:
                 mock_storage_blob_upload.assert_called_with(
                     'test_img.png', '2019/{}'.format(str(event.id)), base64img)
 
+    @freeze_time("2019-02-10T19:00:00")
     def it_creates_an_event_via_rest(
         self, mocker, client, db_session, sample_req_event_data, mock_storage_without_asserts, mock_paypal
     ):
@@ -829,8 +830,8 @@ class WhenPostingUpdatingAnEvent:
         data = {
             "event_type_id": sample_req_event_data_with_event['event_type'].id,
             "title": "Test title new",
-            "sub_title": "Test sub title",
-            "description": "Test description",
+            "sub_title": "Test sub title new",
+            "description": "Test description new",
             "image_filename": "2019/test_img.png",
             "event_dates": [
                 {
@@ -855,6 +856,8 @@ class WhenPostingUpdatingAnEvent:
 
         json_events = json.loads(response.get_data(as_text=True))
         assert json_events["title"] == data["title"]
+        assert json_events["sub_title"] == data["sub_title"]
+        assert json_events["description"] == data["description"]
         assert json_events["image_filename"] == data["image_filename"]
         assert len(json_events["event_dates"]) == 1
         assert len(json_events["event_dates"][0]["speakers"]) == 0
