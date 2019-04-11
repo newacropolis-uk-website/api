@@ -791,7 +791,8 @@ class WhenPostingUpdatingAnEvent:
                     "event_date": "2019-02-10 19:00:00",
                     "speakers": [
                         {"speaker_id": sample_req_event_data_with_event['speaker'].id}
-                    ]
+                    ],
+                    "end_time": "20:00"
                 },
             ],
             "venue_id": sample_req_event_data_with_event['venue'].id,
@@ -816,6 +817,7 @@ class WhenPostingUpdatingAnEvent:
         assert len(json_events["event_dates"][0]["speakers"]) == 1
         assert json_events["event_dates"][0]["speakers"][0]['id'] == (
             sample_req_event_data_with_event['speaker'].serialize()['id'])
+        assert json_events["event_dates"][0]['end_time'] == "20:00"
 
         event_dates = EventDate.query.all()
 
