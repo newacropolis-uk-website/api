@@ -61,9 +61,9 @@ class PayPal:
                 _item_id = _item_id[:-1]
 
                 current_app.logger.info(
-                    'Button compare: {} - {} = {}'.format(item_id, _item_id, item_id == _item_id))
+                    'Button compare: {} - {} = {}'.format(item_id, _item_id, str(item_id) == str(_item_id)))
 
-                if item_id == _item_id:
+                if str(item_id) == str(_item_id):
                     current_app.logger.info('Update paypal button: {}'.format(item_id))
                     return self.paypal_button_process(
                         'BMUpdateButton', search_resp[key], title, item_id,

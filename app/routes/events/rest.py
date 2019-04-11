@@ -195,10 +195,13 @@ def update_event(event_id):
         e = EventDate(
             event_id=event_id,
             event_datetime=_date['event_date'],
+            end_time=_date.get('end_time'),
             speakers=speakers
         )
         dao_create_event_date(e)
-        event_dates.append(e)
+
+        if _date['event_date'] not in [_e.event_datetime for _e in event_dates]:
+            event_dates.append(e)
 
     for _date in sorted(dates_to_update, key=lambda k: k['event_date']):
         speakers = []
@@ -207,7 +210,9 @@ def update_event(event_id):
             speakers.append(speaker)
         db_event_date = [e for e in event.event_dates if str(e.event_datetime) == _date['event_date']][0]
         db_event_date.speakers = speakers
-        event_dates.append(db_event_date)
+
+        if _date['event_date'] not in [_e.event_datetime for _e in event_dates]:
+            event_dates.append(db_event_date)
 
     image_data = data.get('image_data')
 
