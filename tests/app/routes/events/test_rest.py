@@ -7,6 +7,7 @@ from mock import Mock, call
 from freezegun import freeze_time
 from sqlalchemy.orm.exc import NoResultFound
 
+from app.errors import PaypalException
 from app.models import Event, EventDate
 
 from tests.conftest import create_authorization_header
@@ -1035,6 +1036,60 @@ class WhenPostingUpdatingAnEvent:
         assert json_events["image_filename"] == data["image_filename"]
         assert len(json_events["event_dates"]) == 2
         assert len(json_events["event_dates"][0]["speakers"]) == 1
+
+        event_dates = EventDate.query.all()
+
+        assert len(event_dates) == 2
+        assert len(event_dates[0].speakers) == 1
+        # use existing event date
+        assert event_dates[0].id == old_event_date_id
+
+    def it_updates_an_event_handles_exceptions_via_rest(
+        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_upload
+    ):
+        mocker.patch(
+            "app.routes.events.rest.PayPal.create_update_paypal_button",
+            side_effect=PaypalException('Paypal error'))
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "test_img.png",
+            "image_data": base64img,
+            "event_dates": [
+                {
+                    "event_date": str(sample_req_event_data_with_event['event'].event_dates[0].event_datetime),
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ]
+                },
+                {
+                    "event_date": str(
+                        sample_req_event_data_with_event['event'].event_dates[0].event_datetime + timedelta(days=1)
+                    ),
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ]
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "fee": 15,
+            "conc_fee": 12,
+        }
+
+        old_event_date_id = sample_req_event_data_with_event['event'].event_dates[0].id
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 200
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['errors'] == ['Paypal error']
 
         event_dates = EventDate.query.all()
 

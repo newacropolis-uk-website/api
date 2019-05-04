@@ -26,7 +26,7 @@ from app.dao.event_types_dao import dao_get_event_type_by_old_id, dao_get_event_
 from app.dao.speakers_dao import dao_get_speaker_by_name, dao_get_speaker_by_id
 from app.dao.venues_dao import dao_get_venue_by_old_id, dao_get_venue_by_id
 
-from app.errors import register_errors, InvalidRequest
+from app.errors import register_errors, InvalidRequest, PaypalException
 from app.models import Event, EventDate
 
 from app.routes import is_running_locally
@@ -172,6 +172,8 @@ def update_event(event_id):
     except NoResultFound:
         raise InvalidRequest('event not found: {}'.format(event_id), 400)
 
+    errs = []
+
     data_event_dates = data.get('event_dates')
 
     serialized_event_dates = event.serialize_event_dates()
@@ -198,6 +200,9 @@ def update_event(event_id):
             end_time=_date.get('end_time'),
             speakers=speakers
         )
+
+        current_app.logger.info('Adding event date: {}'.format(_date['event_date']))
+
         dao_create_event_date(e)
 
         if _date['event_date'] not in [_e.event_datetime for _e in event_dates]:
@@ -254,18 +259,25 @@ def update_event(event_id):
         if update_data != db_data:
             event_type = dao_get_event_type_by_id(event_data.get('event_type_id'))
             p = PayPal()
-            event_data['booking_code'] = p.create_update_paypal_button(
-                event_id, event_data.get('title'),
-                event_data.get('fee'), event_data.get('conc_fee'),
-                event_data.get('multi_day_fee'), event_data.get('multi_day_conc_fee'),
-                True if event_type.event_type == 'Talk' else False,
-                booking_code=event_data.get('booking_code')
-            )
+            try:
+                event_data['booking_code'] = p.create_update_paypal_button(
+                    event_id, event_data.get('title'),
+                    event_data.get('fee'), event_data.get('conc_fee'),
+                    event_data.get('multi_day_fee'), event_data.get('multi_day_conc_fee'),
+                    True if event_type.event_type == 'Talk' else False,
+                    booking_code=event_data.get('booking_code')
+                )
+            except PaypalException as e:
+                current_app.logger.error(e)
+                errs.append(str(e))
 
     res = dao_update_event(event_id, **event_data)
 
     if res:
-        return jsonify(event.serialize()), 200
+
+        json_events = event.serialize()
+        json_events['errors'] = errs
+        return jsonify(json_events), 200
 
     raise InvalidRequest('{} did not update'.format(event_id), 400)
 
