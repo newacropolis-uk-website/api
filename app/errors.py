@@ -34,6 +34,10 @@ class InvalidRequest(Exception):
         return {'result': 'error', 'message': self.message}
 
 
+class PaypalException(Exception):
+    pass
+
+
 def register_errors(blueprint):
 
     @blueprint.errorhandler(ValidationError)
@@ -114,4 +118,4 @@ def register_errors(blueprint):
     @blueprint.errorhandler(Exception)
     def internal_server_error(e):
         current_app.logger.exception(e)
-        return jsonify(result='error', message="Internal server error"), 500
+        return jsonify(result='error', message="Internal server error: {}".format(str(e))), 500

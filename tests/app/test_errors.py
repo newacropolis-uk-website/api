@@ -18,7 +18,7 @@ from sqlalchemy.exc import DataError
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.routes.authentication.errors import AuthenticationError, TokenNotFound
-from app.errors import register_errors, InvalidRequest
+from app.errors import register_errors, InvalidRequest, PaypalException
 
 
 class WhenAnErrorOccurs(object):
@@ -86,6 +86,10 @@ class WhenAnErrorOccurs(object):
         @error_blueprint.route('/invalid-request')
         def invalid_request():
             raise InvalidRequest('Invalid request', 400)
+
+        @error_blueprint.route('/paypal-err')
+        def paypal_err():
+            raise PaypalException('Paypal exception')
 
         @error_blueprint.route('/status-500')
         def status_500():
@@ -218,7 +222,15 @@ class WhenAnErrorOccurs(object):
         )
         assert response.status_code == 500
         json_resp = json.loads(response.get_data(as_text=True))
-        assert json_resp['message'] == "Internal server error"
+        assert "Internal server error: 500" in json_resp['message']
+
+    def it_handles_paypal_exceptions(self, error_app):
+        response = error_app.get(
+            path='/paypal-err'
+        )
+        assert response.status_code == 500
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['message'] == "Internal server error: Paypal exception"
 
     def it_handles_exeption(self, error_app):
         response = error_app.get(
@@ -226,4 +238,4 @@ class WhenAnErrorOccurs(object):
         )
         assert response.status_code == 500
         json_resp = json.loads(response.get_data(as_text=True))
-        assert json_resp['message'] == "Internal server error"
+        assert json_resp['message'] == "Internal server error: "

@@ -2,7 +2,7 @@ from mock import Mock
 import pytest
 import uuid
 
-from app.errors import InvalidRequest
+from app.errors import PaypalException
 from app.payments.paypal import PayPal
 
 mock_create_button_id = '5T455H4BBKU3W'
@@ -90,7 +90,7 @@ class WhenCreatingPaypalButton:
 
         p = PayPal()
 
-        with pytest.raises(expected_exception=InvalidRequest):
+        with pytest.raises(expected_exception=PaypalException):
             p.create_update_paypal_button('152', 'test title')
 
 
@@ -107,5 +107,5 @@ class WhenUpdatingPaypalButton:
         mocker.patch('app.payments.paypal.requests', MockRequests())
 
         p = PayPal()
-        with pytest.raises(expected_exception=InvalidRequest):
+        with pytest.raises(expected_exception=PaypalException):
             p.create_update_paypal_button(sample_uuid, 'test title', booking_code='test booking code')

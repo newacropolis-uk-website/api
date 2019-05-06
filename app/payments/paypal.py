@@ -4,7 +4,7 @@ import json
 import requests
 from urlparse import parse_qs
 
-from app.errors import InvalidRequest
+from app.errors import PaypalException
 
 PAYPAL_SEARCH_BACK_FROM = 90
 
@@ -71,7 +71,7 @@ class PayPal:
                     )
 
         if booking_code:
-            raise InvalidRequest('Paypal error: button for {} not found'.format(item_id), 500)
+            raise PaypalException('Paypal error: button for {} not found'.format(item_id))
         else:
             current_app.logger.info('Create paypal button: {}'.format(item_id))
             return self.paypal_button_process(
@@ -138,4 +138,4 @@ class PayPal:
             current_app.logger.info('Paypal success: {} - {}'.format(item_id, process_resp['HOSTEDBUTTONID'][0]))
             return process_resp['HOSTEDBUTTONID'][0]
         else:
-            raise InvalidRequest('Paypal error: {}'.format(process_resp['L_LONGMESSAGE0']), 400)
+            raise PaypalException('Paypal error: {}'.format(process_resp['L_LONGMESSAGE0']))
