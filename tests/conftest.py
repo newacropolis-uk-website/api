@@ -86,8 +86,8 @@ def db_session(db):
 
     db.session.remove()
     for tbl in reversed(db.metadata.sorted_tables):
-        # if tbl.name not in ["fees"]:
-        db.engine.execute(tbl.delete())
+        if tbl.name not in ["event_states"]:
+            db.engine.execute(tbl.delete())
     db.session.commit()
 
 

@@ -92,6 +92,22 @@ class Fee(db.Model):
         }
 
 
+DRAFT = 'draft'
+READY = 'ready'
+APPROVED = 'approved'
+REJECTED = 'rejected'
+
+EVENT_STATES = [
+    DRAFT, READY, APPROVED, REJECTED
+]
+
+
+class EventStates(db.Model):
+    __tablename__ = 'event_states'
+
+    name = db.Column(db.String(), primary_key=True)
+
+
 class Event(db.Model):
     __tablename__ = 'events'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -110,6 +126,13 @@ class Event(db.Model):
     multi_day_conc_fee = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     event_dates = db.relationship("EventDate", backref=db.backref("events"), cascade="all,delete,delete-orphan")
+    event_state = db.Column(
+        db.String(255),
+        db.ForeignKey('event_states.name'),
+        default=DRAFT,
+        nullable=True,
+        index=True,
+    )
     venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'))
     venue = db.relationship("Venue", backref=db.backref("event", uselist=False))
 
@@ -155,11 +178,23 @@ class Event(db.Model):
             'multi_day_fee': self.multi_day_fee,
             'multi_day_conc_fee': self.multi_day_conc_fee,
             'venue': self.venue.serialize() if self.venue else None,
-            'event_dates': sorted_event_dates()
+            'event_dates': sorted_event_dates(),
+            'event_state': self.event_state,
         }
 
     def __repr__(self):
         return '<Event: id {}>'.format(self.id)
+
+
+# WIP RejectReason
+# class RejectReason(db.Model):
+#     __tablename__ = 'reject_reasons'
+
+#     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+#     event_id = db.Column(UUID(as_uuid=True), db.ForeignKey('events.id'))
+#     reason = db.Column(db.String(255))
+#     created_by = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'))
+#     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
 
 class Speaker(db.Model):
