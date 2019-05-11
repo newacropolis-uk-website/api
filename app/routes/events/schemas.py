@@ -52,7 +52,8 @@ post_create_event_schema = {
             },
             "minItems": 1,
         },
-        "venue_id": {"type": "string"}
+        "venue_id": {"type": "string"},
+        "state": {"type": ["string", "null"]},
     },
     "definitions": {
         "type": "object",
@@ -178,12 +179,37 @@ post_import_events_schema = {
 
 post_update_event_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "POST schema for updating venue",
+    "description": "POST schema for updating event",
     "type": "object",
     "properties": {
-        "name": {"type": "string"},
-        "address": {"type": "string"},
-        "directions": {"type": ["string", "null"]},
-        "default": {"type": ["boolean", "false"]},
+        "title": {"type": "string"},
+        "sub_title": {"type": ["string", "null"]},
+        "description": {"type": "string"},
+        "booking_code": {"type": ["string", "null"]},
+        "image_filename": {"type": ["string", "null"]},
+        "image_data": {
+            "type": ["string", "null"],
+            "media": {
+                "binaryEncoding": "base64",
+                "type": "image/png"
+            }
+        },
+        "fee": {"type": ["integer", "null"]},
+        "conc_fee": {"type": ["integer", "null"]},
+        "multi_day_fee": {"type": ["integer", "null"]},
+        "multi_day_conc_fee": {"type": ["integer", "null"]},
+        "event_dates": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "$ref": "#/definitions/event_date",
+            },
+        },
+        "venue_id": {"type": "string"},
+        "state": {"type": ["string", "null"]},
+    },
+    "definitions": {
+        "type": "object",
+        "event_date": event_date_schema,
     },
 }
