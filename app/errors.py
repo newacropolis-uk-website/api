@@ -4,7 +4,7 @@ from flask import (
     json)
 from jsonschema import ValidationError
 from jwt.exceptions import DecodeError, ExpiredSignatureError
-from sqlalchemy.exc import DataError
+from sqlalchemy.exc import DataError, IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from flask_jwt_extended.exceptions import (
     JWTDecodeError,
@@ -81,6 +81,15 @@ def register_errors(blueprint):
         msg = 'Invalid header error'
         current_app.logger.exception(msg)
         return jsonify(result='error', message=str(msg)), 400
+
+    @blueprint.errorhandler(IntegrityError)
+    def integrity_error(exc):
+        if 'events_event_state_fkey' in str(exc):
+            return jsonify(result="error",
+                           message="Event state: '{}' not valid".format(exc.params['event_state'])), 400
+
+        current_app.logger.exception(exc)
+        return jsonify(result='error', message="Internal server error"), 500
 
     @blueprint.errorhandler(ExpiredSignatureError)
     def expire_signature_error(e):

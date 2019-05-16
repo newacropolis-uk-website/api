@@ -27,10 +27,10 @@ from app.dao.speakers_dao import dao_get_speaker_by_name, dao_get_speaker_by_id
 from app.dao.venues_dao import dao_get_venue_by_old_id, dao_get_venue_by_id
 
 from app.errors import register_errors, InvalidRequest, PaypalException
-from app.models import Event, EventDate
+from app.models import Event, EventDate, DRAFT
 
 from app.routes import is_running_locally
-from app.routes.events.schemas import post_create_event_schema, post_import_events_schema
+from app.routes.events.schemas import post_create_event_schema, post_update_event_schema, post_import_events_schema
 
 from app.schema_validation import validate
 
@@ -88,7 +88,8 @@ def create_event():
         conc_fee=data.get('conc_fee'),
         multi_day_fee=data.get('multi_day_fee'),
         multi_day_conc_fee=data.get('multi_day_conc_fee'),
-        venue_id=data.get('venue_id')
+        venue_id=data.get('venue_id'),
+        event_state=data.get('event_state', DRAFT)
     )
 
     for event_date in data.get('event_dates'):
@@ -163,7 +164,7 @@ def delete_event(event_id):
 def update_event(event_id):
     data = request.get_json(force=True)
 
-    validate(data, post_create_event_schema)
+    validate(data, post_update_event_schema)
 
     current_app.logger.info('Update event: {}'.format(data))
 
@@ -219,20 +220,6 @@ def update_event(event_id):
         if _date['event_date'] not in [_e.event_datetime for _e in event_dates]:
             event_dates.append(db_event_date)
 
-    image_data = data.get('image_data')
-
-    image_filename = data.get('image_filename')
-
-    storage = Storage(current_app.config['STORAGE'])
-    if image_data:
-        event_year = str(event.event_dates[0].event_datetime).split('-')[0]
-        target_image_filename = '{}/{}'.format(event_year, str(event_id))
-
-        storage.upload_blob_from_base64string(image_filename, target_image_filename, image_data)
-    elif image_filename:
-        if not storage.blob_exists(image_filename):
-            raise InvalidRequest('{} does not exist'.format(image_filename), 400)
-
     event_data = {}
     for k in data.keys():
         if hasattr(Event, k):
@@ -274,10 +261,24 @@ def update_event(event_id):
     res = dao_update_event(event_id, **event_data)
 
     if res:
+        image_data = data.get('image_data')
 
-        json_events = event.serialize()
-        json_events['errors'] = errs
-        return jsonify(json_events), 200
+        image_filename = data.get('image_filename')
+
+        storage = Storage(current_app.config['STORAGE'])
+        if image_data:
+            event_year = str(event.event_dates[0].event_datetime).split('-')[0]
+            target_image_filename = '{}/{}'.format(event_year, str(event_id))
+
+            storage.upload_blob_from_base64string(image_filename, target_image_filename, image_data)
+        elif image_filename:
+            if not storage.blob_exists(image_filename):
+                raise InvalidRequest('{} does not exist'.format(image_filename), 400)
+
+        json_event = event.serialize()
+        json_event['errors'] = errs
+
+        return jsonify(json_event), 200
 
     raise InvalidRequest('{} did not update'.format(event_id), 400)
 

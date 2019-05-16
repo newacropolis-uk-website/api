@@ -8,7 +8,7 @@ from freezegun import freeze_time
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.errors import PaypalException
-from app.models import Event, EventDate
+from app.models import Event, EventDate, DRAFT, READY
 
 from tests.conftest import create_authorization_header
 from tests.db import create_event, create_event_date, create_event_type, create_speaker
@@ -510,6 +510,7 @@ class WhenPostingCreatingAnEvent:
         assert json_events["event_dates"][0]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
         assert json_events["event_dates"][1]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
         assert json_events["event_dates"][1]["speakers"][1]['id'] == speaker.serialize()['id']
+        assert json_events["event_state"] == DRAFT
 
         event = Event.query.one()
         assert event.event_dates[0].end_time.strftime('%H:%M') == '21:00'
@@ -799,6 +800,7 @@ class WhenPostingUpdatingAnEvent:
             "venue_id": sample_req_event_data_with_event['venue'].id,
             "fee": 15,
             "conc_fee": 12,
+            "event_state": READY
         }
 
         old_event_date_id = sample_req_event_data_with_event['event'].event_dates[0].id
@@ -819,12 +821,45 @@ class WhenPostingUpdatingAnEvent:
         assert json_events["event_dates"][0]["speakers"][0]['id'] == (
             sample_req_event_data_with_event['speaker'].serialize()['id'])
         assert json_events["event_dates"][0]['end_time'] == "20:00"
+        assert json_events['event_state'] == READY
 
         event_dates = EventDate.query.all()
 
         assert len(event_dates) == 1
         # use existing event date
         assert event_dates[0].id != old_event_date_id
+
+    def it_rejects_invalid_event_states(
+        self, mocker, client, db_session, sample_req_event_data_with_event, mock_paypal
+    ):
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "event_dates": [
+                {
+                    "event_date": "2019-02-10 19:00:00",
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ],
+                    "end_time": "20:00"
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "event_state": 'invalid',
+        }
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['message'] == "Event state: 'invalid' not valid"
 
     def it_updates_an_event_remove_speakers_via_rest(
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage, mock_paypal
@@ -1150,7 +1185,7 @@ class WhenPostingUpdatingAnEvent:
             event.id, u'Test title', 15, 12, None, None, False, booking_code='test booking')
 
     def it_raises_error_if_file_not_found(
-        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_not_exist
+        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_not_exist, mock_paypal
     ):
         response = client.post(
             url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
@@ -1164,7 +1199,7 @@ class WhenPostingUpdatingAnEvent:
         assert json_resp['message'] == '2019/test_img.png does not exist'
 
     def it_raises_error_if_event_not_updated(
-        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage, mock_paypal
+        self, mocker, client, db_session, sample_req_event_data_with_event, mock_paypal
     ):
         mocker.patch('app.routes.events.rest.dao_update_event', return_value=False)
 

@@ -14,7 +14,7 @@ from flask_jwt_extended.exceptions import (
 )
 from jsonschema import ValidationError
 from jwt.exceptions import DecodeError, ExpiredSignatureError
-from sqlalchemy.exc import DataError
+from sqlalchemy.exc import DataError, IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.routes.authentication.errors import AuthenticationError, TokenNotFound
@@ -78,6 +78,10 @@ class WhenAnErrorOccurs(object):
         @error_blueprint.route('/no-result-found')
         def no_result_found():
             raise NoResultFound()
+
+        @error_blueprint.route('/integrity-error')
+        def integrity_error():
+            raise IntegrityError("", "", "", "")
 
         @error_blueprint.route('/data-error')
         def data_error():
@@ -199,6 +203,14 @@ class WhenAnErrorOccurs(object):
         assert response.status_code == 404
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['message'] == "No result found"
+
+    def it_handles_integrity_error(self, error_app):
+        response = error_app.get(
+            path='/integrity-error'
+        )
+        assert response.status_code == 500
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['message'] == "Internal server error"
 
     def it_handles_data_error(self, error_app):
         response = error_app.get(
