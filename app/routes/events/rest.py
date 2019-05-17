@@ -231,16 +231,16 @@ def update_event(event_id):
         update_data = {
             'fee': event_data.get('fee'),
             'conc_fee': event_data.get('conc_fee'),
-            'nulti_day_fee': event_data.get('nulti_day_fee'),
+            'multi_day_fee': event_data.get('multi_day_fee'),
             'multi_day_conc_fee': event_data.get('multi_day_conc_fee'),
-            'event_type_id': event_data.get('event_type'),
+            'event_type_id': event_data.get('event_type_id'),
         }
         db_data = {
             'fee': event.fee,
             'conc_fee': event.conc_fee,
-            'nulti_day_fee': event.multi_day_fee,
+            'multi_day_fee': event.multi_day_fee,
             'multi_day_conc_fee': event.multi_day_conc_fee,
-            'event_type': event.event_type,
+            'event_type_id': str(event.event_type.id),
         }
 
         if update_data != db_data:
