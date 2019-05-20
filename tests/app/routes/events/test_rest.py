@@ -8,7 +8,7 @@ from freezegun import freeze_time
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.errors import PaypalException
-from app.models import Event, EventDate, DRAFT, READY
+from app.models import Event, EventDate, RejectReason, DRAFT, READY
 
 from tests.conftest import create_authorization_header
 from tests.db import create_event, create_event_date, create_event_type, create_speaker
@@ -860,6 +860,141 @@ class WhenPostingUpdatingAnEvent:
 
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['message'] == "Event state: 'invalid' not valid"
+
+    def it_updates_an_event_to_reject_with_reason(
+        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage, mock_paypal, sample_user
+    ):
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "2019/test_img.png",
+            "event_dates": [
+                {
+                    "event_date": "2019-02-10 19:00:00",
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ],
+                    "end_time": "20:00"
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "event_state": 'rejected',
+            'reject_reasons': [
+                {
+                    "reason": 'Test reject',
+                    'created_by': str(sample_user.id),
+                    'resolved': False,
+                }
+            ]
+        }
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 200
+
+        reject_reasons = RejectReason.query.all()
+        assert len(reject_reasons) == 1
+        assert reject_reasons[0].reason == data['reject_reasons'][0]['reason']
+        assert reject_reasons[0].resolved == data['reject_reasons'][0]['resolved']
+        assert str(reject_reasons[0].created_by) == data['reject_reasons'][0]['created_by']
+
+    def it_updates_an_event_to_reject_resolved(
+        self, mocker, client, db_session,
+        sample_req_event_data_with_event, mock_storage, mock_paypal, sample_reject_reason, sample_user
+    ):
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "2019/test_img.png",
+            "event_dates": [
+                {
+                    "event_date": "2019-02-10 19:00:00",
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ],
+                    "end_time": "20:00"
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "event_state": 'rejected',
+            'reject_reasons': [
+                {
+                    "id": str(sample_reject_reason.id),
+                    "reason": 'Test reject',
+                    'resolved': True,
+                },
+                {
+                    "reason": 'Test reject 2',
+                    'resolved': False,
+                },
+            ]
+        }
+
+        reject_reasons = RejectReason.query.all()
+        assert len(reject_reasons) == 1
+        assert not reject_reasons[0].resolved
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 200
+
+        reject_reasons = RejectReason.query.all()
+        assert len(reject_reasons) == 2
+        assert reject_reasons[0].reason == data['reject_reasons'][0]['reason']
+        assert reject_reasons[0].resolved == data['reject_reasons'][0]['resolved']
+
+    def it_raises_an_error_if_reject_without_new_reason(
+        self, mocker, client, db_session,
+        sample_req_event_data_with_event, sample_reject_reason
+    ):
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "2019/test_img.png",
+            "event_dates": [
+                {
+                    "event_date": "2019-02-10 19:00:00",
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ],
+                    "end_time": "20:00"
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "event_state": 'rejected',
+            'reject_reasons': [
+                {
+                    "id": str(sample_reject_reason.id),
+                    "reason": 'Test reject',
+                    'resolved': True,
+                },
+            ]
+        }
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['message'] == 'rejected event requires new reject reason'
 
     def it_updates_an_event_remove_speakers_via_rest(
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage, mock_paypal

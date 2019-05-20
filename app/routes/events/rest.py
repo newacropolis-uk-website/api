@@ -23,11 +23,12 @@ from app.dao.events_dao import (
 )
 from app.dao.event_dates_dao import dao_create_event_date, dao_get_event_date_by_id
 from app.dao.event_types_dao import dao_get_event_type_by_old_id, dao_get_event_type_by_id
+from app.dao.reject_reasons_dao import dao_create_reject_reason, dao_update_reject_reason
 from app.dao.speakers_dao import dao_get_speaker_by_name, dao_get_speaker_by_id
 from app.dao.venues_dao import dao_get_venue_by_old_id, dao_get_venue_by_id
 
 from app.errors import register_errors, InvalidRequest, PaypalException
-from app.models import Event, EventDate, DRAFT
+from app.models import Event, EventDate, RejectReason, DRAFT, REJECTED
 
 from app.routes import is_running_locally
 from app.routes.events.schemas import post_create_event_schema, post_update_event_schema, post_import_events_schema
@@ -175,6 +176,11 @@ def update_event(event_id):
 
     errs = []
 
+    if data.get('event_state') == REJECTED:
+        new_rejects = [r for r in data.get('reject_reasons') if not r.get('id')]
+        if not new_rejects:
+            raise InvalidRequest('rejected event requires new reject reason', 400)
+
     data_event_dates = data.get('event_dates')
 
     serialized_event_dates = event.serialize_event_dates()
@@ -220,9 +226,27 @@ def update_event(event_id):
         if _date['event_date'] not in [_e.event_datetime for _e in event_dates]:
             event_dates.append(db_event_date)
 
+    if data.get('reject_reasons'):
+        for reject_reason in data.get('reject_reasons'):
+            if reject_reason.get('id'):
+                reject_data = {
+                    'reason': reject_reason['reason'],
+                    'resolved': reject_reason['resolved']
+                }
+
+                dao_update_reject_reason(reject_reason.get('id'), **reject_data)
+            else:
+                rr = RejectReason(
+                    event_id=event_id,
+                    reason=reject_reason['reason'],
+                    resolved=reject_reason['resolved'],
+                    created_by=reject_reason.get('created_by')
+                )
+                dao_create_reject_reason(rr)
+
     event_data = {}
     for k in data.keys():
-        if hasattr(Event, k):
+        if hasattr(Event, k) and k not in ['reject_reasons']:
             event_data[k] = data[k]
 
     event_data['event_dates'] = event_dates

@@ -3,7 +3,7 @@ from app.schema_validation.definitions import datetime, number, uuid, nullable, 
 
 event_date_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "POST schema for event_dates",
+    "description": "POST schema for event_date",
     "type": "object",
     "properties": {
         "event_date": datetime,
@@ -19,6 +19,19 @@ event_date_schema = {
         },
     },
     "required": ["event_date"]
+}
+
+
+reject_reason_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for reject_reason",
+    "type": "object",
+    "properties": {
+        "reason": {"type": "string"},
+        "resolved": {"type": "boolean"},
+        "created_by": uuid
+    },
+    "required": ["reason"]
 }
 
 
@@ -205,11 +218,19 @@ post_update_event_schema = {
                 "$ref": "#/definitions/event_date",
             },
         },
+        "reject_reasons": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "$ref": "#/definitions/reject_reason",
+            },
+        },
         "venue_id": {"type": "string"},
         "state": {"type": ["string", "null"]},
     },
     "definitions": {
         "type": "object",
         "event_date": event_date_schema,
+        "reject_reason": reject_reason_schema
     },
 }
