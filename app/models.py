@@ -133,7 +133,7 @@ class Event(db.Model):
         nullable=True,
         index=True,
     )
-    reject_reason = db.relationship("RejectReason", backref=db.backref("event", uselist=True))
+    reject_reasons = db.relationship("RejectReason", backref=db.backref("event", uselist=True))
     venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'))
     venue = db.relationship("Venue", backref=db.backref("event", uselist=False))
 
@@ -164,6 +164,11 @@ class Event(db.Model):
             dates.sort(key=lambda k: k['event_datetime'])
             return dates
 
+        def serlialized_reject_reasons():
+            reject_reasons = [r.serialize() for r in self.reject_reasons]
+            reject_reasons.sort(key=lambda k: k['resolved'])
+            return reject_reasons
+
         return {
             'id': self.id,
             'old_id': self.old_id,
@@ -181,6 +186,7 @@ class Event(db.Model):
             'venue': self.venue.serialize() if self.venue else None,
             'event_dates': sorted_event_dates(),
             'event_state': self.event_state,
+            'reject_reasons': serlialized_reject_reasons()
         }
 
     def __repr__(self):
@@ -196,6 +202,15 @@ class RejectReason(db.Model):
     resolved = db.Column(db.Boolean, default=False)
     created_by = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'reason': self.reason,
+            'resolved': self.resolved,
+            'created_by': self.created_by,
+            'created_at': self.created_at
+        }
 
 
 class Speaker(db.Model):
