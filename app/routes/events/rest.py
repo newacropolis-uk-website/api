@@ -28,7 +28,7 @@ from app.dao.speakers_dao import dao_get_speaker_by_name, dao_get_speaker_by_id
 from app.dao.venues_dao import dao_get_venue_by_old_id, dao_get_venue_by_id
 
 from app.errors import register_errors, InvalidRequest, PaypalException
-from app.models import Event, EventDate, RejectReason, DRAFT, REJECTED
+from app.models import Event, EventDate, RejectReason, APPROVED, DRAFT, REJECTED
 
 from app.routes import is_running_locally
 from app.routes.events.schemas import post_create_event_schema, post_update_event_schema, post_import_events_schema
@@ -180,6 +180,10 @@ def update_event(event_id):
         new_rejects = [r for r in data.get('reject_reasons') if not r.get('id')]
         if not new_rejects:
             raise InvalidRequest('rejected event requires new reject reason', 400)
+    elif data.get('event_state') == APPROVED:
+        rejects = [r for r in data.get('reject_reasons') if not r.get('resolved')]
+        if rejects:
+            raise InvalidRequest('approved event should not have any reject reasons', 400)
 
     data_event_dates = data.get('event_dates')
 

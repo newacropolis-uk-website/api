@@ -8,7 +8,7 @@ from freezegun import freeze_time
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.errors import PaypalException
-from app.models import Event, EventDate, RejectReason, DRAFT, READY
+from app.models import Event, EventDate, RejectReason, APPROVED, DRAFT, READY, REJECTED
 
 from tests.conftest import create_authorization_header
 from tests.db import create_event, create_event_date, create_event_type, create_speaker
@@ -880,7 +880,7 @@ class WhenPostingUpdatingAnEvent:
                 },
             ],
             "venue_id": sample_req_event_data_with_event['venue'].id,
-            "event_state": 'rejected',
+            "event_state": REJECTED,
             'reject_reasons': [
                 {
                     "reason": 'Test reject',
@@ -924,7 +924,7 @@ class WhenPostingUpdatingAnEvent:
                 },
             ],
             "venue_id": sample_req_event_data_with_event['venue'].id,
-            "event_state": 'rejected',
+            "event_state": REJECTED,
             'reject_reasons': [
                 {
                     "id": str(sample_reject_reason.id),
@@ -975,7 +975,7 @@ class WhenPostingUpdatingAnEvent:
                 },
             ],
             "venue_id": sample_req_event_data_with_event['venue'].id,
-            "event_state": 'rejected',
+            "event_state": REJECTED,
             'reject_reasons': [
                 {
                     "id": str(sample_reject_reason.id),
@@ -995,6 +995,47 @@ class WhenPostingUpdatingAnEvent:
 
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['message'] == 'rejected event requires new reject reason'
+
+    def it_raises_an_error_if_approved_with_reject_reasons(
+        self, mocker, client, db_session,
+        sample_req_event_data_with_event, sample_reject_reason
+    ):
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "2019/test_img.png",
+            "event_dates": [
+                {
+                    "event_date": "2019-02-10 19:00:00",
+                    "speakers": [
+                        {"speaker_id": sample_req_event_data_with_event['speaker'].id}
+                    ],
+                    "end_time": "20:00"
+                },
+            ],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "event_state": APPROVED,
+            'reject_reasons': [
+                {
+                    "id": str(sample_reject_reason.id),
+                    "reason": 'Test reject',
+                    'resolved': False,
+                },
+            ]
+        }
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['message'] == 'approved event should not have any reject reasons'
 
     def it_updates_an_event_remove_speakers_via_rest(
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage, mock_paypal
