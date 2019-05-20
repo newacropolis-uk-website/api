@@ -13,7 +13,7 @@ from app.dao.events_dao import (
     dao_get_limited_events,
     dao_get_past_year_events,
 )
-from app.models import Event, EventDate
+from app.models import Event, EventDate, RejectReason
 
 from tests.db import create_event, create_event_date, create_speaker
 
@@ -114,6 +114,12 @@ class WhenUsingEventsDAO(object):
 
         assert Event.query.count() == 2
         assert event_from_db == sample_event
+
+    def it_gets_event_by_id_with_reject_reason(self, db_session, sample_event_type, sample_reject_reason):
+        event_from_db = dao_get_event_by_id(sample_reject_reason.event_id)
+
+        assert Event.query.count() == 1
+        assert event_from_db.reject_reasons == [sample_reject_reason]
 
     @freeze_time("2018-01-10T19:00:00")
     def it_gets_all_future_events(self, db, db_session, sample_event_with_dates, sample_event_type):

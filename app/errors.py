@@ -49,7 +49,7 @@ def register_errors(blueprint):
     def invalid_data(error):
         response = jsonify(error.to_dict())
         response.status_code = error.status_code
-        current_app.logger.info(error)
+        current_app.logger.info('Invalid data: {}'.format(error.message))
         return response
 
     @blueprint.errorhandler(400)

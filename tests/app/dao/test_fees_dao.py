@@ -19,7 +19,7 @@ class WhenUsingFeesDAO(object):
 
         fee_from_db = Fee.query.filter(Fee.id == sample_fee.id).first()
 
-        assert sample_fee.fee == fee_from_db.fee
+        assert fee_from_db.fee == 10
 
     def it_gets_all_fees(self, db, db_session, sample_fee):
         fees = [create_fee(fee=100, conc_fee=80), sample_fee]

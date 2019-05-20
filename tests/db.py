@@ -6,10 +6,11 @@ from app.dao.events_dao import dao_create_event
 from app.dao.event_dates_dao import dao_create_event_date
 from app.dao.event_types_dao import dao_create_event_type
 from app.dao.fees_dao import dao_create_fee
+from app.dao.reject_reasons_dao import dao_create_reject_reason
 from app.dao.speakers_dao import dao_create_speaker
 from app.dao.users_dao import dao_create_user
 from app.dao.venues_dao import dao_create_venue
-from app.models import Article, Event, EventDate, EventType, Fee, Speaker, User, Venue
+from app.models import Article, Event, EventDate, EventType, Fee, RejectReason, Speaker, User, Venue
 
 
 def create_event(
@@ -208,3 +209,21 @@ def create_user(email='test@example.com', name='First Mid Last-name', access_are
 
     dao_create_user(user)
     return user
+
+
+def create_reject_reason(event_id=None, reason='Test reason', resolved=False, created_by=None):
+    if not created_by:
+        created_by = create_user(email='test_reject@example.com')
+
+    data = {
+        'event_id': event_id,
+        'reason': reason,
+        'resolved': resolved,
+        'created_by': str(created_by.id)
+    }
+
+    reject_reason = RejectReason(**data)
+
+    dao_create_reject_reason(reject_reason)
+
+    return reject_reason

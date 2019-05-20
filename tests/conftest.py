@@ -19,6 +19,7 @@ from tests.db import (
     create_event_date,
     create_event_type,
     create_fee,
+    create_reject_reason,
     create_speaker,
     create_user,
     create_venue
@@ -126,6 +127,11 @@ def sample_event_date_without_event(db):
 @pytest.fixture(scope='function')
 def sample_fee(db, sample_event_type):
     return create_fee(fee=5, conc_fee=3, event_type_id=sample_event_type.id)
+
+
+@pytest.fixture(scope='function')
+def sample_reject_reason(db, sample_event):
+    return create_reject_reason(sample_event.id)
 
 
 @pytest.fixture(scope='function')
