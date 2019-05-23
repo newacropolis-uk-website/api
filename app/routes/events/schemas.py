@@ -27,7 +27,7 @@ reject_reason_schema = {
     "description": "POST schema for reject_reason",
     "type": "object",
     "properties": {
-        "reason": {"type": "string"},
+        "reason": {"type": "string", "minLength": 3},
         "resolved": {"type": "boolean"},
         "created_by": uuid
     },
