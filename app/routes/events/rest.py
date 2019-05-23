@@ -165,9 +165,9 @@ def delete_event(event_id):
 def update_event(event_id):
     data = request.get_json(force=True)
 
-    validate(data, post_update_event_schema)
-
     current_app.logger.info('Update event: {}'.format(data))
+
+    validate(data, post_update_event_schema)
 
     try:
         event = dao_get_event_by_id(event_id)
@@ -235,7 +235,7 @@ def update_event(event_id):
             if reject_reason.get('id'):
                 reject_data = {
                     'reason': reject_reason['reason'],
-                    'resolved': reject_reason['resolved']
+                    'resolved': reject_reason.get('resolved') or False
                 }
 
                 dao_update_reject_reason(reject_reason.get('id'), **reject_data)
@@ -243,7 +243,7 @@ def update_event(event_id):
                 rr = RejectReason(
                     event_id=event_id,
                     reason=reject_reason['reason'],
-                    resolved=reject_reason['resolved'],
+                    resolved=reject_reason.get('resolved') or False,
                     created_by=reject_reason.get('created_by')
                 )
                 dao_create_reject_reason(rr)
