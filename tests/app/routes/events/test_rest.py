@@ -329,6 +329,7 @@ class WhenPostingImportEvents(object):
 
     @pytest.fixture
     def mock_storage_not_exists(self, mocker):
+        mocker.patch('os.path.isfile', return_value=True)
         mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
         mock_storage_blob_exists = mocker.patch("app.storage.utils.Storage.blob_exists", return_value=False)
         mock_storage_blob_upload = mocker.patch("app.storage.utils.Storage.upload_blob")
@@ -336,6 +337,12 @@ class WhenPostingImportEvents(object):
         mock_storage.assert_called_with('test-store')
         mock_storage_blob_exists.assert_called_with('2004/Economics.jpg')
         mock_storage_blob_upload.assert_called_with('./data/events/2004/Economics.jpg', '2004/Economics.jpg')
+
+    @pytest.fixture
+    def mock_storage_not_exists_without_asserts(self, mocker):
+        mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
+        mocker.patch("app.storage.utils.Storage.blob_exists", return_value=False)
+        mocker.patch("app.storage.utils.Storage.upload_blob")
 
     def it_creates_events_for_imported_events(
         self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data,
@@ -427,6 +434,25 @@ class WhenPostingImportEvents(object):
         assert len(json_resp['errors']) == 1
         assert str(json_resp['events'][0]["old_id"]) == str(sample_data[0]["id"])
         assert json_resp['errors'][0] == "{} {} not found: 0".format(sample_data[1]["id"], desc)
+
+    def it_adds_errors_to_list_for_a_non_existant_local_filename(
+        self, client, mocker, db, db_session, sample_event_type, sample_venue, sample_speaker, sample_data,
+        mock_storage_not_exists_without_asserts
+    ):
+        mocker.patch('os.path.isfile', return_value=False)
+        response = client.post(
+            url_for('events.import_events'),
+            data=json.dumps(sample_data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 201
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert len(json_resp['events']) == 2
+        assert len(json_resp['errors']) == 2
+        assert str(json_resp['events'][0]["old_id"]) == str(sample_data[0]["id"])
+        assert json_resp['errors'][0] == "./data/events/{} not found for 1".format(sample_data[0]['ImageFilename'])
+        assert json_resp['errors'][1] == "./data/events/{} not found for 2".format(sample_data[1]['ImageFilename'])
 
 
 class WhenPostingCreatingAnEvent:
@@ -1202,7 +1228,7 @@ class WhenPostingUpdatingAnEvent:
         assert event_dates[0].id == old_event_date_id
 
     def it_updates_an_event_add_event_dates_via_rest(
-        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_upload, mock_paypal
+        self, mocker, client, db, db_session, sample_req_event_data_with_event, mock_storage_upload, mock_paypal
     ):
         data = {
             "event_type_id": sample_req_event_data_with_event['event_type'].id,
