@@ -385,15 +385,20 @@ class WhenPostingImportEvents(object):
         for i in range(0, len(sample_data) - 1):
             assert json_events[i]["old_id"] == int(sample_data[i]["id"])
             assert json_events[i]["title"] == sample_data[i]["Title"]
-        assert json_events[0]["event_dates"][0]["speakers"] == [
-            sample_speaker.serialize(), speaker_1.serialize()]
+
+        speaker_ids = [e['id'] for e in json_events[0]["event_dates"][0]["speakers"]]
+        assert str(sample_speaker.id) in speaker_ids
+        assert str(speaker_1.id) in speaker_ids
+
         assert len(json_events[0]["event_dates"]) == 4
         assert json_events[0]["event_dates"][0]['event_datetime'] == "2004-09-20 19:30"
         assert json_events[0]["event_dates"][1]['event_datetime'] == "2004-09-21 19:30"
         assert json_events[0]["event_dates"][2]['event_datetime'] == "2004-09-22 19:30"
         assert json_events[0]["event_dates"][3]['event_datetime'] == "2004-09-23 19:30"
-        assert json_events[1]["event_dates"][0]["speakers"] == [
-            sample_speaker.serialize(), speaker_1.serialize()]
+
+        speaker_ids = [e['id'] for e in json_events[1]["event_dates"][0]["speakers"]]
+        assert str(sample_speaker.id) in speaker_ids
+        assert str(speaker_1.id) in speaker_ids
 
     def it_ignores_existing_events_for_imported_events(
         self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_event, sample_data,
@@ -534,8 +539,10 @@ class WhenPostingCreatingAnEvent:
         assert json_events["event_dates"][0]["end_time"] == '21:00'
         assert json_events["event_dates"][1]["end_time"] == '21:00'
         assert json_events["event_dates"][0]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
-        assert json_events["event_dates"][1]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
-        assert json_events["event_dates"][1]["speakers"][1]['id'] == speaker.serialize()['id']
+
+        speaker_ids = [e['id'] for e in json_events["event_dates"][1]["speakers"]]
+        assert sample_req_event_data['speaker'].serialize()['id'] in speaker_ids
+        assert speaker.serialize()['id'] in speaker_ids
         assert json_events["event_state"] == DRAFT
 
         event = Event.query.one()
@@ -1228,7 +1235,7 @@ class WhenPostingUpdatingAnEvent:
         assert event_dates[0].id == old_event_date_id
 
     def it_updates_an_event_add_event_dates_via_rest(
-        self, mocker, client, db, db_session, sample_req_event_data_with_event, mock_storage_upload, mock_paypal
+        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_upload, mock_paypal
     ):
         data = {
             "event_type_id": sample_req_event_data_with_event['event_type'].id,
@@ -1274,7 +1281,7 @@ class WhenPostingUpdatingAnEvent:
         assert len(json_events["event_dates"]) == 2
         assert len(json_events["event_dates"][0]["speakers"]) == 1
 
-        event_dates = EventDate.query.all()
+        event_dates = sorted(EventDate.query.all(), key=lambda k: k.event_datetime)
 
         assert len(event_dates) == 2
         assert len(event_dates[0].speakers) == 1
@@ -1328,7 +1335,7 @@ class WhenPostingUpdatingAnEvent:
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['errors'] == ['Paypal error']
 
-        event_dates = EventDate.query.all()
+        event_dates = sorted(EventDate.query.all(), key=lambda k: k.event_datetime)
 
         assert len(event_dates) == 2
         assert len(event_dates[0].speakers) == 1
