@@ -5,6 +5,7 @@ from flask import (
     jsonify,
     request
 )
+import os.path
 import re
 
 from flask_jwt_extended import jwt_required
@@ -451,6 +452,7 @@ def import_events():
 
             events.append(event)
             dao_create_event(event)
+            current_app.logger.info('added event {} - {}'.format(event.old_id, event.title))
         else:
             err = u'event already exists: {} - {}'.format(event.old_id, event.title)
             current_app.logger.info(err)
@@ -460,7 +462,13 @@ def import_events():
             storage = Storage(current_app.config['STORAGE'])
 
             if not storage.blob_exists(item['ImageFilename']):
-                storage.upload_blob("./data/events/{}".format(item['ImageFilename']), item['ImageFilename'])
+                fname = "./data/events/{}".format(item['ImageFilename'])
+                if os.path.isfile(fname):
+                    storage.upload_blob(fname, item['ImageFilename'])
+                else:
+                    err = '{} not found for {}'.format(fname, event.old_id)
+                    current_app.logger.info(err)
+                    errors.append(err)
             else:
                 current_app.logger.info('{} found'.format(item['ImageFilename']))
 

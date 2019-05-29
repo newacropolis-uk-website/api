@@ -329,6 +329,7 @@ class WhenPostingImportEvents(object):
 
     @pytest.fixture
     def mock_storage_not_exists(self, mocker):
+        mocker.patch('os.path.isfile', return_value=True)
         mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
         mock_storage_blob_exists = mocker.patch("app.storage.utils.Storage.blob_exists", return_value=False)
         mock_storage_blob_upload = mocker.patch("app.storage.utils.Storage.upload_blob")
@@ -336,6 +337,12 @@ class WhenPostingImportEvents(object):
         mock_storage.assert_called_with('test-store')
         mock_storage_blob_exists.assert_called_with('2004/Economics.jpg')
         mock_storage_blob_upload.assert_called_with('./data/events/2004/Economics.jpg', '2004/Economics.jpg')
+
+    @pytest.fixture
+    def mock_storage_not_exists_without_asserts(self, mocker):
+        mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
+        mocker.patch("app.storage.utils.Storage.blob_exists", return_value=False)
+        mocker.patch("app.storage.utils.Storage.upload_blob")
 
     def it_creates_events_for_imported_events(
         self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_data,
@@ -378,15 +385,20 @@ class WhenPostingImportEvents(object):
         for i in range(0, len(sample_data) - 1):
             assert json_events[i]["old_id"] == int(sample_data[i]["id"])
             assert json_events[i]["title"] == sample_data[i]["Title"]
-        assert json_events[0]["event_dates"][0]["speakers"] == [
-            sample_speaker.serialize(), speaker_1.serialize()]
+
+        speaker_ids = [e['id'] for e in json_events[0]["event_dates"][0]["speakers"]]
+        assert str(sample_speaker.id) in speaker_ids
+        assert str(speaker_1.id) in speaker_ids
+
         assert len(json_events[0]["event_dates"]) == 4
         assert json_events[0]["event_dates"][0]['event_datetime'] == "2004-09-20 19:30"
         assert json_events[0]["event_dates"][1]['event_datetime'] == "2004-09-21 19:30"
         assert json_events[0]["event_dates"][2]['event_datetime'] == "2004-09-22 19:30"
         assert json_events[0]["event_dates"][3]['event_datetime'] == "2004-09-23 19:30"
-        assert json_events[1]["event_dates"][0]["speakers"] == [
-            sample_speaker.serialize(), speaker_1.serialize()]
+
+        speaker_ids = [e['id'] for e in json_events[1]["event_dates"][0]["speakers"]]
+        assert str(sample_speaker.id) in speaker_ids
+        assert str(speaker_1.id) in speaker_ids
 
     def it_ignores_existing_events_for_imported_events(
         self, client, db_session, sample_event_type, sample_venue, sample_speaker, sample_event, sample_data,
@@ -427,6 +439,25 @@ class WhenPostingImportEvents(object):
         assert len(json_resp['errors']) == 1
         assert str(json_resp['events'][0]["old_id"]) == str(sample_data[0]["id"])
         assert json_resp['errors'][0] == "{} {} not found: 0".format(sample_data[1]["id"], desc)
+
+    def it_adds_errors_to_list_for_a_non_existant_local_filename(
+        self, client, mocker, db, db_session, sample_event_type, sample_venue, sample_speaker, sample_data,
+        mock_storage_not_exists_without_asserts
+    ):
+        mocker.patch('os.path.isfile', return_value=False)
+        response = client.post(
+            url_for('events.import_events'),
+            data=json.dumps(sample_data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 201
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert len(json_resp['events']) == 2
+        assert len(json_resp['errors']) == 2
+        assert str(json_resp['events'][0]["old_id"]) == str(sample_data[0]["id"])
+        assert json_resp['errors'][0] == "./data/events/{} not found for 1".format(sample_data[0]['ImageFilename'])
+        assert json_resp['errors'][1] == "./data/events/{} not found for 2".format(sample_data[1]['ImageFilename'])
 
 
 class WhenPostingCreatingAnEvent:
@@ -508,8 +539,10 @@ class WhenPostingCreatingAnEvent:
         assert json_events["event_dates"][0]["end_time"] == '21:00'
         assert json_events["event_dates"][1]["end_time"] == '21:00'
         assert json_events["event_dates"][0]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
-        assert json_events["event_dates"][1]["speakers"][0]['id'] == sample_req_event_data['speaker'].serialize()['id']
-        assert json_events["event_dates"][1]["speakers"][1]['id'] == speaker.serialize()['id']
+
+        speaker_ids = [e['id'] for e in json_events["event_dates"][1]["speakers"]]
+        assert sample_req_event_data['speaker'].serialize()['id'] in speaker_ids
+        assert speaker.serialize()['id'] in speaker_ids
         assert json_events["event_state"] == DRAFT
 
         event = Event.query.one()
@@ -1248,7 +1281,7 @@ class WhenPostingUpdatingAnEvent:
         assert len(json_events["event_dates"]) == 2
         assert len(json_events["event_dates"][0]["speakers"]) == 1
 
-        event_dates = EventDate.query.all()
+        event_dates = sorted(EventDate.query.all(), key=lambda k: k.event_datetime)
 
         assert len(event_dates) == 2
         assert len(event_dates[0].speakers) == 1
@@ -1302,7 +1335,7 @@ class WhenPostingUpdatingAnEvent:
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['errors'] == ['Paypal error']
 
-        event_dates = EventDate.query.all()
+        event_dates = sorted(EventDate.query.all(), key=lambda k: k.event_datetime)
 
         assert len(event_dates) == 2
         assert len(event_dates[0].speakers) == 1
