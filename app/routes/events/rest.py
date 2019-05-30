@@ -7,6 +7,7 @@ from flask import (
 )
 import os.path
 import re
+import time
 
 from flask_jwt_extended import jwt_required
 from sqlalchemy.orm.exc import NoResultFound
@@ -300,10 +301,13 @@ def update_event(event_id):
             target_image_filename = '{}/{}'.format(event_year, str(event_id))
 
             storage.upload_blob_from_base64string(image_filename, target_image_filename, image_data)
-            image_filename = target_image_filename
+
+            unix_time = time.time()
+            image_filename = '{}?{}'.format(target_image_filename, unix_time)
         elif image_filename:
-            if not storage.blob_exists(image_filename):
-                raise InvalidRequest('{} does not exist'.format(image_filename), 400)
+            image_filename_without_cache_buster = image_filename.split('?')[0]
+            if not storage.blob_exists(image_filename_without_cache_buster):
+                raise InvalidRequest('{} does not exist'.format(image_filename_without_cache_buster), 400)
 
         event.image_filename = image_filename
         dao_update_event(event.id, image_filename=image_filename)
