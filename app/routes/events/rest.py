@@ -260,8 +260,8 @@ def update_event(event_id):
         update_data = {
             'fee': event_data.get('fee'),
             'conc_fee': event_data.get('conc_fee'),
-            'multi_day_fee': event_data.get('multi_day_fee'),
-            'multi_day_conc_fee': event_data.get('multi_day_conc_fee'),
+            'multi_day_fee': event_data.get('multi_day_fee') or 0,
+            'multi_day_conc_fee': event_data.get('multi_day_conc_fee') or 0,
             'event_type_id': event_data.get('event_type_id'),
         }
         db_data = {
@@ -300,9 +300,13 @@ def update_event(event_id):
             target_image_filename = '{}/{}'.format(event_year, str(event_id))
 
             storage.upload_blob_from_base64string(image_filename, target_image_filename, image_data)
+            image_filename = target_image_filename
         elif image_filename:
             if not storage.blob_exists(image_filename):
                 raise InvalidRequest('{} does not exist'.format(image_filename), 400)
+
+        event.image_filename = image_filename
+        dao_update_event(event.id, image_filename=image_filename)
 
         json_event = event.serialize()
         json_event['errors'] = errs
