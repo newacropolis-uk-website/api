@@ -1223,7 +1223,7 @@ class WhenPostingUpdatingAnEvent:
 
         json_events = json.loads(response.get_data(as_text=True))
         assert json_events["title"] == data["title"]
-        assert json_events["image_filename"] == data["image_filename"]
+        assert json_events["image_filename"] == '2018/{}'.format(sample_req_event_data_with_event['event'].id)
         assert len(json_events["event_dates"]) == 1
         assert len(json_events["event_dates"][0]["speakers"]) == 2
 
@@ -1277,7 +1277,7 @@ class WhenPostingUpdatingAnEvent:
 
         json_events = json.loads(response.get_data(as_text=True))
         assert json_events["title"] == data["title"]
-        assert json_events["image_filename"] == data["image_filename"]
+        assert json_events["image_filename"] == '2018/{}'.format(sample_req_event_data_with_event['event'].id)
         assert len(json_events["event_dates"]) == 2
         assert len(json_events["event_dates"][0]["speakers"]) == 1
 
