@@ -151,7 +151,7 @@ class Event(db.Model):
         for e in self.event_dates:
             event_dates.append(
                 {
-                    'event_datetime': str(e.event_datetime),
+                    'event_datetime': e.event_datetime.strftime('%Y-%m-%d %H:%M'),
                     'end_time': e.end_time,
                     'speakers': serialize_speakers(e.speakers)
                 }
