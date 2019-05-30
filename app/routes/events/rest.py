@@ -183,9 +183,10 @@ def update_event(event_id):
         if not new_rejects:
             raise InvalidRequest('rejected event requires new reject reason', 400)
     elif data.get('event_state') == APPROVED:
-        rejects = [r for r in data.get('reject_reasons') if not r.get('resolved')]
-        if rejects:
-            raise InvalidRequest('approved event should not have any reject reasons', 400)
+        if data.get('reject_reasons'):
+            rejects = [r for r in data.get('reject_reasons') if not r.get('resolved')]
+            if rejects:
+                raise InvalidRequest('approved event should not have any reject reasons', 400)
 
     data_event_dates = data.get('event_dates')
 
