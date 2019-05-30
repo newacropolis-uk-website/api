@@ -1081,7 +1081,8 @@ class WhenPostingUpdatingAnEvent:
             "image_filename": "2019/test_img.png",
             "event_dates": [
                 {
-                    "event_date": str(sample_req_event_data_with_event['event'].event_dates[0].event_datetime),
+                    "event_date": sample_req_event_data_with_event['event'].event_dates[0].event_datetime.strftime(
+                        '%Y-%m-%d %H:%M'),
                     "speakers": []
                 },
             ],
@@ -1142,13 +1143,13 @@ class WhenPostingUpdatingAnEvent:
             "image_filename": "2019/test_img.png",
             "event_dates": [
                 {
-                    "event_date": "2019-02-01 19:00:00",
+                    "event_date": "2019-02-01 19:00",
                     "speakers": [
                         {"speaker_id": str(event.event_dates[0].speakers[1].id)},
                     ]
                 },
                 {
-                    "event_date": "2019-02-02 19:00:00",
+                    "event_date": "2019-02-02 19:00",
                     "speakers": [
                         {"speaker_id": str(event.event_dates[1].speakers[0].id)},
                         {"speaker_id": str(event.event_dates[1].speakers[1].id)},
@@ -1199,7 +1200,8 @@ class WhenPostingUpdatingAnEvent:
             "image_data": base64img,
             "event_dates": [
                 {
-                    "event_date": str(sample_req_event_data_with_event['event'].event_dates[0].event_datetime),
+                    "event_date": sample_req_event_data_with_event['event'].event_dates[0].event_datetime.strftime(
+                        '%Y-%m-%d %H:%M'),
                     "speakers": [
                         {"speaker_id": sample_req_event_data_with_event['speaker'].id},
                         {"speaker_id": speaker.id}
@@ -1238,6 +1240,7 @@ class WhenPostingUpdatingAnEvent:
     def it_updates_an_event_add_event_dates_via_rest(
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_upload, mock_paypal
     ):
+        event_datetime = sample_req_event_data_with_event['event'].event_dates[0].event_datetime
         data = {
             "event_type_id": sample_req_event_data_with_event['event_type'].id,
             "title": "Test title new",
@@ -1247,15 +1250,13 @@ class WhenPostingUpdatingAnEvent:
             "image_data": base64img,
             "event_dates": [
                 {
-                    "event_date": str(sample_req_event_data_with_event['event'].event_dates[0].event_datetime),
+                    "event_date": event_datetime.strftime('%Y-%m-%d %H:%M'),
                     "speakers": [
                         {"speaker_id": sample_req_event_data_with_event['speaker'].id}
                     ]
                 },
                 {
-                    "event_date": str(
-                        sample_req_event_data_with_event['event'].event_dates[0].event_datetime + timedelta(days=1)
-                    ),
+                    "event_date": (event_datetime + timedelta(days=1)).strftime('%Y-%m-%d %H:%M'),
                     "speakers": [
                         {"speaker_id": sample_req_event_data_with_event['speaker'].id}
                     ]
@@ -1293,6 +1294,7 @@ class WhenPostingUpdatingAnEvent:
     def it_updates_an_event_handles_exceptions_via_rest(
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage_upload
     ):
+        event_datetime = sample_req_event_data_with_event['event'].event_dates[0].event_datetime
         mocker.patch(
             "app.routes.events.rest.PayPal.create_update_paypal_button",
             side_effect=PaypalException('Paypal error'))
@@ -1305,15 +1307,13 @@ class WhenPostingUpdatingAnEvent:
             "image_data": base64img,
             "event_dates": [
                 {
-                    "event_date": str(sample_req_event_data_with_event['event'].event_dates[0].event_datetime),
+                    "event_date": event_datetime.strftime('%Y-%m-%d %H:%M'),
                     "speakers": [
                         {"speaker_id": sample_req_event_data_with_event['speaker'].id}
                     ]
                 },
                 {
-                    "event_date": str(
-                        sample_req_event_data_with_event['event'].event_dates[0].event_datetime + timedelta(days=1)
-                    ),
+                    "event_date": (event_datetime + timedelta(days=1)).strftime('%Y-%m-%d %H:%M'),
                     "speakers": [
                         {"speaker_id": sample_req_event_data_with_event['speaker'].id}
                     ]
