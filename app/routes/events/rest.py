@@ -12,6 +12,7 @@ import time
 from flask_jwt_extended import jwt_required
 from sqlalchemy.orm.exc import NoResultFound
 
+from app.comms.email import send_email
 from app.dao.events_dao import (
     dao_create_event,
     dao_delete_event,
@@ -27,10 +28,11 @@ from app.dao.event_dates_dao import dao_create_event_date, dao_get_event_date_by
 from app.dao.event_types_dao import dao_get_event_type_by_old_id, dao_get_event_type_by_id
 from app.dao.reject_reasons_dao import dao_create_reject_reason, dao_update_reject_reason
 from app.dao.speakers_dao import dao_get_speaker_by_name, dao_get_speaker_by_id
+from app.dao.users_dao import dao_get_admin_users, dao_get_users
 from app.dao.venues_dao import dao_get_venue_by_old_id, dao_get_venue_by_id
 
 from app.errors import register_errors, InvalidRequest, PaypalException
-from app.models import Event, EventDate, RejectReason, APPROVED, DRAFT, REJECTED
+from app.models import Event, EventDate, RejectReason, APPROVED, DRAFT, READY, REJECTED
 
 from app.routes import is_running_locally
 from app.routes.events.schemas import post_create_event_schema, post_update_event_schema, post_import_events_schema
@@ -177,6 +179,8 @@ def update_event(event_id):
         raise InvalidRequest('event not found: {}'.format(event_id), 400)
 
     errs = []
+    event_dates = []
+    event_data = {}
 
     if data.get('event_state') == REJECTED:
         new_rejects = [r for r in data.get('reject_reasons') if not r.get('id')]
@@ -190,49 +194,49 @@ def update_event(event_id):
 
     data_event_dates = data.get('event_dates')
 
-    serialized_event_dates = event.serialize_event_dates()
+    if data_event_dates:
+        serialized_event_dates = event.serialize_event_dates()
 
-    data_event_dates__dates = [e['event_date'] for e in data_event_dates]
-    serialized_event_dates__dates = [e['event_datetime'] for e in serialized_event_dates]
+        data_event_dates__dates = [e['event_date'] for e in data_event_dates]
+        serialized_event_dates__dates = [e['event_datetime'] for e in serialized_event_dates]
 
-    diff_add = set(data_event_dates__dates).difference(serialized_event_dates__dates)
-    intersect = set(data_event_dates__dates).intersection(serialized_event_dates__dates)
+        diff_add = set(data_event_dates__dates).difference(serialized_event_dates__dates)
+        intersect = set(data_event_dates__dates).intersection(serialized_event_dates__dates)
 
-    dates_to_add = [e for e in data_event_dates if e['event_date'] in diff_add]
-    dates_to_update = [e for e in data_event_dates if e['event_date'] in intersect]
+        dates_to_add = [e for e in data_event_dates if e['event_date'] in diff_add]
+        dates_to_update = [e for e in data_event_dates if e['event_date'] in intersect]
 
-    event_dates = []
-    for _date in dates_to_add:
-        speakers = []
-        for s in _date.get('speakers', []):
-            speaker = dao_get_speaker_by_id(s['speaker_id'])
-            speakers.append(speaker)
+        for _date in dates_to_add:
+            speakers = []
+            for s in _date.get('speakers', []):
+                speaker = dao_get_speaker_by_id(s['speaker_id'])
+                speakers.append(speaker)
 
-        e = EventDate(
-            event_id=event_id,
-            event_datetime=_date['event_date'],
-            end_time=_date.get('end_time'),
-            speakers=speakers
-        )
+            e = EventDate(
+                event_id=event_id,
+                event_datetime=_date['event_date'],
+                end_time=_date.get('end_time'),
+                speakers=speakers
+            )
 
-        current_app.logger.info('Adding event date: {}'.format(_date['event_date']))
+            current_app.logger.info('Adding event date: {}'.format(_date['event_date']))
 
-        dao_create_event_date(e)
+            dao_create_event_date(e)
 
-        if _date['event_date'] not in [_e.event_datetime for _e in event_dates]:
-            event_dates.append(e)
+            if _date['event_date'] not in [_e.event_datetime for _e in event_dates]:
+                event_dates.append(e)
 
-    for _date in sorted(dates_to_update, key=lambda k: k['event_date']):
-        speakers = []
-        for s in _date['speakers']:
-            speaker = dao_get_speaker_by_id(s['speaker_id'])
-            speakers.append(speaker)
-        db_event_date = [
-            e for e in event.event_dates if e.event_datetime.strftime('%Y-%m-%d %H:%M') == _date['event_date']][0]
-        db_event_date.speakers = speakers
+        for _date in sorted(dates_to_update, key=lambda k: k['event_date']):
+            speakers = []
+            for s in _date['speakers']:
+                speaker = dao_get_speaker_by_id(s['speaker_id'])
+                speakers.append(speaker)
+            db_event_date = [
+                e for e in event.event_dates if e.event_datetime.strftime('%Y-%m-%d %H:%M') == _date['event_date']][0]
+            db_event_date.speakers = speakers
 
-        if _date['event_date'] not in [_e.event_datetime for _e in event_dates]:
-            event_dates.append(db_event_date)
+            if _date['event_date'] not in [_e.event_datetime for _e in event_dates]:
+                event_dates.append(db_event_date)
 
     if data.get('reject_reasons'):
         for reject_reason in data.get('reject_reasons'):
@@ -257,7 +261,11 @@ def update_event(event_id):
         if hasattr(Event, k) and k not in ['reject_reasons']:
             event_data[k] = data[k]
 
-    event_data['event_dates'] = event_dates
+    if event_dates:
+        event_data['event_dates'] = event_dates
+    elif data_event_dates == []:
+        error = 'event needs to have a date'
+        raise InvalidRequest('{} needs an event date'.format(event_id), 400)
 
     if event_data.get('fee'):
         update_data = {
@@ -316,6 +324,29 @@ def update_event(event_id):
 
         json_event = event.serialize()
         json_event['errors'] = errs
+
+        if data.get('event_state') == READY:
+            emails_to = [admin.email for admin in dao_get_admin_users()]
+
+            message = 'Please review this event for publishing <a href="{}">{}</a>'.format(
+                '{}/events/{}'.format(current_app.config['FRONTEND_ADMIN_URL'], event_id),
+                event.title
+            )
+
+            send_email(emails_to, '{} is ready for review'.format(event.title), message)
+        elif data.get('event_state') == REJECTED:
+            emails_to = [admin.email for admin in dao_get_users()]
+
+            message = '<div>Please correct this event <a href="{}">{}</a></div>'.format(
+                '{}/events/{}'.format(current_app.config['FRONTEND_ADMIN_URL'], event_id),
+                event.title)
+
+            message += '<ol>'
+            for reject_reason in [rr for rr in json_event.get('reject_reasons') if not rr.get('resolved')]:
+                message += '<li>{}</li>'.format(reject_reason['reason'])
+            message += '</ol>'
+
+            send_email(emails_to, '{} event needs to be corrected'.format(event.title), message)
 
         return jsonify(json_event), 200
 

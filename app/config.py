@@ -45,6 +45,9 @@ class Config(object):
     PAYPAL_USER = os.getenv('PAYPAL_USER')
     PAYPAL_PASSWORD = os.getenv('PAYPAL_PASSWORD')
     PAYPAL_SIG = os.getenv('PAYPAL_SIG')
+    EMAIL_PROVIDER_URL = os.getenv('EMAIL_PROVIDER_URL')
+    EMAIL_PROVIDER_APIKEY = os.getenv('EMAIL_PROVIDER_APIKEY')
+    FRONTEND_ADMIN_URL = os.getenv('FRONTEND_ADMIN_URL')
 
 
 class Development(Config):

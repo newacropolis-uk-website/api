@@ -10,7 +10,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from app.errors import PaypalException
 from app.models import Event, EventDate, RejectReason, APPROVED, DRAFT, READY, REJECTED
 
-from tests.conftest import create_authorization_header
+from tests.conftest import create_authorization_header, TEST_ADMIN_USER
 from tests.db import create_event, create_event_date, create_event_type, create_speaker
 
 base64img = (
@@ -785,6 +785,21 @@ class WhenDeletingEvent:
 
 class WhenPostingUpdatingAnEvent:
 
+    @pytest.fixture(autouse=True)
+    def setup(self, mocker):
+        self.mock_config = {
+            'EMAIL_DOMAIN': 'test.com',
+            'EMAIL_PROVIDER_URL': 'http://emailprovider',
+            'EMAIL_PROVIDER_APIKEY': 'apikey',
+            'FRONTEND_ADMIN_URL': 'https://frontend/test'
+        }
+
+        mocker.patch.dict(
+            'app.comms.email.current_app.config',
+            self.mock_config
+        )
+        self.mock_send_email = mocker.patch('app.comms.email.requests.post')
+
     @pytest.fixture
     def mock_storage(self, mocker):
         mock_storage = mocker.patch("app.storage.utils.Storage.__init__", return_value=None)
@@ -813,7 +828,7 @@ class WhenPostingUpdatingAnEvent:
                     'test_img.png', '2018/{}'.format(str(event.id)), base64img)
 
     def it_updates_an_event_via_rest(
-        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage, mock_paypal
+        self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage, mock_paypal, sample_admin_user
     ):
         data = {
             "event_type_id": sample_req_event_data_with_event['event_type'].id,
@@ -861,6 +876,19 @@ class WhenPostingUpdatingAnEvent:
         assert len(event_dates) == 1
         # use existing event date
         assert event_dates[0].id != old_event_date_id
+        self.mock_send_email.assert_called_with(
+            self.mock_config['EMAIL_PROVIDER_URL'],
+            auth=('api', self.mock_config['EMAIL_PROVIDER_APIKEY']),
+            data={
+                'to': [TEST_ADMIN_USER],
+                'html': 'Please review this event for publishing <a href="{}/events/{}">{}</a>'.format(
+                    self.mock_config['FRONTEND_ADMIN_URL'],
+                    sample_req_event_data_with_event['event'].id,
+                    sample_req_event_data_with_event['event'].title),
+                'from': 'noreply@{}'.format(self.mock_config['EMAIL_DOMAIN']),
+                'subject': '{} is ready for review'.format(sample_req_event_data_with_event['event'].title)
+            }
+        )
 
     def it_rejects_invalid_event_states(
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_paypal
@@ -936,6 +964,21 @@ class WhenPostingUpdatingAnEvent:
         assert reject_reasons[0].reason == data['reject_reasons'][0]['reason']
         assert reject_reasons[0].resolved == data['reject_reasons'][0]['resolved']
         assert str(reject_reasons[0].created_by) == data['reject_reasons'][0]['created_by']
+        self.mock_send_email.assert_called_with(
+            self.mock_config['EMAIL_PROVIDER_URL'],
+            auth=('api', self.mock_config['EMAIL_PROVIDER_APIKEY']),
+            data={
+                'to': [sample_user.email],
+                'html': '<div>Please correct this event <a href="{admin_url}/events/{event_id}">'
+                        '{event_title}</a></div><ol><li>{reject_reason}</li></ol>'.format(
+                            admin_url=self.mock_config['FRONTEND_ADMIN_URL'],
+                            event_id=sample_req_event_data_with_event['event'].id,
+                            event_title=sample_req_event_data_with_event['event'].title,
+                            reject_reason=data['reject_reasons'][0]['reason']),
+                'from': 'noreply@{}'.format(self.mock_config['EMAIL_DOMAIN']),
+                'subject': '{} event needs to be corrected'.format(sample_req_event_data_with_event['event'].title)
+            }
+        )
 
     def it_updates_an_event_to_reject_resolved(
         self, mocker, client, db_session,
@@ -1069,6 +1112,32 @@ class WhenPostingUpdatingAnEvent:
 
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['message'] == 'approved event should not have any reject reasons'
+
+    def it_raises_an_error_if_no_event_dates(
+        self, mocker, client, db_session,
+        sample_req_event_data_with_event, sample_reject_reason
+    ):
+        data = {
+            "event_type_id": sample_req_event_data_with_event['event_type'].id,
+            "title": "Test title new",
+            "sub_title": "Test sub title",
+            "description": "Test description",
+            "image_filename": "2019/test_img.png",
+            "event_dates": [],
+            "venue_id": sample_req_event_data_with_event['venue'].id,
+            "event_state": DRAFT,
+        }
+
+        response = client.post(
+            url_for('events.update_event', event_id=sample_req_event_data_with_event['event'].id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['message'] == '{} needs an event date'.format(sample_req_event_data_with_event['event'].id)
 
     def it_updates_an_event_remove_speakers_via_rest(
         self, mocker, client, db_session, sample_req_event_data_with_event, mock_storage, mock_paypal
@@ -1453,7 +1522,6 @@ class WhenTestingPaypal:
         )
         assert mock_paypal.call_args == call(sample_uuid, 'test paypal')
         resp_text = response.get_data(as_text=True)
-        print(resp_text)
         assert resp_text == 'test booking code'
 
     def it_does_not_create_a_paypal_button_in_live(self, mocker, client, sample_uuid, mock_paypal):
