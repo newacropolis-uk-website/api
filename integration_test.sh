@@ -281,6 +281,26 @@ event=$(cat  << EOF
 EOF
 )
 
+event_update=$(cat  << EOF
+    {
+        "sub_title": "Test title",
+        "event_state": "ready"
+    }
+EOF
+)
+
+event_rejected=$(cat  << EOF
+    {
+        "event_state": "rejected",
+        "reject_reasons": [
+            {
+                "reason": "Better title needed"
+            }
+        ]
+    }
+EOF
+)
+
 function CreateEvent {
     echo "*** Create Event ***"
 
@@ -288,6 +308,24 @@ function CreateEvent {
     -H "Accept: application/json" \
     -H "Authorization: Bearer $TKN" \
     -d "$event"
+}
+
+function UpdateEvent {
+    echo "*** Update Event ***"
+
+    curl -X POST $api_server'/event/df3baba5-e6fa-4c81-b0bf-c56c08c79c94' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$event_update"
+}
+
+function UpdateEventRejected {
+    echo "*** Update Event Rejected ***"
+
+    curl -X POST $api_server'/event/df3baba5-e6fa-4c81-b0bf-c56c08c79c94' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$event_rejected"
 }
 
 function ImportTargetEvents {
@@ -450,6 +488,14 @@ case "$arg" in
 
         -ce)
             CreateEvent
+        ;;
+
+        -ue)
+            UpdateEvent
+        ;;
+
+        -uer)
+            UpdateEventRejected
         ;;
 
         -ite)
