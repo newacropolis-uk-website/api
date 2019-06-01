@@ -2,7 +2,7 @@ import pytest
 from flask import json, url_for
 from tests.conftest import create_authorization_header
 from app.models import User, USER_ADMIN
-from app.dao.users_dao import dao_get_admin_user
+from app.dao.users_dao import dao_get_admin_users
 from tests.db import create_user
 
 
@@ -83,7 +83,7 @@ class WhenPostingUser(object):
 
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['access_area'] == USER_ADMIN
-        assert dao_get_admin_user().email == data['email']
+        assert dao_get_admin_users()[0].email == data['email']
 
     def it_does_not_create_admin_user_if_email_is_not_admin_in_env_var(self, mocker, client, db_session):
         data = {'email': 'gary@example.com', 'name': 'Gary Blue', 'access_area': ',email,'}
