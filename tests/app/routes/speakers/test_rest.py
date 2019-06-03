@@ -195,6 +195,23 @@ class WhenPostingSpeaker(object):
         for key in data.keys():
             assert data[key] == json_resp[key]
 
+    def it_returns_speaker_with_same_name(self, client, db_session, sample_speaker):
+        data = {'name': sample_speaker.name}
+
+        response = client.post(
+            url_for('speaker.create_speaker'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        assert response.status_code == 200
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['id'] == str(sample_speaker.id)
+
+        speakers = Speaker.query.all()
+        assert len(speakers) == 1
+        assert speakers[0].name == sample_speaker.name
+
     @pytest.mark.parametrize('data,error_msg', [
         ({'title': 'Mrs'}, 'name is a required property'),
         # ({'titl': 'Ms', 'name': 'Diane Cyan'}, 'test')  # should be able to handle type errors

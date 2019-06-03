@@ -6,7 +6,9 @@ from flask import (
 )
 from flask_jwt_extended import jwt_required
 
-from app.dao.speakers_dao import dao_get_speakers, dao_get_speaker_by_id, dao_create_speaker, dao_update_speaker
+from app.dao.speakers_dao import (
+    dao_get_speakers, dao_get_speaker_by_id, dao_get_speaker_by_name, dao_create_speaker, dao_update_speaker
+)
 from app.errors import register_errors
 from app.models import Speaker
 from app.schema_validation import validate
@@ -108,13 +110,19 @@ def get_speaker_by_id(speaker_id):
 @speaker_blueprint.route('/speaker', methods=['POST'])
 @jwt_required
 def create_speaker():
-    data = request.get_json()
+    data = request.get_json(force=True)
 
     validate(data, post_create_speaker_schema)
+
+    db_speaker = dao_get_speaker_by_name(data.get('name'))
+    if db_speaker:
+        current_app.logger.info('Speaker found: {}'.format(db_speaker.id))
+        return jsonify(db_speaker.serialize()), 200
 
     speaker = Speaker(**data)
 
     dao_create_speaker(speaker)
+    current_app.logger.info('Speaker created: {}'.format(speaker.id))
     return jsonify(speaker.serialize()), 201
 
 
