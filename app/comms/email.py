@@ -1,4 +1,4 @@
-from flask import current_app
+from flask import current_app, jsonify
 import requests
 
 
@@ -16,11 +16,14 @@ def send_email(to, subject, message, _from=None):
         "html": message
     }
 
-    response = requests.post(
-        email_provider_url,
-        auth=('api', email_provider_apikey),
-        data=data,
-    )
+    if email_provider_url and email_provider_apikey:
+        response = requests.post(
+            email_provider_url,
+            auth=('api', email_provider_apikey),
+            data=data,
+        )
 
-    response.raise_for_status()
-    current_app.logger.info('Sent email: {}'.format(subject))
+        response.raise_for_status()
+        current_app.logger.info('Sent email: {}'.format(subject))
+    else:
+        current_app.logger.info('Email not configured, email would have sent: {}'.format(data))
