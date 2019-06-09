@@ -1,4 +1,4 @@
-from mock import Mock
+from mock import call, Mock
 import pytest
 import uuid
 
@@ -77,6 +77,27 @@ class WhenCreatingPaypalButton:
         button_id = p.create_update_paypal_button(
             sample_uuid, 'test title', all_fee=20, all_conc_fee=15, members_free=True)
         assert button_id == mock_create_button_id
+
+    def it_returns_a_mock_button_id_if_paypal_not_configured(self, app, mocker, sample_uuid):
+        self.mock_config = {
+            'PAYPAL_URL': None,
+            'PAYPAL_USER': None,
+            'PAYPAL_PASSWORD': None,
+            'PAYPAL_SIG': None
+        }
+
+        mocker.patch.dict(
+            'app.payments.paypal.current_app.config',
+            self.mock_config
+        )
+
+        mock_logger = mocker.patch('app.payments.paypal.current_app.logger.info')
+
+        p = PayPal()
+        button_id = p.create_update_paypal_button(
+            sample_uuid, 'test title', all_fee=20, all_conc_fee=15, members_free=True)
+        assert mock_logger.call_args == call('Paypal not configured, returning MOCK_BUTTON_ID')
+        assert button_id == 'MOCK_BUTTON_ID'
 
     def it_calls_paypal_apis_to_update_button(self, app, mocker):
         mocker.patch('app.payments.paypal.requests', MockRequests())

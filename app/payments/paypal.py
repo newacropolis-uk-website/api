@@ -23,6 +23,10 @@ class PayPal:
     def create_update_paypal_button(
         self, item_id, title, fee=5, conc_fee=3, all_fee=None, all_conc_fee=None, members_free=False, booking_code=None
     ):
+        if not self.paypal_url:
+            current_app.logger.info('Paypal not configured, returning MOCK_BUTTON_ID')
+            return 'MOCK_BUTTON_ID'
+
         search_data = self.base_data.copy()
         search_data.update({
             'METHOD': 'BMButtonSearch',
