@@ -97,6 +97,18 @@ class WhenUsingStorage:
         assert store.storage_client.project == 'test-project'
         assert store.storage_client.list_buckets() == ['test-store']
 
+    def it_logs_args_if_development_and_no_google_config(self, app, mocker):
+        mocker.patch.dict('app.storage.utils.current_app.config', {
+            'ENVIRONMENT': 'development',
+            'GOOGLE_APPLICATION_CREDENTIALS': '',
+        })
+
+        mock_logger = mocker.patch("app.storage.utils.current_app.logger.info")
+
+        Storage('test-store')
+
+        assert mock_logger.called
+
     def it_uses_api_key_for_storage_client_with_google_creds_envs(self, app, mocker):
         mocker.patch.dict('os.environ', {
             'GOOGLE_APPLICATION_CREDENTIALS': 'path/to/creds'
@@ -139,6 +151,19 @@ class WhenUsingStorage:
         assert store.bucket.blob.source_filename == 'source'
         assert store.bucket.blob.public
 
+    def it_logs_args_if_development_and_no_google_config_when_upload_file(self, app, mocker):
+        mocker.patch.dict('app.storage.utils.current_app.config', {
+            'ENVIRONMENT': 'development',
+            'GOOGLE_APPLICATION_CREDENTIALS': '',
+        })
+
+        mock_logger = mocker.patch("app.storage.utils.current_app.logger.info")
+
+        store = Storage('test-store')
+        store.upload_blob('source', 'destination')
+
+        assert mock_logger.called
+
     def it_checks_blob_exists(self, app, mocker):
         mocker.patch.dict('os.environ', {
             'GOOGLE_APPLICATION_CREDENTIALS': 'path/to/creds'
@@ -154,6 +179,19 @@ class WhenUsingStorage:
         assert store.bucket.delimiter == 'delimiter'
         assert res
 
+    def it_logs_args_if_development_and_no_google_config_when_blob_exists(self, app, mocker):
+        mocker.patch.dict('app.storage.utils.current_app.config', {
+            'ENVIRONMENT': 'development',
+            'GOOGLE_APPLICATION_CREDENTIALS': '',
+        })
+
+        mock_logger = mocker.patch("app.storage.utils.current_app.logger.info")
+
+        store = Storage('test-store')
+        store.blob_exists('prfix', 'delimiter')
+
+        assert mock_logger.called
+
     def it_uploads_blob_from_base64string(self, app, mocker):
         mocker.patch.dict('os.environ', {
             'GOOGLE_APPLICATION_CREDENTIALS': 'path/to/creds'
@@ -166,6 +204,19 @@ class WhenUsingStorage:
         store.upload_blob_from_base64string('test.png', '2019/new_test.png', self.base64img)
 
         assert store.bucket.blob.source_string == base64.b64decode(self.base64img)
+
+    def it_logs_args_if_development_and_no_google_config_when_upload_from_base64string(self, app, mocker):
+        mocker.patch.dict('app.storage.utils.current_app.config', {
+            'ENVIRONMENT': 'development',
+            'GOOGLE_APPLICATION_CREDENTIALS': '',
+        })
+
+        mock_logger = mocker.patch("app.storage.utils.current_app.logger.info")
+
+        store = Storage('test-store')
+        store.upload_blob_from_base64string('test.png', '2019/new_test.png', self.base64img)
+
+        assert mock_logger.called
 
     @pytest.mark.parametrize('num,exp_res', [
         (1024 * 1000 * 2000, '1.9GiB'),
