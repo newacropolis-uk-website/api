@@ -33,6 +33,7 @@ TEST_ADMIN_USER = 'admin@example.com'
 def app():
     _app = create_app(**{
         'TESTING': True,
+        'ENVIRONMENT': 'test',
         'SQLALCHEMY_DATABASE_URI': TEST_DATABASE_URI,
         'PREFERRED_URL_SCHEME': 'http',
         'ADMIN_CLIENT_ID': 'testadmin',
