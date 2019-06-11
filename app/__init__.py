@@ -136,6 +136,8 @@ def setup_gce_logging():  # pragma: no cover
     if application.config['SQLALCHEMY_DATABASE_URI'][:22] in ['postgresql://localhost', 'db://localhost/test_db']:
         return
 
+    return  # short term patch until google logging has been deployed properly
+
     import google.cloud.logging
 
     client = google.cloud.logging.Client()
