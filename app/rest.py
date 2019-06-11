@@ -12,4 +12,8 @@ def get_info():
     current_app.logger.info('get_info')
     query = 'SELECT version_num FROM alembic_version'
     full_name = db.session.execute(query).fetchone()[0]
-    return jsonify(environment=current_app.config['ENVIRONMENT'], info=full_name)
+    return jsonify(
+        environment=current_app.config['ENVIRONMENT'],
+        info=full_name,
+        commit=current_app.config['TRAVIS_COMMIT']
+    )
