@@ -48,6 +48,7 @@ class Config(object):
     EMAIL_PROVIDER_URL = os.getenv('EMAIL_PROVIDER_URL')
     EMAIL_PROVIDER_APIKEY = os.getenv('EMAIL_PROVIDER_APIKEY')
     FRONTEND_ADMIN_URL = os.getenv('FRONTEND_ADMIN_URL')
+    GOOGLE_APPLICATION_CREDENTIALS = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 
 
 class Development(Config):
