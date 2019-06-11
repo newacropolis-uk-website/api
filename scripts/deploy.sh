@@ -57,7 +57,6 @@ if [ $port != 'No environment' ]; then
     export FRONTEND_ADMIN_URL=$FRONTEND_ADMIN_URL
 
     sudo ./scripts/bootstrap.sh
-    pip install --upgrade google-cloud-logging
     ./scripts/run_app.sh $environment gunicorn $output_params"""
 
     eval "API_ENV=\${API_$environment}"
