@@ -32,6 +32,9 @@ if [ $port != 'No environment' ]; then
     eval "PAYPAL_USER=\${PAYPAL_USER_$environment}"
     eval "PAYPAL_PASSWORD=\${PAYPAL_PASSWORD_$environment}"
     eval "PAYPAL_SIG=\${PAYPAL_SIG_$environment}"
+    eval "EMAIL_PROVIDER_URL=\${EMAIL_PROVIDER_URL_$environment}"
+    eval "EMAIL_PROVIDER_APIKEY=\${EMAIL_PROVIDER_APIKEY_$environment}"
+    eval "FRONTEND_ADMIN_URL=\${FRONTEND_ADMIN_URL_$environment}"
 
     echo starting app $environment on port $port
     ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
@@ -49,6 +52,11 @@ if [ $port != 'No environment' ]; then
     export PAYPAL_USER=$PAYPAL_USER
     export PAYPAL_PASSWORD=$PAYPAL_PASSWORD
     export PAYPAL_SIG=$PAYPAL_SIG
+    export EMAIL_PROVIDER_URL=$EMAIL_PROVIDER_URL
+    export EMAIL_PROVIDER_APIKEY=$EMAIL_PROVIDER_APIKEY
+    export FRONTEND_ADMIN_URL=$FRONTEND_ADMIN_URL
+
+    pip install --upgrade google-cloud-logging
     sudo ./scripts/bootstrap.sh
     ./scripts/run_app.sh $environment gunicorn $output_params"""
 

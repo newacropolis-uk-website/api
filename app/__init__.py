@@ -84,6 +84,8 @@ def get_root_path():
 
 
 def configure_logging():
+    setup_gce_logging()
+
     if not application.config.get('APP_SERVER'):
         return
 
@@ -128,6 +130,16 @@ def configure_logging():
 
     db_name = application.config.get('SQLALCHEMY_DATABASE_URI').split('/')[-1]
     application.logger.debug("connected to db: {}".format(db_name))
+
+
+def setup_gce_logging():  # pragma: no cover
+    if application.config['SQLALCHEMY_DATABASE_URI'][:22] in ['postgresql://localhost', 'db://localhost/test_db']:
+        return
+
+    import google.cloud.logging
+
+    client = google.cloud.logging.Client()
+    client.setup_logging()
 
 
 class LogTruncatingFormatter(logging.Formatter):
