@@ -56,7 +56,7 @@ if [ $port != 'No environment' ]; then
     export EMAIL_PROVIDER_APIKEY=$EMAIL_PROVIDER_APIKEY
     export FRONTEND_ADMIN_URL=$FRONTEND_ADMIN_URL
 
-    pip install --upgrade google-cloud-logging
+    sudo pip install --upgrade google-cloud-logging
     sudo ./scripts/bootstrap.sh
     ./scripts/run_app.sh $environment gunicorn $output_params"""
 
