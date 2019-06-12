@@ -8,5 +8,5 @@ if [ -z "$VIRTUAL_ENV" ] && [ -d venv ]; then
   source ./venv/bin/activate
 fi
 
-pip install google-cloud-logging
 pip install -r requirements_tests.txt
+pip install google-cloud-logging==1.11.0
