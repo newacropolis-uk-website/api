@@ -84,10 +84,10 @@ def get_root_path():
 
 
 def configure_logging():
-    setup_gce_logging()
-
     if not application.config.get('APP_SERVER'):
         return
+
+    setup_gce_logging()
 
     ch = logging.StreamHandler()
     if ch in application.logger.handlers:
@@ -95,7 +95,8 @@ def configure_logging():
 
     del application.logger.handlers[:]
 
-    f = LogTruncatingFormatter("%(asctime)s;[%(process)d];%(levelname)s;%(message)s", "%Y-%m-%d %H:%M:%S")
+    f = LogTruncatingFormatter(
+        "{} %(asctime)s;[%(process)d];%(levelname)s;%(message)s".format(get_env()), "%Y-%m-%d %H:%M:%S")
     ch.setFormatter(f)
     application.logger.addHandler(ch)
 
@@ -137,9 +138,11 @@ def setup_gce_logging():  # pragma: no cover
         return
 
     import google.cloud.logging
+    from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
 
     client = google.cloud.logging.Client()
-    client.setup_logging()
+    handler = CloudLoggingHandler(client, name=get_env())
+    setup_logging(handler)
 
 
 class LogTruncatingFormatter(logging.Formatter):
