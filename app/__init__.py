@@ -87,8 +87,6 @@ def configure_logging():
     if not application.config.get('APP_SERVER'):
         return
 
-    setup_gce_logging()
-
     ch = logging.StreamHandler()
     if ch in application.logger.handlers:
         return
@@ -119,6 +117,8 @@ def configure_logging():
         gunicorn_access_logger.addHandler(ch)
         gunicorn_error_logger.addHandler(ch)
 
+        setup_gce_logging(gunicorn_access_logger, gunicorn_error_logger)
+
         application.logger.info('Gunicorn logging configured')
     else:
         werkzeug_log = logging.getLogger('werkzeug')
@@ -133,7 +133,7 @@ def configure_logging():
     application.logger.debug("connected to db: {}".format(db_name))
 
 
-def setup_gce_logging():  # pragma: no cover
+def setup_gce_logging(gunicorn_access_logger, gunicorn_error_logger):  # pragma: no cover
     if application.config['SQLALCHEMY_DATABASE_URI'][:22] in ['postgresql://localhost', 'db://localhost/test_db']:
         return
 
@@ -143,6 +143,9 @@ def setup_gce_logging():  # pragma: no cover
     client = google.cloud.logging.Client()
     handler = CloudLoggingHandler(client, name=get_env())
     setup_logging(handler)
+
+    gunicorn_access_logger.addHandler(handler)
+    gunicorn_error_logger.addHandler(handler)
 
 
 class LogTruncatingFormatter(logging.Formatter):
