@@ -55,9 +55,10 @@ if [ $port != 'No environment' ]; then
     export EMAIL_PROVIDER_URL=$EMAIL_PROVIDER_URL
     export EMAIL_PROVIDER_APIKEY=$EMAIL_PROVIDER_APIKEY
     export FRONTEND_ADMIN_URL=$FRONTEND_ADMIN_URL
+    export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
+    export TRAVIS_COMMIT=$TRAVIS_COMMIT
 
     sudo ./scripts/bootstrap.sh
-    pip install --upgrade google-cloud-logging
     ./scripts/run_app.sh $environment gunicorn $output_params"""
 
     eval "API_ENV=\${API_$environment}"
