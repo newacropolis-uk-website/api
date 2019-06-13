@@ -137,9 +137,6 @@ def setup_gce_logging(gunicorn_access_logger, gunicorn_error_logger):  # pragma:
     if application.config['SQLALCHEMY_DATABASE_URI'][:22] in ['postgresql://localhost', 'db://localhost/test_db']:
         return
 
-    # frontend is not working with api, maybe due to google logger
-    return
-
     import google.cloud.logging
     from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
 
@@ -147,9 +144,8 @@ def setup_gce_logging(gunicorn_access_logger, gunicorn_error_logger):  # pragma:
     handler = CloudLoggingHandler(client, name=get_env())
     setup_logging(handler)
 
-    # Google cloud logging doesn't work with gunicorn, will need to find correct config
-    # gunicorn_access_logger.addHandler(handler)
-    # gunicorn_error_logger.addHandler(handler)
+    gunicorn_access_logger.addHandler(handler)
+    gunicorn_error_logger.addHandler(handler)
 
 
 class LogTruncatingFormatter(logging.Formatter):
