@@ -144,8 +144,9 @@ def setup_gce_logging(gunicorn_access_logger, gunicorn_error_logger):  # pragma:
     handler = CloudLoggingHandler(client, name=get_env())
     setup_logging(handler)
 
-    gunicorn_access_logger.addHandler(handler)
-    gunicorn_error_logger.addHandler(handler)
+    # Google cloud logging doesn't work with gunicorn, will need to find correct config
+    # gunicorn_access_logger.addHandler(handler)
+    # gunicorn_error_logger.addHandler(handler)
 
 
 class LogTruncatingFormatter(logging.Formatter):
