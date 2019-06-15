@@ -94,7 +94,7 @@ def register_errors(blueprint):
     @blueprint.errorhandler(ExpiredSignatureError)
     def expire_signature_error(e):
         msg = 'Signature expired'
-        current_app.logger.exception(msg, e.message)
+        current_app.logger.exception(msg, str(e))
         return jsonify(result='error', message=str(msg)), 401
 
     @blueprint.errorhandler(NoAuthorizationError)
