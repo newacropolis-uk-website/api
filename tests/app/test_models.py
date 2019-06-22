@@ -1,5 +1,5 @@
 from app.models import Event, Fee, Speaker
-from tests.db import create_article, create_event, create_fee, create_speaker
+from tests.db import create_article, create_event, create_email, create_fee, create_speaker
 
 
 class WhenUsingEventModel(object):
@@ -99,4 +99,21 @@ class WhenUsingArticleModel(object):
             'title': article.title,
             'short_content': clean_long_content[:clean_short_content_length] + '...',
             'very_short_content': clean_long_content[:clean_very_short_content_length] + '...',
+        }
+
+
+class WhenUsingEmailModel:
+    def it_shows_email_json_on_serialize(self, db, db_session):
+        email = create_email(created_at='2019-06-01T10:00:00')
+
+        assert email.serialize() == {
+            'id': str(email.id),
+            'event_id': None,
+            'old_id': email.old_id,
+            'old_event_id': email.old_event_id,
+            'created_at': '2019-06-01 10:00:00',
+            'extra_txt': 'test extra text',
+            'details': 'test event details',
+            'replace_all': False,
+            'email_type': 'event',
         }

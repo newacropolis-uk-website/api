@@ -50,6 +50,56 @@ class Article(db.Model):
         }
 
 
+ANON_PROCESS = 'anon_process'
+ANON_REMINDER = 'anon_reminder'
+ANNOUNCEMENT = 'announcement'
+EVENT = 'event'
+MAGAZINE = 'magazine'
+REPORT_MONTHLY = 'report_monthly'
+REPORT_ANNUALLY = 'report_annually'
+TICKET = 'ticket'
+EMAIL_TYPES = [ANON_PROCESS, ANON_REMINDER, EVENT, MAGAZINE, ANNOUNCEMENT, REPORT_MONTHLY, REPORT_ANNUALLY, TICKET]
+
+
+class Email(db.Model):
+    __tablename__ = 'emails'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_id = db.Column(UUID(as_uuid=True), db.ForeignKey('events.id'), nullable=True)
+    old_id = db.Column(db.Integer)
+    old_event_id = db.Column(db.Integer)
+    details = db.Column(db.String)
+    extra_txt = db.Column(db.String)
+    replace_all = db.Column(db.Boolean)
+    email_type = db.Column(
+        db.String,
+        db.ForeignKey('email_types.email_type'),
+        default=EVENT,
+        nullable=False,
+        index=True,
+    )
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'event_id': str(self.event_id) if self.event_id else None,
+            'old_id': self.old_id,
+            'old_event_id': self.old_event_id,
+            'details': self.details,
+            'extra_txt': self.extra_txt,
+            'replace_all': self.replace_all,
+            'email_type': self.email_type,
+            'created_at': str(self.created_at)
+        }
+
+
+class EmailType(db.Model):
+    __tablename__ = 'email_types'
+
+    email_type = db.Column(db.String, primary_key=True)
+    template = db.Column(db.String)
+
+
 DRAFT = 'draft'
 READY = 'ready'
 APPROVED = 'approved'
@@ -85,6 +135,7 @@ class Event(db.Model):
         nullable=True,
         index=True,
     )
+    email = db.relationship("Email", backref=db.backref("event", uselist=False))
     reject_reasons = db.relationship("RejectReason", backref=db.backref("event", uselist=True))
     venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'))
     venue = db.relationship("Venue", backref=db.backref("event", uselist=False))

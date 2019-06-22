@@ -13,8 +13,10 @@ import sqlalchemy
 from flask_jwt_extended import create_access_token, create_refresh_token
 
 from app import create_app, db as _db, get_env
+from app.models import EVENT
 from tests.db import (
     create_article,
+    create_email,
     create_event,
     create_event_date,
     create_event_type,
@@ -88,7 +90,7 @@ def db_session(db):
 
     db.session.remove()
     for tbl in reversed(db.metadata.sorted_tables):
-        if tbl.name not in ["event_states"]:
+        if tbl.name not in ["event_states", "email_types"]:
             db.engine.execute(tbl.delete())
     db.session.commit()
 
@@ -96,6 +98,11 @@ def db_session(db):
 @pytest.fixture(scope='function')
 def sample_article(db):
     return create_article(title='Ancient Greece')
+
+
+@pytest.fixture(scope='function')
+def sample_email(db):
+    return create_email(details='<strong>Fees:</strong> 10, <strong>Concessions:</strong> 5', created_at='2019-06-01')
 
 
 @pytest.fixture(scope='function')
