@@ -268,6 +268,15 @@ function ImportEvents {
     -d @data/events.json
 }
 
+function ImportEmails {
+    echo "*** Import Emails ***"
+
+    curl -X POST $api_server'/emails/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d @data/emails.json
+}
+
 event=$(cat  << EOF
     {
         "event_dates": [{"event_date": "2019-04-01 19:00:00"}],
@@ -496,6 +505,10 @@ case "$arg" in
 
         -uer)
             UpdateEventRejected
+        ;;
+
+        -iem)
+            ImportEmails
         ;;
 
         -ite)
