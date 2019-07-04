@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      {% block head %}
+      {% block style %}
+      <link rel="stylesheet" href="{{api_base_url}}/static/css/style.css" />
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+      {% endblock %}
+      <title>{% block title %}{% endblock %}</title>
+      {% endblock %}
+      {% block extra_head %}
+      {% endblock %}
+      <style>
+        body {
+            background-color:#f5f2ea;
+        }
+        #email-background {
+            background-color:#eebf6d;
+            width:100%;
+            height:260px;
+        }
+
+        #content-background {
+            position:absolute;
+            top:100px;
+            width:1060px;
+            background-color:white;
+        }
+      </style>
+  </head>
+  <body>
+        <div id='email-background' class='d-flex justify-content-center'>
+        <div id='content-background' class=''>
+            {% include "components/header.html" %}
+            <div id="content">{% block content %}{% endblock %}</div>
+            {% include "components/footer.html" %}
+        </div>
+        </div>
+  </body>
+</html>

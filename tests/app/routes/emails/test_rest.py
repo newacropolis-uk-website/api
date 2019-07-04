@@ -3,7 +3,7 @@ import pytest
 from flask import json, url_for
 
 from app.models import ANNOUNCEMENT, EVENT, MAGAZINE
-from tests.conftest import create_authorization_header
+from tests.conftest import create_authorization_header, request
 from tests.db import create_email
 
 
@@ -121,3 +121,27 @@ class WhenPostingImportingEmails:
         json_errors = json_resp['errors']
         assert json_errors == ['event not found: {}'.format(
             {k.decode('utf8'): v.decode('utf8') for k, v in sample_emails[1].items()})]
+
+
+class WhenPreviewingEmails:
+
+    def it_returns_an_email_preview(self, client, db_session, sample_event_with_dates):
+        data = {
+            "event_id": str(sample_event_with_dates.id),
+            "details": "<div>Some additional details</div>",
+            "extra_txt": "<div>Some more information about the event</div>",
+            "replace_all": False,
+            "email_type": "event"
+        }
+
+        html = request(
+            url_for('emails.preview_email'),
+            client.post,
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()])
+
+        assert html.soup.select_one('#event_date h3').text.strip() == 'Mon 1 of January - 7 PM'
+        assert html.soup.select_one('.event_text h4').text == 'WORKSHOP: test_title'
+
+        assert data['details'] in str(html.soup.select_one('.event_text'))
+        assert data['extra_txt'] in str(html.soup.select_one('.event_text'))

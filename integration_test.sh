@@ -406,6 +406,28 @@ function GetUserByEmail {
     -H "Authorization: Bearer $TKN" 
 }
 
+email=$(cat  << EOF
+    {
+        "event_id": "c910dc5a-3344-4983-b73a-99beabdb1c53",
+        "details": "<div>Some additional details</div>",
+        "extra_txt": "<div>Some more information about the event</div>",
+        "replace_all": false,
+        "email_type": "event"
+    }
+EOF
+)
+
+function PreviewEmail {
+    echo "*** Preview email ***"
+
+    curl -X POST $api_server'/preview/email' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$email" > 'data/preview_email.html'
+
+    open 'data/preview_email.html'
+}
+
 function TestPaypal {
     echo "*** Test paypal ***"
 
@@ -541,6 +563,10 @@ case "$arg" in
 
         -gue)
             GetUserByEmail
+        ;;
+
+        -pe)
+            PreviewEmail
         ;;
 
         -pay)

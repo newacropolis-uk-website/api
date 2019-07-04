@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Events{% endblock %}
+
+{% block content %}
+
+<div>
+    <div id='email_events' class='d-flex justify-content-center mt-5'>
+        <img src="{{api_base_url}}/static/images/events_flower.png">
+    </div>
+    <div id='event_date' class='d-flex justify-content-center border-bottom-2 border-dark shadow pb-1 mb-5'>
+        <h3 class='mt-4'>
+            {{ event_dates }}
+        </h3>
+    </div>
+    <div class='d-flex justify-content-center mt-5'>
+        <div class='event_box'>
+            <div class='d-flex flex-row'>
+                <div class='event_text col-sm'>
+                    <h4>{{ event.event_type.event_type|upper }}: {{ event.title|safe }}</h4>
+                    <div>{{ description|safe }}</div>
+                    {{extra_txt|safe}}
+                    <div class='font-weight-bold mt-2'>ADMISSION &pound;{{ event.fee }} (Concession &pound;{{ event.conc_fee }})</div>
+                    {{details|safe}}
+                </div>
+                <div class='p-4 col-sm'>
+                    <img id='event_image' src='{{images_url}}{{event.image_filename}}' class='img-fluid'>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -19,8 +19,23 @@ post_create_email_schema = {
     "type": "object",
     "properties": {
         "event_id": uuid,
-        "details": {"type": "string"},
-        "extra_txt": {"type": "string"},
+        "details": {"type": ["string", "null"]},
+        "extra_txt": {"type": ["string", "null"]},
+        "replace_all": {"type": "boolean"},
+        "email_type": email_types()
+    },
+    "required": ["email_type"]
+}
+
+
+post_preview_email_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for preview email",
+    "type": "object",
+    "properties": {
+        "event_id": uuid,
+        "details": {"type": ["string", "null"]},
+        "extra_txt": {"type": ["string", "null"]},
         "replace_all": {"type": "boolean"},
         "email_type": email_types()
     },

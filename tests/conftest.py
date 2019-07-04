@@ -50,8 +50,8 @@ def app():
         'PAYPAL_URL': 'https://test.paypal',
         'PAYPAL_USER': 'seller@test.com',
         'PAYPAL_PASSWORD': 'test pass',
-        'PAYPAL_SIG': 'paypal signature'
-
+        'PAYPAL_SIG': 'paypal signature',
+        'API_BASE_URL': 'http://test'
     })
 
     ctx = _app.app_context()
