@@ -1,7 +1,5 @@
 import os
-from datetime import datetime
 from flask import (
-    abort,
     Blueprint,
     current_app,
     jsonify,
@@ -59,6 +57,22 @@ def preview_email():
             frontend_url=current_app.config['FRONTEND_URL'],
             images_url=images_url
         )
+
+
+@emails_blueprint.route('/email', methods=['POST'])
+@jwt_required
+def create_email():
+    data = request.get_json(force=True)
+
+    validate(data, post_create_email_schema)
+
+    if data['email_type'] == 'event':
+        dao_get_event_by_id(data.get('event_id'))
+
+    email = Email(**data)
+
+    dao_create_email(email)
+    return jsonify(email.serialize()), 201
 
 
 @emails_blueprint.route('/emails/import', methods=['POST'])

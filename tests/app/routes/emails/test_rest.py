@@ -2,7 +2,7 @@ import pytest
 
 from flask import json, url_for
 
-from app.models import ANNOUNCEMENT, EVENT, MAGAZINE
+from app.models import ANNOUNCEMENT, EVENT, MAGAZINE, Email
 from tests.conftest import create_authorization_header, request
 from tests.db import create_email
 
@@ -145,3 +145,37 @@ class WhenPreviewingEmails:
 
         assert data['details'] in str(html.soup.select_one('.event_text'))
         assert data['extra_txt'] in str(html.soup.select_one('.event_text'))
+
+
+class WhenPostingCreateEmail:
+
+    def it_creates_an_event_email(self, client, db_session, sample_event_with_dates):
+        data = {
+            "event_id": str(sample_event_with_dates.id),
+            "details": "<div>Some additional details</div>",
+            "extra_txt": "<div>Some more information about the event</div>",
+            "replace_all": False,
+            "email_type": "event"
+        }
+
+        response = client.post(
+            url_for('emails.create_email'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        json_resp = json.loads(response.get_data(as_text=True))
+
+        assert json_resp['email_type'] == 'event'
+        assert not json_resp['old_id']
+        assert json_resp['event_id'] == str(sample_event_with_dates.id)
+        assert not json_resp['old_event_id']
+        assert json_resp['extra_txt'] == '<div>Some more information about the event</div>'
+        assert json_resp['details'] == '<div>Some additional details</div>'
+        assert not json_resp['replace_all']
+
+        emails = Email.query.all()
+
+        assert len(emails) == 1
+        assert emails[0].email_type == 'event'
+        assert emails[0].event_id == sample_event_with_dates.id
