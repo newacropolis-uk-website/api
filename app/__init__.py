@@ -34,6 +34,10 @@ def create_app(**kwargs):
 
 
 def init_app(app):
+    app.jinja_env.globals['API_BASE_URL'] = app.config['API_BASE_URL']
+    app.jinja_env.globals['FRONTEND_URL'] = app.config['FRONTEND_URL']
+    app.jinja_env.globals['IMAGES_URL'] = os.environ.get('IMAGES_URL', app.config['API_BASE_URL'] + '/images/')
+
     @app.before_request
     def check_for_apikey():
         # print("check: ", request)

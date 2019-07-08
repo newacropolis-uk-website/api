@@ -1,13 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Events{% endblock %}
+{% block extra_head%}
+{% endblock %}
 
 {% block content %}
 
 <div>
     <div id='email_events' class='d-flex justify-content-center mt-5'>
-        <img src="{{api_base_url}}/static/images/events_flower.png">
+        <img src="{{API_BASE_URL}}/static/images/events_flower.png">
     </div>
-    <div id='event_date' class='d-flex justify-content-center border-bottom-2 border-dark shadow pb-1 mb-5'>
+    <div id='event_date' class='d-flex justify-content-center pb-1 mb-5'>
         <h3 class='mt-4'>
             {{ event_dates }}
         </h3>
@@ -23,7 +25,7 @@
                     {{details|safe}}
                 </div>
                 <div class='p-4 col-sm'>
-                    <img id='event_image' src='{{images_url}}{{event.image_filename}}' class='img-fluid'>
+                    <img id='event_image' src='{{IMAGES_URL}}{{event.image_filename}}' class='img-fluid'>
                 </div>
             </div>
         </div>
