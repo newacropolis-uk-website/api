@@ -179,3 +179,26 @@ class WhenPostingCreateEmail:
         assert len(emails) == 1
         assert emails[0].email_type == 'event'
         assert emails[0].event_id == sample_event_with_dates.id
+
+    def it_does_not_create_an_event_email_if_no_event_matches(self, client, db_session, sample_uuid):
+        data = {
+            "event_id": sample_uuid,
+            "details": "<div>Some additional details</div>",
+            "extra_txt": "<div>Some more information about the event</div>",
+            "replace_all": False,
+            "email_type": "event"
+        }
+
+        response = client.post(
+            url_for('emails.create_email'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 404
+
+        json_resp = json.loads(response.get_data(as_text=True))
+
+        assert json_resp['message'] == 'No result found'
+        emails = Email.query.all()
+        assert not emails
