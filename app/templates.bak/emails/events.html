@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Events{% endblock %}
+{% block extra_head%}
+{% endblock %}
+
+{% block content %}
+
+<div style="box-sizing:border-box; display:block">
+    <div id="email_events" style="box-sizing:border-box; display:flex !important; -ms-flex-pack:center !important; -webkit-box-pack:center !important; justify-content:center !important; margin-top:3rem !important">
+        <img src="{{API_BASE_URL}}/static/images/events_flower.png" style="box-sizing:border-box">
+    </div>
+    <div id="event_date" style="box-sizing:border-box; display:flex !important; background-color:#3a8766; box-shadow:0 2px 2px gray; color:white; height:91px; position:absolute; top:443px; width:1060px; padding-bottom:0.25rem !important; margin-bottom:3rem !important; -ms-flex-pack:center !important; -webkit-box-pack:center !important; justify-content:center !important" bgcolor="#3a8766" height="91" width="1060">
+        <h3 style="box-sizing:border-box; color:inherit; font-family:inherit; font-weight:500; line-height:1.2; margin-bottom:0.5rem; font-size:1.75rem; margin-top:1.5rem !important">
+            Tue 6 of August - 7 PM
+        </h3>
+    </div>
+    <div style="box-sizing:border-box; display:flex !important; -ms-flex-pack:center !important; -webkit-box-pack:center !important; justify-content:center !important; margin-top:3rem !important">
+        <div style="box-sizing:border-box; display:block; background-color:#f8faf3; border:darkgray 1px solid; margin-bottom:70px; padding:10px; width:90%" bgcolor="#f8faf3" width="90%">
+            <div style="box-sizing:border-box; display:flex !important; -ms-flex-direction:row !important; -webkit-box-direction:normal !important; -webkit-box-orient:horizontal !important; flex-direction:row !important">
+                <div style="padding:1rem; box-sizing:border-box; display:block; min-height:1px; padding-left:15px; padding-right:15px; position:relative; width:100%" width="100%">
+                    <h4 style="box-sizing:border-box; color:inherit; font-family:inherit; font-weight:500; line-height:1.2; margin-bottom:0.5rem">{{ event.event_type.event_type|upper }}: {{ event.title|safe }}</h4>
+                    <div style="box-sizing:border-box; display:block">{{ description|safe }}</div>
+                    <div style="box-sizing:border-box; display:block">{{extra_txt|safe}}</div>
+                    <div style="box-sizing:border-box; display:block; font-weight:700 !important; margin-top:0.5rem !important">ADMISSION &pound;{{ event.fee }} (Concession &pound;{{ event.conc_fee }})</div>
+                    <div style="box-sizing:border-box; display:block">{{details|safe}}</div>
+                </div>
+                <div style="padding:1rem; box-sizing:border-box; display:block; min-height:1px; padding-left:15px; padding-right:15px; position:relative; width:100%" width="100%">
+                    <img id="event_image" src="{{IMAGES_URL}}{{event.image_filename}}" style="box-sizing:border-box; height:auto; max-width:100%; box-shadow:0 0 10px gray; min-width:400px" height="auto">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

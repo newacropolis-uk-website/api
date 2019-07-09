@@ -9,8 +9,11 @@ idna==2.7
 google-cloud-storage==1.16.1
 gevent==1.3.7
 gunicorn==19.7.1
+inlinestyler==0.2.5
 iso8601==0.1.12
 jsonschema==2.6.0
+premailer==3.4.1
 psycopg2-binary==2.7.5
 pyOpenSSL==18.0.0
+pynliner
 requests>=2.0.0
