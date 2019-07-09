@@ -428,6 +428,15 @@ function PreviewEmail {
     open 'data/preview_email.html'
 }
 
+function CreateEmail {
+    echo "*** Create email ***"
+
+    curl -X POST $api_server'/email' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$email"
+}
+
 function TestPaypal {
     echo "*** Test paypal ***"
 
@@ -567,6 +576,10 @@ case "$arg" in
 
         -pe)
             PreviewEmail
+        ;;
+
+        -cem)
+            CreateEmail
         ;;
 
         -pay)
