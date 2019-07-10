@@ -35,7 +35,9 @@ if [ $port != 'No environment' ]; then
     eval "EMAIL_PROVIDER_URL=\${EMAIL_PROVIDER_URL_$environment}"
     eval "EMAIL_PROVIDER_APIKEY=\${EMAIL_PROVIDER_APIKEY_$environment}"
     eval "FRONTEND_ADMIN_URL=\${FRONTEND_ADMIN_URL_$environment}"
-
+    eval "API_BASE_URL=\$API_BASE_URL_$environment"
+    eval "FRONTEND_URL=\$FRONTEND_URL_$environment"
+    
     echo starting app $environment on port $port
     ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
     cd www-$environment
@@ -55,6 +57,8 @@ if [ $port != 'No environment' ]; then
     export EMAIL_PROVIDER_URL=$EMAIL_PROVIDER_URL
     export EMAIL_PROVIDER_APIKEY=$EMAIL_PROVIDER_APIKEY
     export FRONTEND_ADMIN_URL=$FRONTEND_ADMIN_URL
+    export API_BASE_URL=$API_BASE_URL
+    export FRONTEND_URL=$FRONTEND_URL
     export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
     export TRAVIS_COMMIT=$TRAVIS_COMMIT
 
