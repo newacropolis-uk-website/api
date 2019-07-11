@@ -15,7 +15,6 @@
         }
         #event_image {
             box-shadow:0px 0px 10px gray;
-            min-width: 200px;
         }
     </style>
 {% endblock %}
@@ -26,22 +25,41 @@
     <h3 style='text-align: center;'>
         {{ event_dates }}
     </h3>
-    <div class='event_box'>
-        <table width="100%" cellspacing="0" cellpadding="10">
-            <tr>
-                <td valign='top'>
-                    <div class='event_text'>
-                        <h4>{{ event.event_type.event_type|upper }}: {{ event.title|safe }}</h4>
-                        <div>{{ description|safe }}</div>
-                        {{extra_txt|safe}}
-                        <div class='font-weight-bold mt-2'>ADMISSION &pound;{{ event.fee }} (Concession &pound;{{ event.conc_fee }})</div>
-                        {{details|safe}}
-                    </div>
-                </td>
-                <td>
-                    <img id='event_image' src='{{IMAGES_URL}}{{event.image_filename}}' class='img-fluid'>
-                </td>
-            </tr>
+    <div class='event_box'>        
+        <table width="100%" align="center" cellpadding="10" cellspacing="0">
+        <tr>
+            <td align="center">
+                <div>
+                    <table class="msoFix" width="60%" cellpadding="0" cellspacing="0" align="left">
+                    <tr>
+                        <td width="15">&nbsp;</td>
+                        <td width="100%" style="padding: 0px;">&nbsp;<br>
+                            <div class='event_text'>
+                                <h4>{{ event.event_type.event_type|upper }}: {{ event.title|safe }}</h4>
+                                <div>{{ description|safe }}</div>
+                                {{extra_txt|safe}}
+                                <div class='font-weight-bold mt-2'>ADMISSION &pound;{{ event.fee }} (Concession &pound;{{ event.conc_fee }})</div>
+                                {{details|safe}}
+                            </div>
+
+                        <br>&nbsp;<br>&nbsp;
+                        </td>
+                        <td width="15">&nbsp;</td>
+                    </tr>
+                    </table>
+
+                    <table class="msoFix" width="320" cellpadding="0" cellspacing="0" align="left">
+                    <tr>
+                        <td width="15">&nbsp;</td>
+                        <td width="290" style="padding: 0px;">&nbsp;<br>
+                        <img id='event_image' src='{{IMAGES_URL}}{{event.image_filename}}' class='img-fluid'>
+                        </td>
+                        <td width="15">&nbsp;</td>
+                    </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
         </table>
     </div>
 </div>
