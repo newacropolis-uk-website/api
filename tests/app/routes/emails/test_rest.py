@@ -3,7 +3,7 @@ import pytest
 from flask import json, url_for
 
 from app.models import ANNOUNCEMENT, EVENT, MAGAZINE, Email
-from tests.conftest import create_authorization_header, request
+from tests.conftest import create_authorization_header, request, TEST_ADMIN_USER
 from tests.db import create_email
 
 
@@ -149,7 +149,8 @@ class WhenPreviewingEmails:
 
 class WhenPostingCreateEmail:
 
-    def it_creates_an_event_email(self, client, db_session, sample_event_with_dates):
+    def it_creates_an_event_email(self, mocker, client, db_session, sample_admin_user, sample_event_with_dates):
+        mock_send_email = mocker.patch('app.routes.emails.rest.send_email')
         data = {
             "event_id": str(sample_event_with_dates.id),
             "details": "<div>Some additional details</div>",
@@ -179,6 +180,8 @@ class WhenPostingCreateEmail:
         assert len(emails) == 1
         assert emails[0].email_type == 'event'
         assert emails[0].event_id == sample_event_with_dates.id
+
+        assert mock_send_email.call_args[0][0] == TEST_ADMIN_USER
 
     def it_does_not_create_an_event_email_if_no_event_matches(self, client, db_session, sample_uuid):
         data = {
