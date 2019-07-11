@@ -9,24 +9,241 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from app import db
 
 
-class TokenBlacklist(db.Model):
+class Article(db.Model):
+    __tablename__ = 'articles'
+
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    jti = db.Column(db.String(36), nullable=False)
-    token_type = db.Column(db.String(10), nullable=False)
-    user_identity = db.Column(db.String(50), nullable=False)
-    revoked = db.Column(db.Boolean, nullable=False)
-    expires = db.Column(db.DateTime, nullable=False)
+    old_id = db.Column(db.Integer)
+    title = db.Column(db.String(255))
+    author = db.Column(db.String(255))
+    content = db.Column(db.Text())
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
     def serialize(self):
         return {
-            'token_id': self.id,
-            'jti': self.jti,
-            'token_type': self.token_type,
-            'user_identity': self.user_identity,
-            'revoked': self.revoked,
-            'expires': self.expires
+            'id': str(self.id),
+            'old_id': self.old_id,
+            'title': self.title,
+            'author': self.author,
+            'content': self.content,
+            'created_at': self.created_at.strftime('%Y-%m-%d') if self.created_at else None,
         }
+
+    def serialize_summary(self):
+        def get_short_content(num_words):
+            html_tag_pattern = r'<.*?>'
+            clean_content = re.sub(html_tag_pattern, '', self.content)
+
+            content_arr = clean_content.split(' ')
+            if len(content_arr) > num_words:
+                find_words = " ".join([content_arr[num_words - 2], content_arr[num_words - 1], content_arr[num_words]])
+                return clean_content[0:clean_content.index(find_words) + len(find_words)] + '...'
+            else:
+                return clean_content
+
+        return {
+            'id': str(self.id),
+            'title': self.title,
+            'author': self.author,
+            'short_content': get_short_content(num_words=110),
+            'very_short_content': get_short_content(num_words=30),
+        }
+
+
+ANON_PROCESS = 'anon_process'
+ANON_REMINDER = 'anon_reminder'
+ANNOUNCEMENT = 'announcement'
+EVENT = 'event'
+MAGAZINE = 'magazine'
+REPORT_MONTHLY = 'report_monthly'
+REPORT_ANNUALLY = 'report_annually'
+TICKET = 'ticket'
+EMAIL_TYPES = [ANON_PROCESS, ANON_REMINDER, EVENT, MAGAZINE, ANNOUNCEMENT, REPORT_MONTHLY, REPORT_ANNUALLY, TICKET]
+
+
+class Email(db.Model):
+    __tablename__ = 'emails'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_id = db.Column(UUID(as_uuid=True), db.ForeignKey('events.id'), nullable=True)
+    old_id = db.Column(db.Integer)
+    old_event_id = db.Column(db.Integer)
+    details = db.Column(db.String)
+    extra_txt = db.Column(db.String)
+    replace_all = db.Column(db.Boolean)
+    email_type = db.Column(
+        db.String,
+        db.ForeignKey('email_types.email_type'),
+        default=EVENT,
+        nullable=False,
+        index=True,
+    )
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'event_id': str(self.event_id) if self.event_id else None,
+            'old_id': self.old_id,
+            'old_event_id': self.old_event_id,
+            'details': self.details,
+            'extra_txt': self.extra_txt,
+            'replace_all': self.replace_all,
+            'email_type': self.email_type,
+            'created_at': str(self.created_at)
+        }
+
+
+class EmailType(db.Model):
+    __tablename__ = 'email_types'
+
+    email_type = db.Column(db.String, primary_key=True)
+    template = db.Column(db.String)
+
+
+DRAFT = 'draft'
+READY = 'ready'
+APPROVED = 'approved'
+REJECTED = 'rejected'
+
+EVENT_STATES = [
+    DRAFT, READY, APPROVED, REJECTED
+]
+
+
+class Event(db.Model):
+    __tablename__ = 'events'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    old_id = db.Column(db.Integer)
+    duration = db.Column(db.Integer, nullable=True)
+    event_type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_types.id'), nullable=False)
+    event_type = db.relationship("EventType", backref=db.backref("event", uselist=False))
+    title = db.Column(db.String(255))
+    sub_title = db.Column(db.String(255))
+    description = db.Column(db.String())
+    booking_code = db.Column(db.String(20))
+    image_filename = db.Column(db.String(255))
+    fee = db.Column(db.Integer, nullable=True)
+    conc_fee = db.Column(db.Integer, nullable=True)
+    multi_day_fee = db.Column(db.Integer, nullable=True)
+    multi_day_conc_fee = db.Column(db.Integer, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    event_dates = db.relationship("EventDate", backref=db.backref("events"), cascade="all,delete,delete-orphan")
+    event_state = db.Column(
+        db.String(255),
+        db.ForeignKey('event_states.name'),
+        default=DRAFT,
+        nullable=True,
+        index=True,
+    )
+    email = db.relationship("Email", backref=db.backref("event", uselist=False))
+    reject_reasons = db.relationship("RejectReason", backref=db.backref("event", uselist=True))
+    venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'))
+    venue = db.relationship("Venue", backref=db.backref("event", uselist=False))
+
+    def serialize_event_dates(self):
+        def serialize_speakers(speakers):
+            _speakers = []
+            for s in speakers:
+                _speakers.append({
+                    'speaker_id': s.id
+                })
+
+            return _speakers
+
+        event_dates = []
+        for e in self.event_dates:
+            event_dates.append(
+                {
+                    'event_datetime': e.event_datetime.strftime('%Y-%m-%d %H:%M'),
+                    'end_time': e.end_time,
+                    'speakers': serialize_speakers(e.speakers)
+                }
+            )
+        return event_dates
+
+    def serialize(self):
+        def sorted_event_dates():
+            dates = [e.serialize() for e in self.event_dates]
+            dates.sort(key=lambda k: k['event_datetime'])
+            return dates
+
+        def serlialized_reject_reasons():
+            reject_reasons = [r.serialize() for r in self.reject_reasons]
+            reject_reasons.sort(key=lambda k: k['resolved'])
+            return reject_reasons
+
+        return {
+            'id': self.id,
+            'old_id': self.old_id,
+            'event_type': self.event_type.event_type,
+            'event_type_id': self.event_type.id,
+            'title': self.title,
+            'sub_title': self.sub_title,
+            'description': self.description,
+            'booking_code': self.booking_code,
+            'image_filename': self.image_filename,
+            'fee': self.fee,
+            'conc_fee': self.conc_fee,
+            'multi_day_fee': self.multi_day_fee,
+            'multi_day_conc_fee': self.multi_day_conc_fee,
+            'venue': self.venue.serialize() if self.venue else None,
+            'event_dates': sorted_event_dates(),
+            'event_state': self.event_state,
+            'reject_reasons': serlialized_reject_reasons()
+        }
+
+    def __repr__(self):
+        return '<Event: id {}>'.format(self.id)
+
+
+event_date_to_speaker = db.Table(
+    'event_date_to_speaker',
+    db.Model.metadata,
+    db.Column('event_date_id', UUID(as_uuid=True), db.ForeignKey('event_dates.id')),
+    db.Column('speaker_id', UUID(as_uuid=True), db.ForeignKey('speakers.id')),
+    UniqueConstraint('event_date_id', 'speaker_id', name='uix_event_date_id_to_speaker_id')
+)
+
+
+class EventDate(db.Model):
+    __tablename__ = 'event_dates'
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_id = db.Column(UUID(as_uuid=True), db.ForeignKey('events.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    event_datetime = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    end_time = db.Column(db.Time, nullable=True)
+    duration = db.Column(db.Integer, nullable=True)
+    soldout = db.Column(db.Boolean, default=False)
+    repeat = db.Column(db.Integer, nullable=True)
+    repeat_interval = db.Column(db.Integer, nullable=True)
+    fee = db.Column(db.Integer, nullable=True)
+    conc_fee = db.Column(db.Integer, nullable=True)
+    multi_day_fee = db.Column(db.Integer, nullable=True)
+    multi_day_conc_fee = db.Column(db.Integer, nullable=True)
+
+    venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'))
+    venue = db.relationship("Venue", backref=db.backref("event_date", uselist=False))
+    speakers = db.relationship(
+        'Speaker',
+        secondary=event_date_to_speaker,
+        backref=db.backref('event_date_to_speaker', lazy='dynamic'),
+    )
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'event_id': str(self.event_id),
+            'event_datetime': self.event_datetime.strftime('%Y-%m-%d %H:%M'),
+            'end_time': self.end_time.strftime('%H:%M') if self.end_time else None,
+            'speakers': [s.serialize() for s in self.speakers]
+        }
+
+
+class EventStates(db.Model):
+    __tablename__ = 'event_states'
+
+    name = db.Column(db.String(), primary_key=True)
 
 
 class EventType(db.Model):
@@ -92,107 +309,6 @@ class Fee(db.Model):
         }
 
 
-DRAFT = 'draft'
-READY = 'ready'
-APPROVED = 'approved'
-REJECTED = 'rejected'
-
-EVENT_STATES = [
-    DRAFT, READY, APPROVED, REJECTED
-]
-
-
-class EventStates(db.Model):
-    __tablename__ = 'event_states'
-
-    name = db.Column(db.String(), primary_key=True)
-
-
-class Event(db.Model):
-    __tablename__ = 'events'
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    old_id = db.Column(db.Integer)
-    duration = db.Column(db.Integer, nullable=True)
-    event_type_id = db.Column(UUID(as_uuid=True), db.ForeignKey('event_types.id'), nullable=False)
-    event_type = db.relationship("EventType", backref=db.backref("event", uselist=False))
-    title = db.Column(db.String(255))
-    sub_title = db.Column(db.String(255))
-    description = db.Column(db.String())
-    booking_code = db.Column(db.String(20))
-    image_filename = db.Column(db.String(255))
-    fee = db.Column(db.Integer, nullable=True)
-    conc_fee = db.Column(db.Integer, nullable=True)
-    multi_day_fee = db.Column(db.Integer, nullable=True)
-    multi_day_conc_fee = db.Column(db.Integer, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    event_dates = db.relationship("EventDate", backref=db.backref("events"), cascade="all,delete,delete-orphan")
-    event_state = db.Column(
-        db.String(255),
-        db.ForeignKey('event_states.name'),
-        default=DRAFT,
-        nullable=True,
-        index=True,
-    )
-    reject_reasons = db.relationship("RejectReason", backref=db.backref("event", uselist=True))
-    venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'))
-    venue = db.relationship("Venue", backref=db.backref("event", uselist=False))
-
-    def serialize_event_dates(self):
-        def serialize_speakers(speakers):
-            _speakers = []
-            for s in speakers:
-                _speakers.append({
-                    'speaker_id': s.id
-                })
-
-            return _speakers
-
-        event_dates = []
-        for e in self.event_dates:
-            event_dates.append(
-                {
-                    'event_datetime': e.event_datetime.strftime('%Y-%m-%d %H:%M'),
-                    'end_time': e.end_time,
-                    'speakers': serialize_speakers(e.speakers)
-                }
-            )
-        return event_dates
-
-    def serialize(self):
-        def sorted_event_dates():
-            dates = [e.serialize() for e in self.event_dates]
-            dates.sort(key=lambda k: k['event_datetime'])
-            return dates
-
-        def serlialized_reject_reasons():
-            reject_reasons = [r.serialize() for r in self.reject_reasons]
-            reject_reasons.sort(key=lambda k: k['resolved'])
-            return reject_reasons
-
-        return {
-            'id': self.id,
-            'old_id': self.old_id,
-            'event_type': self.event_type.event_type,
-            'event_type_id': self.event_type.id,
-            'title': self.title,
-            'sub_title': self.sub_title,
-            'description': self.description,
-            'booking_code': self.booking_code,
-            'image_filename': self.image_filename,
-            'fee': self.fee,
-            'conc_fee': self.conc_fee,
-            'multi_day_fee': self.multi_day_fee,
-            'multi_day_conc_fee': self.multi_day_conc_fee,
-            'venue': self.venue.serialize() if self.venue else None,
-            'event_dates': sorted_event_dates(),
-            'event_state': self.event_state,
-            'reject_reasons': serlialized_reject_reasons()
-        }
-
-    def __repr__(self):
-        return '<Event: id {}>'.format(self.id)
-
-
 class RejectReason(db.Model):
     __tablename__ = 'reject_reasons'
 
@@ -236,110 +352,23 @@ class Speaker(db.Model):
         return str(self.name).split(' ')[-1]
 
 
-event_date_to_speaker = db.Table(
-    'event_date_to_speaker',
-    db.Model.metadata,
-    db.Column('event_date_id', UUID(as_uuid=True), db.ForeignKey('event_dates.id')),
-    db.Column('speaker_id', UUID(as_uuid=True), db.ForeignKey('speakers.id')),
-    UniqueConstraint('event_date_id', 'speaker_id', name='uix_event_date_id_to_speaker_id')
-)
-
-
-class EventDate(db.Model):
-    __tablename__ = 'event_dates'
-
+class TokenBlacklist(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    event_id = db.Column(UUID(as_uuid=True), db.ForeignKey('events.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    event_datetime = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    end_time = db.Column(db.Time, nullable=True)
-    duration = db.Column(db.Integer, nullable=True)
-    soldout = db.Column(db.Boolean, default=False)
-    repeat = db.Column(db.Integer, nullable=True)
-    repeat_interval = db.Column(db.Integer, nullable=True)
-    fee = db.Column(db.Integer, nullable=True)
-    conc_fee = db.Column(db.Integer, nullable=True)
-    multi_day_fee = db.Column(db.Integer, nullable=True)
-    multi_day_conc_fee = db.Column(db.Integer, nullable=True)
-
-    venue_id = db.Column(UUID(as_uuid=True), db.ForeignKey('venues.id'))
-    venue = db.relationship("Venue", backref=db.backref("event_date", uselist=False))
-    speakers = db.relationship(
-        'Speaker',
-        secondary=event_date_to_speaker,
-        backref=db.backref('event_date_to_speaker', lazy='dynamic'),
-    )
-
-    def serialize(self):
-        return {
-            'id': str(self.id),
-            'event_id': str(self.event_id),
-            'event_datetime': self.event_datetime.strftime('%Y-%m-%d %H:%M'),
-            'end_time': self.end_time.strftime('%H:%M') if self.end_time else None,
-            'speakers': [s.serialize() for s in self.speakers]
-        }
-
-
-class Venue(db.Model):
-    __tablename__ = 'venues'
-
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    old_id = db.Column(db.Integer)
-    name = db.Column(db.String(255))
-    address = db.Column(db.String(255))
-    directions = db.Column(db.String(255))
-
-    default = db.Column(db.Boolean)
-
-    def serialize(self):
-        return {
-            'id': str(self.id),
-            'old_id': self.old_id,
-            'name': str(self.name),
-            'address': self.address,
-            'directions': self.directions,
-            'default': self.default,
-        }
-
-
-class Article(db.Model):
-    __tablename__ = 'articles'
-
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    old_id = db.Column(db.Integer)
-    title = db.Column(db.String(255))
-    author = db.Column(db.String(255))
-    content = db.Column(db.Text())
+    jti = db.Column(db.String(36), nullable=False)
+    token_type = db.Column(db.String(10), nullable=False)
+    user_identity = db.Column(db.String(50), nullable=False)
+    revoked = db.Column(db.Boolean, nullable=False)
+    expires = db.Column(db.DateTime, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
     def serialize(self):
         return {
-            'id': str(self.id),
-            'old_id': self.old_id,
-            'title': self.title,
-            'author': self.author,
-            'content': self.content,
-            'created_at': self.created_at.strftime('%Y-%m-%d') if self.created_at else None,
-        }
-
-    def serialize_summary(self):
-        def get_short_content(num_words):
-            html_tag_pattern = r'<.*?>'
-            clean_content = re.sub(html_tag_pattern, '', self.content)
-
-            content_arr = clean_content.split(' ')
-            if len(content_arr) > num_words:
-                find_words = " ".join([content_arr[num_words - 2], content_arr[num_words - 1], content_arr[num_words]])
-                return clean_content[0:clean_content.index(find_words) + len(find_words)] + '...'
-            else:
-                return clean_content
-
-        return {
-            'id': str(self.id),
-            'title': self.title,
-            'author': self.author,
-            'short_content': get_short_content(num_words=110),
-            'very_short_content': get_short_content(num_words=30),
+            'token_id': self.id,
+            'jti': self.jti,
+            'token_type': self.token_type,
+            'user_identity': self.user_identity,
+            'revoked': self.revoked,
+            'expires': self.expires
         }
 
 
@@ -374,3 +403,25 @@ class User(db.Model):
 
     def is_admin(self):
         return self.access_area == USER_ADMIN
+
+
+class Venue(db.Model):
+    __tablename__ = 'venues'
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    old_id = db.Column(db.Integer)
+    name = db.Column(db.String(255))
+    address = db.Column(db.String(255))
+    directions = db.Column(db.String(255))
+
+    default = db.Column(db.Boolean)
+
+    def serialize(self):
+        return {
+            'id': str(self.id),
+            'old_id': self.old_id,
+            'name': str(self.name),
+            'address': self.address,
+            'directions': self.directions,
+            'default': self.default,
+        }

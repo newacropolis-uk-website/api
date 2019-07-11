@@ -27,17 +27,21 @@ export ADMIN_PASSWORD=<admin client password>
 export ADMIN_CLIENT_SECRET=<admin client secret>
 export JWT_SECRET=<secret key>
 export PROJECT=<google project name>
-export GOOGLE_APPLICATION_CREDENTIALS=<location of google credentials>
-export GOOGLE_STORE=<name of google storage>
+export FRONTEND_ADMIN_URL=<URL for the frontend admin>
+export API_BASE_URL=<URL for API>
+export FRONTEND_URL=<URL for the frontend>
+export IMAGES_URL=<URL for images>
+# optional below
 export EMAIL_DOMAIN=<email domain for admin users>
 export ADMIN_USERS=<super admin emails comma separated>
+export GOOGLE_APPLICATION_CREDENTIALS=<location of google credentials>
+export GOOGLE_STORE=<name of google storage>
 export PAYPAL_URL=<paypal url>
 export PAYPAL_USER=<paypal seller account>
 export PAYPAL_PASSWORD=<paypal password>
 export PAYPAL_SIG=<paypal signature>
 export EMAIL_PROVIDER_URL=<email provider url>
 export EMAIL_PROVIDER_APIKEY=<email provider api key>
-export FRONTEND_ADMIN_URL=<URL for the frontend>
 ```
 
 Run `source environment.sh` to make the parameters available

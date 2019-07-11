@@ -46,6 +46,10 @@ def dao_get_event_by_id(event_id):
     return Event.query.filter(Event.id == event_id).one()
 
 
+def dao_get_event_by_old_id(old_event_id):
+    return Event.query.filter(Event.old_id == old_event_id).first()
+
+
 def dao_get_events_in_year(year):
     return Event.query.filter(
         and_(

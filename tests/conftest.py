@@ -13,8 +13,10 @@ import sqlalchemy
 from flask_jwt_extended import create_access_token, create_refresh_token
 
 from app import create_app, db as _db, get_env
+from app.models import EVENT
 from tests.db import (
     create_article,
+    create_email,
     create_event,
     create_event_date,
     create_event_type,
@@ -48,9 +50,19 @@ def app():
         'PAYPAL_URL': 'https://test.paypal',
         'PAYPAL_USER': 'seller@test.com',
         'PAYPAL_PASSWORD': 'test pass',
-        'PAYPAL_SIG': 'paypal signature'
-
+        'PAYPAL_SIG': 'paypal signature',
+        'API_BASE_URL': 'http://test',
+        'FRONTEND_URL': 'http://frontend-test',
     })
+
+    old_env = os.environ.copy()
+
+    class EnvironDict(dict):
+        def __setitem__(self, key, value):
+            assert type(value) == str
+            super(EnvironDict, self).__setitem__(key, value)
+
+    os.environ = EnvironDict()
 
     ctx = _app.app_context()
     ctx.push()
@@ -58,6 +70,7 @@ def app():
     yield _app
 
     ctx.pop()
+    os.environ = old_env
 
 
 @pytest.fixture(scope='session')
@@ -88,7 +101,7 @@ def db_session(db):
 
     db.session.remove()
     for tbl in reversed(db.metadata.sorted_tables):
-        if tbl.name not in ["event_states"]:
+        if tbl.name not in ["event_states", "email_types"]:
             db.engine.execute(tbl.delete())
     db.session.commit()
 
@@ -96,6 +109,11 @@ def db_session(db):
 @pytest.fixture(scope='function')
 def sample_article(db):
     return create_article(title='Ancient Greece')
+
+
+@pytest.fixture(scope='function')
+def sample_email(db):
+    return create_email(details='<strong>Fees:</strong> 10, <strong>Concessions:</strong> 5', created_at='2019-06-01')
 
 
 @pytest.fixture(scope='function')

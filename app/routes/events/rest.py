@@ -467,7 +467,8 @@ def import_events():
                 multi_day_fee=item['MultiDayFee'],
                 multi_day_conc_fee=item['MultiDayConcFee'],
                 duration=item['Duration'],
-                venue_id=venue.id
+                venue_id=venue.id,
+                event_state=APPROVED
             )
 
             def add_event_date(event_datetime):

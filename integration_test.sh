@@ -268,6 +268,15 @@ function ImportEvents {
     -d @data/events.json
 }
 
+function ImportEmails {
+    echo "*** Import Emails ***"
+
+    curl -X POST $api_server'/emails/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d @data/emails.json
+}
+
 event=$(cat  << EOF
     {
         "event_dates": [{"event_date": "2019-04-01 19:00:00"}],
@@ -397,6 +406,37 @@ function GetUserByEmail {
     -H "Authorization: Bearer $TKN" 
 }
 
+email=$(cat  << EOF
+    {
+        "event_id": "c910dc5a-3344-4983-b73a-99beabdb1c53",
+        "details": "<div>Some additional details</div>",
+        "extra_txt": "<div>Some more information about the event</div>",
+        "replace_all": false,
+        "email_type": "event"
+    }
+EOF
+)
+
+function PreviewEmail {
+    echo "*** Preview email ***"
+
+    curl -X POST $api_server'/preview/email' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$email" > 'data/preview_email.html'
+
+    open 'data/preview_email.html'
+}
+
+function CreateEmail {
+    echo "*** Create email ***"
+
+    curl -X POST $api_server'/email' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$email"
+}
+
 function TestPaypal {
     echo "*** Test paypal ***"
 
@@ -498,6 +538,10 @@ case "$arg" in
             UpdateEventRejected
         ;;
 
+        -iem)
+            ImportEmails
+        ;;
+
         -ite)
             ImportTargetEvents
         ;;
@@ -528,6 +572,14 @@ case "$arg" in
 
         -gue)
             GetUserByEmail
+        ;;
+
+        -pe)
+            PreviewEmail
+        ;;
+
+        -cem)
+            CreateEmail
         ;;
 
         -pay)

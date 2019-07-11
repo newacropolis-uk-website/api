@@ -2,6 +2,7 @@ from app import db
 
 from app.dao.articles_dao import dao_create_article
 from app.dao.blacklist_dao import store_token
+from app.dao.emails_dao import dao_create_email
 from app.dao.events_dao import dao_create_event
 from app.dao.event_dates_dao import dao_create_event_date
 from app.dao.event_types_dao import dao_create_event_type
@@ -10,7 +11,7 @@ from app.dao.reject_reasons_dao import dao_create_reject_reason
 from app.dao.speakers_dao import dao_create_speaker
 from app.dao.users_dao import dao_create_user
 from app.dao.venues_dao import dao_create_venue
-from app.models import Article, Event, EventDate, EventType, Fee, RejectReason, Speaker, User, Venue
+from app.models import Article, Email, Event, EventDate, EventType, Fee, RejectReason, Speaker, User, Venue, EVENT
 
 
 def create_event(
@@ -195,6 +196,30 @@ def create_article(
 
     dao_create_article(article)
     return article
+
+
+def create_email(
+        old_id=1,
+        old_event_id=2,
+        details='test event details',
+        extra_txt='test extra text',
+        replace_all=False,
+        email_type=EVENT,
+        created_at=None
+):
+    data = {
+        'old_id': old_id,
+        'old_event_id': old_event_id,
+        'details': details,
+        'extra_txt': extra_txt,
+        'replace_all': replace_all,
+        'email_type': email_type,
+        'created_at': created_at
+    }
+    email = Email(**data)
+
+    dao_create_email(email)
+    return email
 
 
 def create_user(email='test@example.com', name='First Mid Last-name', access_area=',email,event,report,article,'):

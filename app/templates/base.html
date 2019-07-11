@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      {% block head %}
+      {% block style %}
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      {% endblock %}
+      <title>{% block title %}{% endblock %}</title>
+      {% endblock %}
+      {% block extra_head %}
+      {% endblock %}
+      <style>
+        a {
+            color: #007bff;
+            text-decoration: none;
+            background-color: transparent;
+        }
+        .text-uppercase {
+            text-transform: uppercase !important;
+        }
+        .text-right {
+            text-align: right !important;
+        }
+        /* HEADER */
+        #header{
+            font-family: 'AvenirNext-DemiBold',Helvetica,Arial,serif;
+            padding: .8rem;
+            background-color: rgb(10,134,101);
+        }
+        /* FOOTER */
+        #footer{
+            background-color :rgb(10,134,101);
+            color: white;
+            margin-top:20px;
+            padding: 5px 10px 5px 10px;
+            font-size: 15px;
+            line-height: 5px;
+            border-top: solid 10px rgb(238,191,109);
+            font-family: 'AvenirNext-Medium',Helvetica,Arial,serif;
+        }
+        .footer_icons{
+            padding: 5px 5px 5px 0;
+        }
+        .font-weight-bold {
+            font-weight: 700 !important;
+        }
+        .yellow_txt {
+            color: rgb(240,200,129);
+        }
+        #background {
+            background-color:#f5f2ea;
+            font-family: 'AvenirNext-Medium',Helvetica,Arial,serif;
+        }
+        #content-background {
+            display:inline-block;
+            background-color:white;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+      </style>
+  </head>
+  <body>
+        <div id='background'>
+            <div id='content-background'>
+                {% include "components/header.html" %}
+                <div id="content">{% block content %}{% endblock %}</div>
+                {% include "components/footer.html" %}
+            </div>
+        </div>
+  </body>
+</html>
