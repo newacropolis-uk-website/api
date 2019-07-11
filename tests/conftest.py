@@ -55,12 +55,22 @@ def app():
         'FRONTEND_URL': 'http://frontend-test',
     })
 
+    old_env = os.environ.copy()
+
+    class EnvironDict(dict):
+        def __setitem__(self, key, value):
+            assert type(value) == str
+            super(EnvironDict, self).__setitem__(key, value)
+
+    os.environ = EnvironDict()
+
     ctx = _app.app_context()
     ctx.push()
 
     yield _app
 
     ctx.pop()
+    os.environ = old_env
 
 
 @pytest.fixture(scope='session')
