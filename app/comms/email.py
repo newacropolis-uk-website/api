@@ -25,5 +25,10 @@ def send_email(to, subject, message, _from=None):
 
         response.raise_for_status()
         current_app.logger.info('Sent email: {}'.format(subject))
+        if current_app.config['ENVIRONMENT'] != 'live':  # pragma: no cover
+            current_app.logger.info('Email to: {}'.format(to))
+            current_app.logger.info('Email response: {}'.format(response.text))
+            current_app.logger.info('Email provider: {}'.format(email_provider_url[:5]))
+            current_app.logger.info('Email key: {}'.format(email_provider_apikey[:5]))
     else:
         current_app.logger.info('Email not configured, email would have sent: {}'.format(data))
