@@ -2,7 +2,7 @@ import pytest
 
 from flask import json, url_for
 
-from app.models import ANNOUNCEMENT, EVENT, MAGAZINE, Email
+from app.models import ANNOUNCEMENT, EVENT, MAGAZINE, EMAIL_TYPES, Email
 from tests.conftest import create_authorization_header, request, TEST_ADMIN_USER
 from tests.db import create_email
 
@@ -40,6 +40,17 @@ def sample_emails():
             "timestamp": "2019-03-01 11:00:00",
         }
     ]
+
+
+class WhenGettingEmailTypes:
+    def it_returns_email_types(self, client):
+        response = client.get(
+            url_for('emails.get_email_types'),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        json_email_types = json.loads(response.get_data(as_text=True))
+
+        assert set(EMAIL_TYPES) == set([email_type['type'] for email_type in json_email_types])
 
 
 class WhenPostingImportingEmails:
@@ -135,7 +146,7 @@ class WhenPreviewingEmails:
         }
 
         html = request(
-            url_for('emails.preview_email'),
+            url_for('emails.email_preview'),
             client.post,
             data=json.dumps(data),
             headers=[('Content-Type', 'application/json'), create_authorization_header()])

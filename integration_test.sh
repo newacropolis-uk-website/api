@@ -420,7 +420,7 @@ EOF
 function PreviewEmail {
     echo "*** Preview email ***"
 
-    curl -X POST $api_server'/preview/email' \
+    curl -X POST $api_server'/email/preview' \
     -H "Accept: application/json" \
     -H "Authorization: Bearer $TKN" \
     -d "$email" > 'data/preview_email.html'
