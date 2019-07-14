@@ -24,7 +24,7 @@ from app.dao.events_dao import dao_get_event_by_old_id, dao_get_event_by_id
 from app.routes.emails import get_nice_event_dates
 from app.errors import register_errors, InvalidRequest
 
-from app.models import Email, ANNOUNCEMENT, EVENT, MAGAZINE, EMAIL_TYPES
+from app.models import Email, ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES
 from app.routes.emails.schemas import (
     post_create_email_schema, post_update_email_schema, post_import_emails_schema, post_preview_email_schema
 )
@@ -86,7 +86,7 @@ def create_email():
 
 @emails_blueprint.route('/email/types', methods=['GET'])
 def get_email_types():
-    return jsonify([{'type': email_type} for email_type in EMAIL_TYPES])
+    return jsonify([{'type': email_type} for email_type in MANAGED_EMAIL_TYPES])
 
 
 @emails_blueprint.route('/emails/import', methods=['POST'])

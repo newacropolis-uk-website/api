@@ -2,7 +2,7 @@ import pytest
 
 from flask import json, url_for
 
-from app.models import ANNOUNCEMENT, EVENT, MAGAZINE, EMAIL_TYPES, Email
+from app.models import ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, Email
 from tests.conftest import create_authorization_header, request, TEST_ADMIN_USER
 from tests.db import create_email
 
@@ -50,7 +50,7 @@ class WhenGettingEmailTypes:
         )
         json_email_types = json.loads(response.get_data(as_text=True))
 
-        assert set(EMAIL_TYPES) == set([email_type['type'] for email_type in json_email_types])
+        assert set(MANAGED_EMAIL_TYPES) == set([email_type['type'] for email_type in json_email_types])
 
 
 class WhenPostingImportingEmails:
