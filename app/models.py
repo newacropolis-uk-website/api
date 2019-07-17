@@ -79,10 +79,27 @@ class Email(db.Model):
         index=True,
     )
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    send_starts_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    expires = db.Column(db.DateTime)
+
+    def get_subject(self):
+        if self.email_type == EVENT:
+            from app.dao.events_dao import dao_get_event_by_id
+
+            event = dao_get_event_by_id(str(self.event_id))
+            return "{}: {}".format(event.event_type.event_type, event.title)
+
+    def get_expired_date(self):
+        if self.email_type == EVENT:
+            from app.dao.events_dao import dao_get_event_by_id
+
+            event = dao_get_event_by_id(str(self.event_id))
+            return "{}".format(event.get_last_event_date())
 
     def serialize(self):
         return {
             'id': str(self.id),
+            'subject': self.get_subject(),
             'event_id': str(self.event_id) if self.event_id else None,
             'old_id': self.old_id,
             'old_event_id': self.old_event_id,
@@ -90,7 +107,9 @@ class Email(db.Model):
             'extra_txt': self.extra_txt,
             'replace_all': self.replace_all,
             'email_type': self.email_type,
-            'created_at': str(self.created_at)
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M'),
+            'send_starts_at': self.send_starts_at.strftime('%Y-%m-%d %H:%M'),
+            'expires': self.expires.strftime('%Y-%m-%d %H:%M') if self.expires else self.get_expired_date()
         }
 
 
@@ -161,6 +180,10 @@ class Event(db.Model):
                 }
             )
         return event_dates
+
+    def get_last_event_date(self):
+        if self.event_dates:
+            return self.event_dates[-1].event_datetime
 
     def serialize(self):
         def sorted_event_dates():
