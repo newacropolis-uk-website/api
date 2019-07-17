@@ -1,3 +1,5 @@
+from freezegun import freeze_time
+
 from app.models import Event, Fee, Speaker
 from tests.db import create_article, create_event, create_email, create_fee, create_speaker
 
@@ -104,16 +106,19 @@ class WhenUsingArticleModel(object):
 
 class WhenUsingEmailModel:
     def it_shows_email_json_on_serialize(self, db, db_session):
-        email = create_email(created_at='2019-06-01T10:00:00')
+        email = create_email(created_at='2019-06-01T10:00:00', send_starts_at='2019-06-02T11:00:00')
 
         assert email.serialize() == {
             'id': str(email.id),
-            'event_id': None,
+            'subject': 'workshop: test title',
+            'event_id': str(email.event_id),
             'old_id': email.old_id,
             'old_event_id': email.old_event_id,
-            'created_at': '2019-06-01 10:00:00',
-            'extra_txt': 'test extra text',
-            'details': 'test event details',
+            'created_at': '2019-06-01 10:00',
+            'extra_txt': u'test extra text',
+            'details': u'test event details',
             'replace_all': False,
-            'email_type': 'event',
+            'email_type': u'event',
+            'send_starts_at': '2019-06-02 11:00',
+            'expires': '2019-06-21 19:00:00'
         }

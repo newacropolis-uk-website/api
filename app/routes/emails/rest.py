@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import os
 from flask import (
     Blueprint,
@@ -110,6 +111,7 @@ def import_emails():
                 else:
                     email_type = ANNOUNCEMENT
 
+            expires = None
             if email_type == EVENT:
                 event = dao_get_event_by_old_id(item['eventid'])
 
@@ -119,6 +121,10 @@ def import_emails():
                     errors.append(err)
                     continue
                 event_id = str(event.id)
+                expires = event.get_last_event_date()
+            else:
+                # default to 2 weeks expiry after email was created
+                expires = datetime.strptime(item['timestamp'], "%Y-%m-%d %H:%M") + timedelta(weeks=2)
 
             email = Email(
                 event_id=event_id,
@@ -128,7 +134,9 @@ def import_emails():
                 extra_txt=item['extratxt'],
                 replace_all=True if item['replaceAll'] == 'y' else False,
                 email_type=email_type,
-                created_at=item['timestamp']
+                created_at=item['timestamp'],
+                send_starts_at=item['timestamp'],
+                expires=expires
             )
 
             dao_create_email(email)

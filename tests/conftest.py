@@ -55,22 +55,12 @@ def app():
         'FRONTEND_URL': 'http://frontend-test',
     })
 
-    # old_env = os.environ.copy()
-
-    # class EnvironDict(dict):
-    #     def __setitem__(self, key, value):
-    #         assert type(value) == str
-    #         super(EnvironDict, self).__setitem__(key, value)
-
-    # os.environ = EnvironDict()
-
     ctx = _app.app_context()
     ctx.push()
 
     yield _app
 
     ctx.pop()
-    # os.environ = old_env
 
 
 @pytest.fixture(scope='session')
@@ -113,7 +103,11 @@ def sample_article(db):
 
 @pytest.fixture(scope='function')
 def sample_email(db):
-    return create_email(details='<strong>Fees:</strong> 10, <strong>Concessions:</strong> 5', created_at='2019-06-01')
+    return create_email(
+        details='<strong>Fees:</strong> 10, <strong>Concessions:</strong> 5',
+        created_at='2019-06-01',
+        expires='2019-07-01'
+    )
 
 
 @pytest.fixture(scope='function')
