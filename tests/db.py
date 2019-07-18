@@ -3,7 +3,7 @@ from app import db
 from app.dao.articles_dao import dao_create_article
 from app.dao.blacklist_dao import store_token
 from app.dao.emails_dao import dao_create_email
-from app.dao.events_dao import dao_create_event
+from app.dao.events_dao import dao_create_event, dao_get_event_by_old_id
 from app.dao.event_dates_dao import dao_create_event_date
 from app.dao.event_types_dao import dao_create_event_type
 from app.dao.fees_dao import dao_create_fee
@@ -201,20 +201,33 @@ def create_article(
 def create_email(
         old_id=1,
         old_event_id=2,
+        event_id=None,
         details='test event details',
         extra_txt='test extra text',
         replace_all=False,
         email_type=EVENT,
-        created_at=None
+        created_at=None,
+        send_starts_at=None,
+        expires=None
 ):
+    if old_event_id:
+        event = dao_get_event_by_old_id(old_event_id)
+        if not event:
+            event = create_event(old_id=old_event_id)
+            event_id = str(event.id)
+            create_event_date(event_id=event_id, event_datetime='2019-06-21 19:00')
+
     data = {
+        'event_id': event_id,
         'old_id': old_id,
         'old_event_id': old_event_id,
         'details': details,
         'extra_txt': extra_txt,
         'replace_all': replace_all,
         'email_type': email_type,
-        'created_at': created_at
+        'created_at': created_at,
+        'send_starts_at': send_starts_at,
+        'expires': expires
     }
     email = Email(**data)
 

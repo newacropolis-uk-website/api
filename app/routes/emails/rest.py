@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import os
 from flask import (
     Blueprint,
@@ -13,6 +14,7 @@ from HTMLParser import HTMLParser
 from app.comms.email import send_email
 from app.dao.emails_dao import (
     dao_create_email,
+    dao_get_future_emails,
     dao_get_email_by_id,
     dao_get_emails_for_year_starting_on,
     dao_update_email,
@@ -89,6 +91,13 @@ def get_email_types():
     return jsonify([{'type': email_type} for email_type in MANAGED_EMAIL_TYPES])
 
 
+@emails_blueprint.route('/emails/future', methods=['GET'])
+def get_future_emails():
+    emails = dao_get_future_emails()
+
+    return jsonify([e.serialize() for e in emails])
+
+
 @emails_blueprint.route('/emails/import', methods=['POST'])
 @jwt_required
 def import_emails():
@@ -110,6 +119,7 @@ def import_emails():
                 else:
                     email_type = ANNOUNCEMENT
 
+            expires = None
             if email_type == EVENT:
                 event = dao_get_event_by_old_id(item['eventid'])
 
@@ -119,6 +129,10 @@ def import_emails():
                     errors.append(err)
                     continue
                 event_id = str(event.id)
+                expires = event.get_last_event_date()
+            else:
+                # default to 2 weeks expiry after email was created
+                expires = datetime.strptime(item['timestamp'], "%Y-%m-%d %H:%M") + timedelta(weeks=2)
 
             email = Email(
                 event_id=event_id,
@@ -128,7 +142,9 @@ def import_emails():
                 extra_txt=item['extratxt'],
                 replace_all=True if item['replaceAll'] == 'y' else False,
                 email_type=email_type,
-                created_at=item['timestamp']
+                created_at=item['timestamp'],
+                send_starts_at=item['timestamp'],
+                expires=expires
             )
 
             dao_create_email(email)

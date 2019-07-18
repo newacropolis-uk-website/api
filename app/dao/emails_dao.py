@@ -35,3 +35,10 @@ def dao_get_emails_for_year_starting_on(date_starting=None):
 
 def dao_get_email_by_id(email_id):
     return Email.query.filter_by(id=email_id).one()
+
+
+def dao_get_future_emails():
+    today = datetime.today().strftime("%Y-%m-%d")
+    return Email.query.filter(
+        Email.expires >= today
+    ).all()

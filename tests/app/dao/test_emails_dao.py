@@ -1,6 +1,8 @@
 from freezegun import freeze_time
 
-from app.dao.emails_dao import dao_update_email, dao_get_emails_for_year_starting_on, dao_get_email_by_id
+from app.dao.emails_dao import (
+    dao_update_email, dao_get_emails_for_year_starting_on, dao_get_email_by_id, dao_get_future_emails
+)
 from app.models import Email, EVENT, MAGAZINE
 
 from tests.db import create_email
@@ -47,3 +49,17 @@ class WhenUsingEmailsDAO(object):
 
         fetched_email = dao_get_email_by_id(email.id)
         assert fetched_email == email
+
+    @freeze_time("2019-07-10T10:00:00")
+    def it_gets_future_emails(self, db, db_session):
+        active_email = create_email(created_at='2019-07-01 11:00', send_starts_at='2019-07-10', expires='2019-07-20')
+        active_email_2 = create_email(created_at='2019-07-01 11:00', send_starts_at='2019-07-01', expires='2019-07-12')
+        active_email_3 = create_email(created_at='2019-07-01 11:00', send_starts_at='2019-07-11', expires='2019-07-18')
+        # these emails below are not active
+        create_email(created_at='2019-07-01 11:00', send_starts_at='2019-07-01', expires='2019-07-09')
+
+        emails_from_db = dao_get_future_emails()
+        assert len(emails_from_db) == 3
+        assert emails_from_db[0] == active_email
+        assert emails_from_db[1] == active_email_2
+        assert emails_from_db[2] == active_email_3
