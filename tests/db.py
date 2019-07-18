@@ -201,6 +201,7 @@ def create_article(
 def create_email(
         old_id=1,
         old_event_id=2,
+        event_id=None,
         details='test event details',
         extra_txt='test extra text',
         replace_all=False,
@@ -209,7 +210,6 @@ def create_email(
         send_starts_at=None,
         expires=None
 ):
-    event_id = None
     if old_event_id:
         event = dao_get_event_by_old_id(old_event_id)
         if not event:

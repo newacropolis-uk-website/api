@@ -14,6 +14,7 @@ from HTMLParser import HTMLParser
 from app.comms.email import send_email
 from app.dao.emails_dao import (
     dao_create_email,
+    dao_get_future_emails,
     dao_get_email_by_id,
     dao_get_emails_for_year_starting_on,
     dao_update_email,
@@ -88,6 +89,13 @@ def create_email():
 @emails_blueprint.route('/email/types', methods=['GET'])
 def get_email_types():
     return jsonify([{'type': email_type} for email_type in MANAGED_EMAIL_TYPES])
+
+
+@emails_blueprint.route('/emails/future', methods=['GET'])
+def get_future_emails():
+    emails = dao_get_future_emails()
+
+    return jsonify([e.serialize() for e in emails])
 
 
 @emails_blueprint.route('/emails/import', methods=['POST'])

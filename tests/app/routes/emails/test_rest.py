@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
+from freezegun import freeze_time
 import pytest
 
 from flask import json, url_for
 
 from app.models import ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, Email
 from tests.conftest import create_authorization_header, request, TEST_ADMIN_USER
-from tests.db import create_email
+from tests.db import create_email, create_event, create_event_date
 
 
 @pytest.fixture
@@ -52,6 +53,44 @@ class WhenGettingEmailTypes:
         json_email_types = json.loads(response.get_data(as_text=True))
 
         assert set(MANAGED_EMAIL_TYPES) == set([email_type['type'] for email_type in json_email_types])
+
+
+class WhenGettingFutureEmails:
+    @freeze_time("2019-07-10T10:00:00")
+    def it_returns_future_emails(self, client, db, db_session):
+        event = create_event(title='Event 1')
+        event_2 = create_event(title='Event 2')
+        event_3 = create_event(title='Event 3')
+        past_event = create_event(title='Past event')
+
+        event_date = create_event_date(event_id=str(event.id), event_datetime='2019-07-20 19:00')
+        event_date_2 = create_event_date(event_id=str(event_2.id), event_datetime='2019-07-13 19:00')
+        event_date_3 = create_event_date(event_id=str(event_3.id), event_datetime='2019-08-13 19:00')
+        past_event_date = create_event_date(event_id=str(past_event.id), event_datetime='2019-06-13 19:00')
+
+        future_email = create_email(
+            event_id=str(event.id), created_at='2019-07-01 11:00', send_starts_at='2019-07-10', expires='2019-07-20')
+        future_email_2 = create_email(
+            event_id=str(event_2.id), created_at='2019-07-01 11:00', send_starts_at='2019-07-01', expires='2019-07-12')
+        future_email_3 = create_email(
+            event_id=str(event_3.id), created_at='2019-07-01 11:00', send_starts_at='2019-08-01', expires='2019-08-12')
+        # email below will be ignored as its in the past
+        create_email(
+            event_id=str(past_event.id),
+            created_at='2019-06-01 11:00',
+            send_starts_at='2019-06-01',
+            expires='2019-06-12')
+
+        response = client.get(
+            url_for('emails.get_future_emails'),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+        json_future_emails = json.loads(response.get_data(as_text=True))
+
+        assert len(json_future_emails) == 3
+        assert json_future_emails[0] == future_email.serialize()
+        assert json_future_emails[1] == future_email_2.serialize()
+        assert json_future_emails[2] == future_email_3.serialize()
 
 
 class WhenPostingImportingEmails:
