@@ -9,6 +9,27 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from app import db
 
 
+ANON_PROCESS = 'anon_process'
+ANON_REMINDER = 'anon_reminder'
+ANNOUNCEMENT = 'announcement'
+EVENT = 'event'
+MAGAZINE = 'magazine'
+REPORT_MONTHLY = 'report_monthly'
+REPORT_ANNUALLY = 'report_annually'
+TICKET = 'ticket'
+EMAIL_TYPES = [ANON_PROCESS, ANON_REMINDER, EVENT, MAGAZINE, ANNOUNCEMENT, REPORT_MONTHLY, REPORT_ANNUALLY, TICKET]
+MANAGED_EMAIL_TYPES = [EVENT, MAGAZINE, ANNOUNCEMENT]
+
+DRAFT = 'draft'
+READY = 'ready'
+APPROVED = 'approved'
+REJECTED = 'rejected'
+
+EMAIL_STATES = EVENT_STATES = [
+    DRAFT, READY, APPROVED, REJECTED
+]
+
+
 class Article(db.Model):
     __tablename__ = 'articles'
 
@@ -50,18 +71,6 @@ class Article(db.Model):
         }
 
 
-ANON_PROCESS = 'anon_process'
-ANON_REMINDER = 'anon_reminder'
-ANNOUNCEMENT = 'announcement'
-EVENT = 'event'
-MAGAZINE = 'magazine'
-REPORT_MONTHLY = 'report_monthly'
-REPORT_ANNUALLY = 'report_annually'
-TICKET = 'ticket'
-EMAIL_TYPES = [ANON_PROCESS, ANON_REMINDER, EVENT, MAGAZINE, ANNOUNCEMENT, REPORT_MONTHLY, REPORT_ANNUALLY, TICKET]
-MANAGED_EMAIL_TYPES = [EVENT, MAGAZINE, ANNOUNCEMENT]
-
-
 class Email(db.Model):
     __tablename__ = 'emails'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -71,6 +80,13 @@ class Email(db.Model):
     details = db.Column(db.String)
     extra_txt = db.Column(db.String)
     replace_all = db.Column(db.Boolean)
+    email_state = db.Column(
+        db.String(255),
+        db.ForeignKey('email_states.name'),
+        default=DRAFT,
+        nullable=True,
+        index=True,
+    )
     email_type = db.Column(
         db.String,
         db.ForeignKey('email_types.email_type'),
@@ -107,10 +123,17 @@ class Email(db.Model):
             'extra_txt': self.extra_txt,
             'replace_all': self.replace_all,
             'email_type': self.email_type,
+            'email_state': self.email_state,
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M'),
-            'send_starts_at': self.send_starts_at.strftime('%Y-%m-%d %H:%M'),
-            'expires': self.expires.strftime('%Y-%m-%d %H:%M') if self.expires else self.get_expired_date()
+            'send_starts_at': self.send_starts_at.strftime('%Y-%m-%d'),
+            'expires': self.expires.strftime('%Y-%m-%d') if self.expires else self.get_expired_date()
         }
+
+
+class EmailStates(db.Model):
+    __tablename__ = 'email_states'
+
+    name = db.Column(db.String(), primary_key=True)
 
 
 class EmailType(db.Model):
@@ -118,16 +141,6 @@ class EmailType(db.Model):
 
     email_type = db.Column(db.String, primary_key=True)
     template = db.Column(db.String)
-
-
-DRAFT = 'draft'
-READY = 'ready'
-APPROVED = 'approved'
-REJECTED = 'rejected'
-
-EVENT_STATES = [
-    DRAFT, READY, APPROVED, REJECTED
-]
 
 
 class Event(db.Model):
@@ -183,7 +196,9 @@ class Event(db.Model):
 
     def get_last_event_date(self):
         if self.event_dates:
-            return self.event_dates[-1].event_datetime
+            dates = [e.serialize() for e in self.event_dates]
+            dates.sort(key=lambda k: k['event_datetime'])
+            return dates[-1]['event_datetime'].split(' ')[0]
 
     def serialize(self):
         def sorted_event_dates():

@@ -119,6 +119,7 @@ class WhenUsingEmailModel:
             'details': u'test event details',
             'replace_all': False,
             'email_type': u'event',
-            'send_starts_at': '2019-06-02 11:00',
-            'expires': '2019-06-21 19:00:00'
+            'email_state': u'draft',
+            'send_starts_at': '2019-06-02',
+            'expires': '2019-06-21'
         }

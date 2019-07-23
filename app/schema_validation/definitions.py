@@ -10,6 +10,12 @@ datetime = {
     "validationMessage": "is not a datetime in format YYYY-MM-DD HH:MM(:SS)?",
 }
 
+date = {
+    "type": "string",
+    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+    "validationMessage": "is not a date in format YYYY-MM-DD",
+}
+
 time = {
     "type": "string",
     "pattern": "^[0-9]{2}:[0-9]{2}(:[0-9]{2})?$",

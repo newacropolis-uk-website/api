@@ -335,7 +335,7 @@ def update_event(event_id):
 
             send_email(emails_to, '{} is ready for review'.format(event.title), message)
         elif data.get('event_state') == REJECTED:
-            emails_to = [admin.email for admin in dao_get_users()]
+            emails_to = [user.email for user in dao_get_users()]
 
             message = '<div>Please correct this event <a href="{}">{}</a></div>'.format(
                 '{}/events/{}'.format(current_app.config['FRONTEND_ADMIN_URL'], event_id),
@@ -350,7 +350,7 @@ def update_event(event_id):
 
         return jsonify(json_event), 200
 
-    raise InvalidRequest('{} did not update'.format(event_id), 400)
+    raise InvalidRequest('{} did not update event'.format(event_id), 400)
 
 
 @events_blueprint.route('/events')

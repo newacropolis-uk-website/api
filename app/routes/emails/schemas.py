@@ -1,6 +1,5 @@
-from app.schema_validation.definitions import datetime
 from app.models import EMAIL_TYPES
-from app.schema_validation.definitions import uuid, datetime
+from app.schema_validation.definitions import uuid, datetime, date
 
 
 def email_types():
@@ -22,7 +21,9 @@ post_create_email_schema = {
         "details": {"type": ["string", "null"]},
         "extra_txt": {"type": ["string", "null"]},
         "replace_all": {"type": "boolean"},
-        "email_type": email_types()
+        "email_type": email_types(),
+        "send_starts_at": date,
+        "expires": date
     },
     "required": ["email_type"]
 }
@@ -48,7 +49,13 @@ post_update_email_schema = {
     "description": "POST schema for updating email",
     "type": "object",
     "properties": {
-        "event_datetime": datetime,
+        "event_id": uuid,
+        "details": {"type": ["string", "null"]},
+        "extra_txt": {"type": ["string", "null"]},
+        "replace_all": {"type": "boolean"},
+        "email_type": email_types(),
+        "send_starts_at": date,
+        "expires": date
     },
 }
 

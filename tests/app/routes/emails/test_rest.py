@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
 from freezegun import freeze_time
 import pytest
+import six.moves.urllib as urllib
+from sqlalchemy.orm.exc import NoResultFound
 
 from flask import json, url_for
 
-from app.models import ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, Email
+from app.models import ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, APPROVED, READY, REJECTED, Email
 from tests.conftest import create_authorization_header, request, TEST_ADMIN_USER
 from tests.db import create_email, create_event, create_event_date
 
@@ -107,8 +109,7 @@ class WhenPostingImportingEmails:
         json_emails = json.loads(response.get_data(as_text=True))['emails']
         email_types = [MAGAZINE, EVENT, ANNOUNCEMENT]
         assert len(json_emails) == len(sample_old_emails)
-        # print(json_emails)
-        # print(sample_old_emails)
+
         for i in range(0, len(sample_old_emails)):
             if json_emails[i]['email_type'] == EVENT:
                 assert json_emails[i]['event_id'] == str(sample_event_with_dates.id)
@@ -119,10 +120,11 @@ class WhenPostingImportingEmails:
             assert str(json_emails[i]['old_id']) == sample_old_emails[i]['id']
             assert str(json_emails[i]['old_event_id']) == sample_old_emails[i]['eventid']
             assert json_emails[i]['replace_all'] == (True if sample_old_emails[i]['replaceAll'] == 'y' else False)
-            assert json_emails[i]['send_starts_at'] == sample_old_emails[i]['timestamp']
-            expiry = datetime.strptime(sample_old_emails[i]['timestamp'], "%Y-%m-%d %H:%M") + \
-                timedelta(weeks=2) if email_types[i] != EVENT else sample_event_with_dates.get_last_event_date()
-            assert datetime.strptime(json_emails[i]['expires'], "%Y-%m-%d %H:%M") == expiry
+            assert json_emails[i]['send_starts_at'] == sample_old_emails[i]['timestamp'].split(' ')[0]
+            expiry = (datetime.strptime(sample_old_emails[i]['timestamp'].split(' ')[0], "%Y-%m-%d") +
+                      timedelta(weeks=2)).strftime("%Y-%m-%d") \
+                if email_types[i] != EVENT else sample_event_with_dates.get_last_event_date()
+            assert json_emails[i]['expires'] == expiry
 
     def it_doesnt_create_email_for_imported_emails_already_imported(
         self, client, db_session, sample_old_emails, sample_event
@@ -192,10 +194,11 @@ class WhenPreviewingEmails:
             "email_type": "event"
         }
 
+        encoded_data = urllib.parse.quote(json.dumps(data))
+
         html = request(
-            url_for('emails.email_preview'),
-            client.post,
-            data=json.dumps(data),
+            url_for('emails.email_preview', data=encoded_data),
+            client.get,
             headers=[('Content-Type', 'application/json'), create_authorization_header()])
 
         assert html.soup.select_one('h3').text.strip() == 'Mon 1 of January - 7 PM'
@@ -207,8 +210,7 @@ class WhenPreviewingEmails:
 
 class WhenPostingCreateEmail:
 
-    def it_creates_an_event_email(self, mocker, client, db_session, sample_admin_user, sample_event_with_dates):
-        mock_send_email = mocker.patch('app.routes.emails.rest.send_email')
+    def it_creates_an_event_email(self, mocker, client, db_session, sample_event_with_dates):
         data = {
             "event_id": str(sample_event_with_dates.id),
             "details": "<div>Some additional details</div>",
@@ -239,8 +241,6 @@ class WhenPostingCreateEmail:
         assert emails[0].email_type == 'event'
         assert emails[0].event_id == sample_event_with_dates.id
 
-        assert mock_send_email.call_args[0][0] == TEST_ADMIN_USER
-
     def it_does_not_create_an_event_email_if_no_event_matches(self, client, db_session, sample_uuid):
         data = {
             "event_id": sample_uuid,
@@ -256,10 +256,190 @@ class WhenPostingCreateEmail:
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
 
-        assert response.status_code == 404
+        assert response.status_code == 500
 
         json_resp = json.loads(response.get_data(as_text=True))
 
-        assert json_resp['message'] == 'No result found'
+        assert json_resp['message'] == 'Internal server error'
         emails = Email.query.all()
         assert not emails
+
+
+class WhenPostingUpdateEmail:
+
+    def it_updates_an_event_email(self, mocker, client, db, db_session, sample_email):
+        data = {
+            "event_id": str(sample_email.event_id),
+            "details": sample_email.details,
+            "extra_txt": '<div>New extra text</div>',
+            "replace_all": sample_email.replace_all,
+            "email_type": EVENT
+        }
+
+        response = client.post(
+            url_for('emails.update_email', email_id=str(sample_email.id)),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['extra_txt'] == data['extra_txt']
+        emails = Email.query.all()
+        assert len(emails) == 1
+        assert emails[0].extra_txt == data['extra_txt']
+
+    def it_errors_when_incorrect_event_id(self, mocker, client, db, db_session, sample_email, sample_uuid):
+        data = {
+            "event_id": sample_uuid,
+            "details": sample_email.details,
+            "extra_txt": '<div>New extra text</div>',
+            "replace_all": sample_email.replace_all,
+            "email_type": EVENT
+        }
+
+        response = client.post(
+            url_for('emails.update_email', email_id=str(sample_email.id)),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['message'] == 'event not found: {}'.format(sample_uuid)
+
+    def it_updates_an_event_email_to_ready(self, mocker, client, db, db_session, sample_admin_user, sample_email):
+        mock_send_email = mocker.patch('app.routes.emails.rest.send_email')
+        data = {
+            "event_id": str(sample_email.event_id),
+            "details": sample_email.details,
+            "extra_txt": '<div>New extra text</div>',
+            "replace_all": sample_email.replace_all,
+            "email_type": EVENT,
+            "email_state": READY
+        }
+
+        response = client.post(
+            url_for('emails.update_email', email_id=str(sample_email.id)),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['extra_txt'] == data['extra_txt']
+        emails = Email.query.all()
+        assert len(emails) == 1
+        assert emails[0].extra_txt == data['extra_txt']
+
+        assert mock_send_email.call_args[0][0] == [TEST_ADMIN_USER]
+
+    def it_updates_an_event_email_to_rejected(
+        self, mocker, client, db, db_session, sample_admin_user, sample_email
+    ):
+        mock_send_email = mocker.patch('app.routes.emails.rest.send_email')
+        data = {
+            "event_id": str(sample_email.event_id),
+            "details": sample_email.details,
+            "extra_txt": '<div>New extra text</div>',
+            "replace_all": sample_email.replace_all,
+            "email_type": EVENT,
+            "email_state": REJECTED,
+            "reject_reason": 'test reason'
+        }
+
+        response = client.post(
+            url_for('emails.update_email', email_id=str(sample_email.id)),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['extra_txt'] == data['extra_txt']
+        emails = Email.query.all()
+        assert len(emails) == 1
+        assert emails[0].extra_txt == data['extra_txt']
+
+        assert mock_send_email.call_args[0][0] == [TEST_ADMIN_USER]
+        assert mock_send_email.call_args[0][1] == "test title email needs to be corrected"
+        assert mock_send_email.call_args[0][2] == (
+            '<div>Please correct this email <a href="http://frontend-test/admin/'
+            'emails/{}">workshop: test title</a>'
+            '</div><div>Reason: test reason</div>'.format(str(sample_email.id))
+        )
+
+    def it_updates_an_event_email_to_approved(
+        self, mocker, client, db, db_session, sample_admin_user, sample_email
+    ):
+        data = {
+            "event_id": str(sample_email.event_id),
+            "details": sample_email.details,
+            "extra_txt": '<div>New extra text</div>',
+            "replace_all": sample_email.replace_all,
+            "email_type": EVENT,
+            "email_state": APPROVED,
+            "reject_reason": 'test reason'
+        }
+
+        response = client.post(
+            url_for('emails.update_email', email_id=str(sample_email.id)),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['extra_txt'] == data['extra_txt']
+        emails = Email.query.all()
+        assert len(emails) == 1
+        assert emails[0].email_state == data['email_state']
+        assert emails[0].extra_txt == data['extra_txt']
+
+    def it_raises_error_if_email_not_found(
+        self, mocker, client, db_session, sample_email, sample_uuid
+    ):
+        data = {
+            "event_id": str(sample_email.event_id),
+            "details": sample_email.details,
+            "extra_txt": '<div>New extra text</div>',
+            "replace_all": sample_email.replace_all,
+            "email_type": EVENT,
+            "email_state": READY
+        }
+
+        mocker.patch('app.routes.emails.rest.dao_get_email_by_id', side_effect=NoResultFound())
+
+        response = client.post(
+            url_for('emails.update_email', email_id=sample_uuid),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+
+        json_resp = json.loads(response.get_data(as_text=True))
+
+        assert json_resp['message'] == '{} did not update email'.format(sample_uuid)
+
+    def it_raises_error_if_email_not_updated(
+        self, mocker, client, db_session, sample_email
+    ):
+        data = {
+            "event_id": str(sample_email.event_id),
+            "details": sample_email.details,
+            "extra_txt": '<div>New extra text</div>',
+            "replace_all": sample_email.replace_all,
+            "email_type": EVENT,
+            "email_state": READY
+        }
+
+        mocker.patch('app.routes.emails.rest.dao_update_email', return_value=False)
+
+        response = client.post(
+            url_for('emails.update_email', email_id=sample_email.id),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+
+        json_resp = json.loads(response.get_data(as_text=True))
+        assert json_resp['message'] == '{} did not update email'.format(sample_email.id)

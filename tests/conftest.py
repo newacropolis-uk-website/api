@@ -53,6 +53,7 @@ def app():
         'PAYPAL_SIG': 'paypal signature',
         'API_BASE_URL': 'http://test',
         'FRONTEND_URL': 'http://frontend-test',
+        'FRONTEND_ADMIN_URL': 'http://frontend-test/admin',
     })
 
     ctx = _app.app_context()
@@ -91,7 +92,7 @@ def db_session(db):
 
     db.session.remove()
     for tbl in reversed(db.metadata.sorted_tables):
-        if tbl.name not in ["event_states", "email_types"]:
+        if tbl.name not in ["event_states", "email_types", "email_states"]:
             db.engine.execute(tbl.delete())
     db.session.commit()
 
