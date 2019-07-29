@@ -1492,7 +1492,7 @@ class WhenPostingUpdatingAnEvent:
         assert response.status_code == 400
 
         json_resp = json.loads(response.get_data(as_text=True))
-        assert json_resp['message'] == '{} did not update'.format(sample_req_event_data_with_event['event'].id)
+        assert json_resp['message'] == '{} did not update event'.format(sample_req_event_data_with_event['event'].id)
 
     def it_raises_error_if_event_not_found(
         self, mocker, client, db_session, sample_req_event_data_with_event, sample_uuid

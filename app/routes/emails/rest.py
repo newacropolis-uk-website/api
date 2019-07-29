@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import json
 import os
 from flask import (
     Blueprint,
@@ -7,8 +8,10 @@ from flask import (
     render_template,
     request
 )
+import urlparse
 
 from flask_jwt_extended import jwt_required
+from sqlalchemy.orm.exc import NoResultFound
 from HTMLParser import HTMLParser
 
 from app.comms.email import send_email
@@ -20,13 +23,13 @@ from app.dao.emails_dao import (
     dao_update_email,
 )
 
-from app.dao.users_dao import dao_get_admin_users
+from app.dao.users_dao import dao_get_admin_users, dao_get_users
 from app.dao.events_dao import dao_get_event_by_old_id, dao_get_event_by_id
 
 from app.routes.emails import get_nice_event_dates
 from app.errors import register_errors, InvalidRequest
 
-from app.models import Email, ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES
+from app.models import Email, ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, READY, APPROVED, REJECTED
 from app.routes.emails.schemas import (
     post_create_email_schema, post_update_email_schema, post_import_emails_schema, post_preview_email_schema
 )
@@ -50,14 +53,16 @@ def get_email_html(data):
         )
 
 
-@emails_blueprint.route('/email/preview', methods=['POST'])
-@jwt_required
+@emails_blueprint.route('/email/preview', methods=['GET'])
 def email_preview():
-    data = request.get_json(force=True)
+    data = json.loads(urlparse.unquote(request.args.get('data')))
 
     validate(data, post_preview_email_schema)
 
-    return get_email_html(data)
+    current_app.logger.info('Email preview: {}'.format(data))
+
+    html = get_email_html(data)
+    return html
 
 
 @emails_blueprint.route('/email', methods=['POST'])
@@ -67,31 +72,77 @@ def create_email():
 
     validate(data, post_create_email_schema)
 
-    subject = None
-    if data['email_type'] == EVENT:
-        event = dao_get_event_by_id(data.get('event_id'))
-        subject = 'Please review {}'.format(event.title)
-
     email = Email(**data)
 
     dao_create_email(email)
 
-    # send email to admin users and ask them to log in in order to approve the email
-    for user in dao_get_admin_users():
-        review_part = '<div>Please review this email: {}/emails/{}</div>'.format(
-            current_app.config['FRONTEND_ADMIN_URL'], str(email.id))
-        event_html = get_email_html(data)
-        send_email(user.email, subject, review_part + event_html)
-
     return jsonify(email.serialize()), 201
 
 
+@emails_blueprint.route('/email/<uuid:email_id>', methods=['POST'])
+@jwt_required
+def update_email(email_id):
+    data = request.get_json(force=True)
+
+    validate(data, post_update_email_schema)
+
+    if data['email_type'] == EVENT:
+        try:
+            event = dao_get_event_by_id(data.get('event_id'))
+        except NoResultFound:
+            raise InvalidRequest('event not found: {}'.format(data.get('event_id')), 400)
+
+    email_data = {}
+    for k in data.keys():
+        if hasattr(Email, k):
+            email_data[k] = data[k]
+
+    current_app.logger.info('Update email: {}'.format(email_data))
+
+    res = dao_update_email(email_id, **email_data)
+
+    if res:
+        email = dao_get_email_by_id(email_id)
+
+        if data.get('email_state') == READY:
+            subject = None
+            if data['email_type'] == EVENT:
+                event = dao_get_event_by_id(data.get('event_id'))
+                subject = 'Please review {}'.format(event.title)
+
+            emails_to = [admin.email for admin in dao_get_admin_users()]
+
+            # send email to admin users and ask them to log in in order to approve the email
+            review_part = '<div>Please review this email: {}/emails/{}</div>'.format(
+                current_app.config['FRONTEND_ADMIN_URL'], str(email.id))
+            event_html = get_email_html(data)
+            send_email(emails_to, subject, review_part + event_html)
+        elif data.get('email_state') == REJECTED:
+            emails_to = [user.email for user in dao_get_users()]
+
+            message = '<div>Please correct this email <a href="{}">{}</a></div>'.format(
+                '{}/emails/{}'.format(current_app.config['FRONTEND_ADMIN_URL'], str(email.id)),
+                email.get_subject())
+
+            message += '<div>Reason: {}</div>'.format(data.get('reject_reason'))
+
+            send_email(emails_to, '{} email needs to be corrected'.format(event.title), message)
+        elif data.get('email_state') == APPROVED:
+            # setup celery to handle processing of emails at scheduled times
+            pass
+        return jsonify(email.serialize()), 200
+
+    raise InvalidRequest('{} did not update email'.format(email_id), 400)
+
+
 @emails_blueprint.route('/email/types', methods=['GET'])
+@jwt_required
 def get_email_types():
     return jsonify([{'type': email_type} for email_type in MANAGED_EMAIL_TYPES])
 
 
 @emails_blueprint.route('/emails/future', methods=['GET'])
+@jwt_required
 def get_future_emails():
     emails = dao_get_future_emails()
 

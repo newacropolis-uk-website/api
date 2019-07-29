@@ -214,8 +214,8 @@ def create_email(
         event = dao_get_event_by_old_id(old_event_id)
         if not event:
             event = create_event(old_id=old_event_id)
-            event_id = str(event.id)
-            create_event_date(event_id=event_id, event_datetime='2019-06-21 19:00')
+            create_event_date(event_id=str(event.id), event_datetime='2019-06-21 19:00')
+        event_id = str(event.id)
 
     data = {
         'event_id': event_id,
