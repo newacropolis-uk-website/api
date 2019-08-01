@@ -103,6 +103,7 @@ def update_email(email_id):
 
     if res:
         email = dao_get_email_by_id(email_id)
+        response = None
 
         if data.get('email_state') == READY:
             subject = None
@@ -116,7 +117,7 @@ def update_email(email_id):
             review_part = '<div>Please review this email: {}/emails/{}</div>'.format(
                 current_app.config['FRONTEND_ADMIN_URL'], str(email.id))
             event_html = get_email_html(data)
-            send_email(emails_to, subject, review_part + event_html)
+            response = send_email(emails_to, subject, review_part + event_html)
         elif data.get('email_state') == REJECTED:
             emails_to = [user.email for user in dao_get_users()]
 
@@ -126,11 +127,15 @@ def update_email(email_id):
 
             message += '<div>Reason: {}</div>'.format(data.get('reject_reason'))
 
-            send_email(emails_to, '{} email needs to be corrected'.format(event.title), message)
+            response = send_email(emails_to, '{} email needs to be corrected'.format(event.title), message)
         elif data.get('email_state') == APPROVED:
             # setup celery to handle processing of emails at scheduled times
             pass
-        return jsonify(email.serialize()), 200
+
+        email_json = email.serialize()
+        if response:
+            email_json['email_status_code'] = response
+        return jsonify(email_json), 200
 
     raise InvalidRequest('{} did not update email'.format(email_id), 400)
 
