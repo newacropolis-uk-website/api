@@ -309,7 +309,7 @@ class WhenPostingUpdateEmail:
         assert json_resp['message'] == 'event not found: {}'.format(sample_uuid)
 
     def it_updates_an_event_email_to_ready(self, mocker, client, db, db_session, sample_admin_user, sample_email):
-        mock_send_email = mocker.patch('app.routes.emails.rest.send_email')
+        mock_send_email = mocker.patch('app.routes.emails.rest.send_email', return_value=200)
         data = {
             "event_id": str(sample_email.event_id),
             "details": sample_email.details,
@@ -336,7 +336,7 @@ class WhenPostingUpdateEmail:
     def it_updates_an_event_email_to_rejected(
         self, mocker, client, db, db_session, sample_admin_user, sample_email
     ):
-        mock_send_email = mocker.patch('app.routes.emails.rest.send_email')
+        mock_send_email = mocker.patch('app.routes.emails.rest.send_email', return_value=200)
         data = {
             "event_id": str(sample_email.event_id),
             "details": sample_email.details,

@@ -55,7 +55,8 @@ post_update_email_schema = {
         "replace_all": {"type": "boolean"},
         "email_type": email_types(),
         "send_starts_at": date,
-        "expires": date
+        "expires": date,
+        "reject_reason": {"type": ["string", "null"]},
     },
 }
 
