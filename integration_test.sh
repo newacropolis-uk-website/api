@@ -408,11 +408,20 @@ function GetUserByEmail {
 
 email=$(cat  << EOF
     {
-        "event_id": "c910dc5a-3344-4983-b73a-99beabdb1c53",
+        "event_id": "27c93ad8-71a3-4775-9506-da9e9f17a2df",
         "details": "<div>Some additional details</div>",
         "extra_txt": "<div>Some more information about the event</div>",
         "replace_all": false,
         "email_type": "event"
+    }
+EOF
+)
+
+update_email=$(cat  << EOF
+    {
+        "email_state": "ready", 
+        "email_type": "event", 
+        "event_id": "$EVENT_ID"
     }
 EOF
 )
@@ -435,6 +444,23 @@ function CreateEmail {
     -H "Accept: application/json" \
     -H "Authorization: Bearer $TKN" \
     -d "$email"
+}
+
+function UpdateEmailToReady {
+    echo "*** Update email to ready ***"
+
+    curl -X POST $api_server'/email/'$EMAIL_ID \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$update_email"
+}
+
+function GetFutureEmails {
+    echo "*** Get future emails ***"
+
+    curl -X GET $api_server'/emails/future' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
 }
 
 function TestPaypal {
@@ -554,6 +580,10 @@ case "$arg" in
             GetArticles
         ;;
 
+        -gfe)
+            GetFutureEmails
+        ;;
+
         -gas)
             GetArticlesSummary
         ;;
@@ -584,6 +614,10 @@ case "$arg" in
 
         -pay)
             TestPaypal
+        ;;
+
+        -uem)
+            UpdateEmailToReady
         ;;
 
         -setup)
