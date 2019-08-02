@@ -37,6 +37,7 @@ if [ $port != 'No environment' ]; then
     eval "FRONTEND_ADMIN_URL=\${FRONTEND_ADMIN_URL_$environment}"
     eval "API_BASE_URL=\$API_BASE_URL_$environment"
     eval "FRONTEND_URL=\$FRONTEND_URL_$environment"
+    eval "IMAGES_URL=\$IMAGES_URL_$environment"
     
     echo starting app $environment on port $port
     ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
@@ -59,6 +60,7 @@ if [ $port != 'No environment' ]; then
     export FRONTEND_ADMIN_URL=$FRONTEND_ADMIN_URL
     export API_BASE_URL=$API_BASE_URL
     export FRONTEND_URL=$FRONTEND_URL
+    export IMAGES_URL=$IMAGES_URL
     export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
     export TRAVIS_COMMIT=$TRAVIS_COMMIT
 
