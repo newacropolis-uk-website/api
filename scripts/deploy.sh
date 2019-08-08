@@ -67,6 +67,7 @@ if [ $port != 'No environment' ]; then
     export CELERY_BROKER_URL=$CELERY_BROKER_URL
 
     sudo ./scripts/bootstrap.sh
+    ./scripts/run_celery.sh
     ./scripts/run_app.sh $environment gunicorn $output_params"""
 
     eval "API_ENV=\${API_$environment}"
