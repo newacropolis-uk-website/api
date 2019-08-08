@@ -19,6 +19,7 @@ class WhenInitializingApp(object):
             'API_BASE_URL': 'http://test',
             'FRONTEND_URL': 'http://frontend-test'
         })
+        mocker.patch("app.celery.init_app")
         mocker.patch("app.get_root_path", return_value=returnval)
         mocked_config = mocker.patch("app.application.config.from_object", return_value={})
         create_app()

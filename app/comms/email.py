@@ -1,5 +1,50 @@
-from flask import current_app, jsonify
+from flask import current_app, jsonify, render_template
 import requests
+from HTMLParser import HTMLParser
+
+from app.models import EVENT
+from app.dao.events_dao import dao_get_event_by_id
+
+h = HTMLParser()
+
+
+def get_nice_event_dates(event_dates):
+    event_date_str = ''
+    _event_month = ''
+    _event_dates = ''
+    for event_date in event_dates:
+        m = event_date.event_datetime.strftime("%B")
+        d = event_date.event_datetime.strftime("%a %-d, ")
+
+        if not _event_month:
+            _event_month = event_date.event_datetime.strftime("%B")
+
+        if m == _event_month:
+            _event_dates += d
+        elif _event_dates:
+            event_date_str += _event_dates[:-2] + ' of ' + _event_month + ', '
+            _event_dates = d
+            _event_month = m
+
+    event_date_str = (event_date_str if len(event_date_str) > 2 else '') + _event_dates[:-2] + ' of ' + _event_month
+    event_datetime = event_dates[0].event_datetime
+    event_date_str += ' - ' + event_datetime.strftime(
+        "%-I:%M %p" if event_datetime.strftime("%M") != '00' else "%-I %p")
+
+    return event_date_str
+
+
+def get_email_html(email_type, **kwargs):
+    if email_type == EVENT:
+        event = dao_get_event_by_id(kwargs.get('event_id'))
+        return render_template(
+            'emails/events.html',
+            event=event,
+            event_dates=get_nice_event_dates(event.event_dates),
+            description=h.unescape(event.description),
+            details=kwargs.get('details'),
+            extra_txt=kwargs.get('extra_txt'),
+        )
 
 
 def send_email(to, subject, message, _from=None):

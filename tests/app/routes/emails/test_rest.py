@@ -1,9 +1,12 @@
 from datetime import datetime, timedelta
 from freezegun import freeze_time
+from freezegun.api import FakeDatetime
+from mock import Mock, call
 import pytest
 import six.moves.urllib as urllib
 from sqlalchemy.orm.exc import NoResultFound
 
+from bs4 import BeautifulSoup
 from flask import json, url_for
 
 from app.models import ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, APPROVED, READY, REJECTED, Email
@@ -325,8 +328,7 @@ class WhenPostingUpdateEmail:
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
 
-        json_resp = json.loads(response.get_data(as_text=True))
-        assert json_resp['extra_txt'] == data['extra_txt']
+        assert response.json['extra_txt'] == data['extra_txt']
         emails = Email.query.all()
         assert len(emails) == 1
         assert emails[0].extra_txt == data['extra_txt']
@@ -367,9 +369,15 @@ class WhenPostingUpdateEmail:
             '</div><div>Reason: test reason</div>'.format(str(sample_email.id))
         )
 
+    @freeze_time("2019-08-08 10:00:00")
     def it_updates_an_event_email_to_approved(
         self, mocker, client, db, db_session, sample_admin_user, sample_email
     ):
+        mock_result = Mock()
+        mock_result.id = 'test task_id'
+        mock_send_emails_task = mocker.patch(
+            'app.routes.emails.rest.email_tasks.send_emails.apply_async', return_value=mock_result)
+
         data = {
             "event_id": str(sample_email.event_id),
             "details": sample_email.details,
@@ -386,8 +394,10 @@ class WhenPostingUpdateEmail:
             headers=[('Content-Type', 'application/json'), create_authorization_header()]
         )
 
-        json_resp = json.loads(response.get_data(as_text=True))
-        assert json_resp['extra_txt'] == data['extra_txt']
+        assert mock_send_emails_task.call_args[0][0] == (str(sample_email.id),)
+        assert mock_send_emails_task.call_args[1] == {'eta': FakeDatetime(2019, 8, 8, 10, 1)}
+        assert response.json['extra_txt'] == data['extra_txt']
+        assert response.json['task_id'] == mock_result.id
         emails = Email.query.all()
         assert len(emails) == 1
         assert emails[0].email_state == data['email_state']

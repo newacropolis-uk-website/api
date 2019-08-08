@@ -14,7 +14,8 @@ from flask_jwt_extended import jwt_required
 from sqlalchemy.orm.exc import NoResultFound
 from HTMLParser import HTMLParser
 
-from app.comms.email import send_email
+from app.celery import email_tasks
+from app.comms.email import get_email_html, send_email
 from app.dao.emails_dao import (
     dao_create_email,
     dao_get_future_emails,
@@ -26,7 +27,7 @@ from app.dao.emails_dao import (
 from app.dao.users_dao import dao_get_admin_users, dao_get_users
 from app.dao.events_dao import dao_get_event_by_old_id, dao_get_event_by_id
 
-from app.routes.emails import get_nice_event_dates
+from app.comms.email import get_nice_event_dates
 from app.errors import register_errors, InvalidRequest
 
 from app.models import Email, ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, READY, APPROVED, REJECTED
@@ -37,20 +38,6 @@ from app.schema_validation import validate
 
 emails_blueprint = Blueprint('emails', __name__)
 register_errors(emails_blueprint)
-h = HTMLParser()
-
-
-def get_email_html(data):
-    if data['email_type'] == EVENT:
-        event = dao_get_event_by_id(data.get('event_id'))
-        return render_template(
-            'emails/events.html',
-            event=event,
-            event_dates=get_nice_event_dates(event.event_dates),
-            description=h.unescape(event.description),
-            details=data.get('details', ''),
-            extra_txt=data.get('extra_txt', ''),
-        )
 
 
 @emails_blueprint.route('/email/preview', methods=['GET'])
@@ -61,7 +48,7 @@ def email_preview():
 
     current_app.logger.info('Email preview: {}'.format(data))
 
-    html = get_email_html(data)
+    html = get_email_html(**data)
     return html
 
 
@@ -116,7 +103,7 @@ def update_email(email_id):
             # send email to admin users and ask them to log in in order to approve the email
             review_part = '<div>Please review this email: {}/emails/{}</div>'.format(
                 current_app.config['FRONTEND_ADMIN_URL'], str(email.id))
-            event_html = get_email_html(data)
+            event_html = get_email_html(**data)
             response = send_email(emails_to, subject, review_part + event_html)
         elif data.get('email_state') == REJECTED:
             emails_to = [user.email for user in dao_get_users()]
@@ -129,8 +116,12 @@ def update_email(email_id):
 
             response = send_email(emails_to, '{} email needs to be corrected'.format(event.title), message)
         elif data.get('email_state') == APPROVED:
-            # setup celery to handle processing of emails at scheduled times
-            pass
+            # send the email later in order to allow it to be rejected
+            later = datetime.utcnow() + timedelta(seconds=current_app.config['EMAIL_DELAY'])
+            result = email_tasks.send_emails.apply_async(((str(email_id)),), eta=later)
+
+            dao_update_email(email_id, task_id=result.id)
+            current_app.logger.info('Task: send_email: %d, %r', email_id, result.id)
 
         email_json = email.serialize()
         if response:

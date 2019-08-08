@@ -54,6 +54,10 @@ class Config(object):
     GOOGLE_APPLICATION_CREDENTIALS = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
     TRAVIS_COMMIT = os.environ.get('TRAVIS_COMMIT')
 
+    CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
+    EMAIL_DELAY = 30
+    EMAIL_LIMIT = 400
+
 
 class Development(Config):
     DEBUG = True
