@@ -426,6 +426,15 @@ update_email=$(cat  << EOF
 EOF
 )
 
+update_email_approved=$(cat  << EOF
+    {
+        "email_state": "approved", 
+        "email_type": "event", 
+        "event_id": "$EVENT_ID"
+    }
+EOF
+)
+
 function PreviewEmail {
     echo "*** Preview email ***"
 
@@ -453,6 +462,15 @@ function UpdateEmailToReady {
     -H "Accept: application/json" \
     -H "Authorization: Bearer $TKN" \
     -d "$update_email"
+}
+
+function UpdateEmailToApproved {
+    echo "*** Update email to approved ***"
+
+    curl -X POST $api_server'/email/'$EMAIL_ID \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d "$update_email_approved"
 }
 
 function GetFutureEmails {
@@ -618,6 +636,10 @@ case "$arg" in
 
         -uem)
             UpdateEmailToReady
+        ;;
+
+        -uema)
+            UpdateEmailToApproved
         ;;
 
         -setup)
