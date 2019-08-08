@@ -3,6 +3,10 @@ from celery import Celery
 
 class NewAcropolisCelery(Celery):
     def init_app(self, app):
+        if not app.config['CELERY_BROKER_URL']:
+            app.logger.info('Celery broker URL not set')
+            return
+
         super(NewAcropolisCelery, self).__init__(
             app.import_name,
             broker=app.config['CELERY_BROKER_URL'],
