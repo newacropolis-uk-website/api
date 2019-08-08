@@ -121,5 +121,6 @@ class WhenUsingEmailModel:
             'email_type': u'event',
             'email_state': u'draft',
             'send_starts_at': '2019-06-02',
-            'expires': '2019-06-21'
+            'expires': '2019-06-21',
+            'task_id': None
         }
