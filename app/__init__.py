@@ -2,13 +2,17 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 
+import jinja2
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 
+from app.celery import NewAcropolisCelery
+
 db = SQLAlchemy()
 application = Flask(__name__)
 jwt = JWTManager(application)
+celery = NewAcropolisCelery()
 
 
 def create_app(**kwargs):
@@ -25,6 +29,7 @@ def create_app(**kwargs):
     configure_logging()
 
     db.init_app(application)
+    celery.init_app(application)
 
     register_blueprint()
 
@@ -34,6 +39,8 @@ def create_app(**kwargs):
 
 
 def init_app(app):
+    app.jinja_loader = jinja2.FileSystemLoader([os.getcwd() + '/app/templates'])
+
     app.jinja_env.globals['API_BASE_URL'] = app.config['API_BASE_URL']
     app.jinja_env.globals['FRONTEND_URL'] = app.config['FRONTEND_URL']
     app.jinja_env.globals['IMAGES_URL'] = os.environ.get('IMAGES_URL', app.config['API_BASE_URL'] + '/images/')

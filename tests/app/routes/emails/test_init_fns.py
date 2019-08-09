@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app.routes.emails import get_nice_event_dates
+from app.comms.email import get_nice_event_dates
 
 
 class WhenGettingNiceEventDates:

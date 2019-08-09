@@ -38,6 +38,7 @@ if [ $port != 'No environment' ]; then
     eval "API_BASE_URL=\$API_BASE_URL_$environment"
     eval "FRONTEND_URL=\$FRONTEND_URL_$environment"
     eval "IMAGES_URL=\$IMAGES_URL_$environment"
+    eval "CELERY_BROKER_URL=\$CELERY_BROKER_URL_$environment"
     
     echo starting app $environment on port $port
     ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
@@ -63,8 +64,10 @@ if [ $port != 'No environment' ]; then
     export IMAGES_URL=$IMAGES_URL
     export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
     export TRAVIS_COMMIT=$TRAVIS_COMMIT
+    export CELERY_BROKER_URL=$CELERY_BROKER_URL
 
     sudo ./scripts/bootstrap.sh
+    ./scripts/run_celery.sh
     ./scripts/run_app.sh $environment gunicorn $output_params"""
 
     eval "API_ENV=\${API_$environment}"
