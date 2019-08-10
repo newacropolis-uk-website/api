@@ -3,7 +3,7 @@ from freezegun import freeze_time
 from app.dao.emails_dao import (
     dao_update_email, dao_get_emails_for_year_starting_on, dao_get_email_by_id, dao_get_future_emails
 )
-from app.models import Email, EVENT, MAGAZINE
+from app.models import Email
 
 from tests.db import create_email
 
