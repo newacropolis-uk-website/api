@@ -481,6 +481,23 @@ function GetFutureEmails {
     -H "Authorization: Bearer $TKN"
 }
 
+function ImportMarketings {
+    echo "*** Import marketings ***"
+
+    curl -X POST $api_server'/marketings/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d @data/marketings.json
+}
+
+function GetMarketings {
+    echo "*** Get marketings ***"
+
+    curl -X GET $api_server'/marketings' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
 function TestPaypal {
     echo "*** Test paypal ***"
 
@@ -594,12 +611,20 @@ case "$arg" in
             ImportArticles
         ;;
 
+        -ima)
+            ImportMarketings
+        ;;
+
         -ga)
             GetArticles
         ;;
 
         -gfe)
             GetFutureEmails
+        ;;
+
+        -gm)
+            GetMarketings
         ;;
 
         -gas)
