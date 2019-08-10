@@ -3,6 +3,9 @@ from celery import Celery
 
 class NewAcropolisCelery(Celery):
     def init_app(self, app):
+        if app.config['ENVIRONMENT'] == 'test':
+            return
+
         if not app.config['CELERY_BROKER_URL']:
             app.logger.info('Celery broker URL not set')
             return
