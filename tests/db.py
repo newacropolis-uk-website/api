@@ -7,11 +7,16 @@ from app.dao.events_dao import dao_create_event, dao_get_event_by_old_id
 from app.dao.event_dates_dao import dao_create_event_date
 from app.dao.event_types_dao import dao_create_event_type
 from app.dao.fees_dao import dao_create_fee
+from app.dao.marketings_dao import dao_create_marketing
+from app.dao.members_dao import dao_create_member
 from app.dao.reject_reasons_dao import dao_create_reject_reason
 from app.dao.speakers_dao import dao_create_speaker
 from app.dao.users_dao import dao_create_user
 from app.dao.venues_dao import dao_create_venue
-from app.models import Article, Email, Event, EventDate, EventType, Fee, RejectReason, Speaker, User, Venue, EVENT
+from app.models import (
+    Article, Email, Event, EventDate, EventType, Fee, Marketing, Member, RejectReason, Speaker, User, Venue,
+    EVENT
+)
 
 
 def create_event(
@@ -233,6 +238,52 @@ def create_email(
 
     dao_create_email(email)
     return email
+
+
+def create_marketing(
+    old_id=1,
+    description='Poster',
+    order_number=0,
+    active=True,
+):
+    data = {
+        'old_id': old_id,
+        'description': description,
+        'order_number': order_number,
+        'active': True,
+    }
+
+    marketing = Marketing(**data)
+
+    dao_create_marketing(marketing)
+
+    return marketing
+
+
+def create_member(
+    old_id=1,
+    name='Joe Blue',
+    email='test@example.com',
+    active=True,
+    old_marketing_id=1,
+    is_course_member=False,
+    last_updated=None
+):
+    data = {
+        'old_id': old_id,
+        'name': name,
+        'email': email,
+        'active': active,
+        'old_marketing_id': old_marketing_id,
+        'is_course_member': is_course_member,
+        'last_updated': last_updated
+    }
+
+    member = Member(**data)
+
+    dao_create_member(member)
+
+    return member
 
 
 def create_user(email='test@example.com', name='First Mid Last-name', access_area=',email,event,report,article,'):

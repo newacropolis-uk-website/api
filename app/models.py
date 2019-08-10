@@ -133,6 +133,43 @@ class Email(db.Model):
         }
 
 
+class Marketing(db.Model):
+    __tablename__ = 'marketings'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    old_id = db.Column(db.Integer, unique=True)
+    description = db.Column(db.String, unique=True)  # marketingtext
+    order_number = db.Column(db.Integer)
+    active = db.Column(db.Boolean)  # visible
+
+
+class Member(db.Model):
+    __tablename__ = 'members'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    old_id = db.Column(db.Integer)
+    name = db.Column(db.String)
+    email = db.Column(db.String, unique=True)
+    active = db.Column(db.Boolean)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    marketing_id = db.Column(UUID(as_uuid=True), db.ForeignKey('marketings.id'), nullable=False)
+    old_marketing_id = db.Column(db.Integer)
+    is_course_member = db.Column(db.Boolean)
+    last_updated = db.Column(db.DateTime)
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'old_id': self.old_id,
+            'name': self.name,
+            'email': self.email,
+            'active': self.active,
+            'created_at': self.created_at,
+            'marketing_id': self.marketing_id,
+            'old_marketing_id': self.old_marketing_id,
+            'is_course_member': self.is_course_member,
+            'last_updated': self.last_updated
+        }
+
+
 class EmailStates(db.Model):
     __tablename__ = 'email_states'
 

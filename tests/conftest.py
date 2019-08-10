@@ -21,6 +21,8 @@ from tests.db import (
     create_event_date,
     create_event_type,
     create_fee,
+    create_marketing,
+    create_member,
     create_reject_reason,
     create_speaker,
     create_user,
@@ -110,6 +112,21 @@ def sample_email(db):
         details='<strong>Fees:</strong> 10, <strong>Concessions:</strong> 5',
         created_at='2019-06-01',
         expires='2019-07-01'
+    )
+
+
+@pytest.fixture(scope='function')
+def sample_marketing(db):
+    return create_marketing(
+        description='Leaflet'
+    )
+
+
+@pytest.fixture(scope='function')
+def sample_member(db):
+    return create_member(
+        name='Sue Green',
+        email='sue@example.com'
     )
 
 
