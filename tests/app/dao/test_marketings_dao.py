@@ -2,7 +2,7 @@ from sqlalchemy.exc import IntegrityError
 import pytest
 
 from app.dao.marketings_dao import (
-    dao_update_marketing, dao_get_marketing_by_id
+    dao_update_marketing, dao_get_marketing_by_id, dao_get_marketings
 )
 from app.models import Marketing
 
@@ -25,6 +25,12 @@ class WhenUsingMarketingsDAO(object):
         marketing_from_db = Marketing.query.filter(Marketing.id == sample_marketing.id).first()
 
         assert marketing_from_db.description == 'New posters'
+
+    def it_gets_all_marketings(self, db, db_session, sample_marketing):
+        create_marketing(description='Email')
+
+        fetched_marketings = dao_get_marketings()
+        assert len(fetched_marketings) == 2
 
     def it_gets_an_marketing_by_id(self, db, db_session, sample_marketing):
         marketing = create_marketing(description='Email')
