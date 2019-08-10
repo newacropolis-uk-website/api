@@ -141,6 +141,15 @@ class Marketing(db.Model):
     order_number = db.Column(db.Integer)
     active = db.Column(db.Boolean)  # visible
 
+    def serialize(self):
+        return {
+            "id": str(self.id),
+            "old_id": self.old_id,
+            "description": self.description,
+            "order_number": self.order_number,
+            "acive": self.active
+        }
+
 
 class Member(db.Model):
     __tablename__ = 'members'
