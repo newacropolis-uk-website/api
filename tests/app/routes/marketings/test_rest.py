@@ -23,13 +23,13 @@ class WhenPostingMarketings:
             {
                 "id": "1",
                 "marketingtxt": 'Poster',
-                "ordernum": "1",
+                "ordernum": "0",
                 "visible": "1"
             },
             {
                 "id": "2",
                 "marketingtxt": 'Leaflet',
-                "ordernum": "2",
+                "ordernum": "1",
                 "visible": "1"
             },
         ]
@@ -53,13 +53,13 @@ class WhenPostingMarketings:
             {
                 "id": "1",
                 "marketingtxt": 'Leaflet',
-                "ordernum": "1",
+                "ordernum": "0",
                 "visible": "1"
             },
             {
                 "id": "2",
                 "marketingtxt": 'Poster',
-                "ordernum": "2",
+                "ordernum": "1",
                 "visible": "1"
             },
         ]
