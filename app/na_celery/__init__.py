@@ -1,7 +1,7 @@
 from celery import Celery
 
 
-class NewAcropolisCelery(Celery):
+class NewAcropolisCelery(Celery):  # pragma: no cover
     def init_app(self, app):
         if app.config['ENVIRONMENT'] == 'test':
             return
@@ -20,7 +20,7 @@ class NewAcropolisCelery(Celery):
         self.conf.update(app.config)
 
         class ContextTask(self.Task):
-            def __call__(self, *args, **kwargs):  # noqa
+            def __call__(self, *args, **kwargs):
                 with app.app_context():
                     return self.run(*args, **kwargs)
 

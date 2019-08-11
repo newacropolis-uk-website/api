@@ -7,7 +7,8 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 
-from app.celery import NewAcropolisCelery
+from app.na_celery import NewAcropolisCelery
+
 
 db = SQLAlchemy()
 application = Flask(__name__)

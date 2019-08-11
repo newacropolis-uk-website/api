@@ -17,9 +17,9 @@ class WhenInitializingApp(object):
         mocker.patch.dict('app.application.config', {
             'SQLALCHEMY_DATABASE_URI': 'db://localhost/test_db',
             'API_BASE_URL': 'http://test',
-            'FRONTEND_URL': 'http://frontend-test'
+            'FRONTEND_URL': 'http://frontend-test',
+            'ENVIRONMENT': 'test'
         })
-        mocker.patch("app.celery.init_app")
         mocker.patch("app.get_root_path", return_value=returnval)
         mocked_config = mocker.patch("app.application.config.from_object", return_value={})
         create_app()
