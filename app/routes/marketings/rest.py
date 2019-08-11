@@ -1,24 +1,18 @@
-import json
-import os
 from flask import (
     Blueprint,
     current_app,
     jsonify,
-    render_template,
     request
 )
 
 from flask_jwt_extended import jwt_required
-from sqlalchemy.orm.exc import NoResultFound
 
 from app.dao.marketings_dao import (
     dao_create_marketing,
     dao_get_marketings,
-    dao_get_marketing_by_id,
-    dao_update_marketing,
 )
 
-from app.errors import register_errors, InvalidRequest
+from app.errors import register_errors
 
 from app.models import Marketing
 from app.routes.marketings.schemas import post_import_marketings_schema
