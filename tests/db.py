@@ -250,7 +250,7 @@ def create_marketing(
         'old_id': old_id,
         'description': description,
         'order_number': order_number,
-        'active': True,
+        'active': active,
     }
 
     marketing = Marketing(**data)

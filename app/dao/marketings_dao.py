@@ -16,7 +16,7 @@ def dao_update_marketing(marketing_id, **kwargs):
 
 
 def dao_get_marketings():
-    return Marketing.query.order_by(Marketing.order_number).all()
+    return Marketing.query.filter_by(active=True).order_by(Marketing.order_number).all()
 
 
 def dao_get_marketing_by_id(marketing_id):
