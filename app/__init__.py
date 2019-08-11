@@ -62,6 +62,7 @@ def register_blueprint():
     from app.routes.event_dates.rest import event_dates_blueprint, event_date_blueprint
     from app.routes.event_types.rest import event_types_blueprint, event_type_blueprint
     from app.routes.marketings.rest import marketings_blueprint
+    from app.routes.members.rest import members_blueprint
     from app.routes.speakers.rest import speakers_blueprint, speaker_blueprint
     from app.routes.users.rest import users_blueprint, user_blueprint
     from app.routes.venues.rest import venues_blueprint, venue_blueprint
@@ -78,6 +79,7 @@ def register_blueprint():
     application.register_blueprint(fees_blueprint)
     application.register_blueprint(fee_blueprint)
     application.register_blueprint(marketings_blueprint)
+    application.register_blueprint(members_blueprint)
     application.register_blueprint(speakers_blueprint)
     application.register_blueprint(speaker_blueprint)
     application.register_blueprint(users_blueprint)
