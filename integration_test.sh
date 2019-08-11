@@ -498,6 +498,15 @@ function GetMarketings {
     -H "Authorization: Bearer $TKN"
 }
 
+function ImportMembers {
+    echo "*** Import members ***"
+
+    curl -X POST $api_server'/members/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d @data/members.json
+}
+
 function TestPaypal {
     echo "*** Test paypal ***"
 
@@ -613,6 +622,10 @@ case "$arg" in
 
         -ima)
             ImportMarketings
+        ;;
+
+        -ime)
+            ImportMembers
         ;;
 
         -ga)
