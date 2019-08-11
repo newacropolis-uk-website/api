@@ -26,8 +26,9 @@ class WhenUsingMarketingsDAO(object):
 
         assert marketing_from_db.description == 'New posters'
 
-    def it_gets_all_marketings(self, db, db_session, sample_marketing):
+    def it_gets_all_active_marketings(self, db, db_session, sample_marketing):
         create_marketing(description='Email')
+        create_marketing(description='Old magazine', active=False)
 
         fetched_marketings = dao_get_marketings()
         assert len(fetched_marketings) == 2
