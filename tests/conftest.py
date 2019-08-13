@@ -118,6 +118,7 @@ def sample_email(db):
 @pytest.fixture(scope='function')
 def sample_marketing(db):
     return create_marketing(
+        old_id=1,
         description='Leaflet'
     )
 

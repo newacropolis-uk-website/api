@@ -3,7 +3,7 @@ import uuid
 import re
 
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import PrimaryKeyConstraint, UniqueConstraint
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from app import db
@@ -71,6 +71,17 @@ class Article(db.Model):
         }
 
 
+class EmailToMember(db.Model):
+    __tablename__ = 'email_to_member'
+    __table_args__ = (
+        PrimaryKeyConstraint('email_id', 'member_id'),
+    )
+    email_id = db.Column(UUID(as_uuid=True), db.ForeignKey('emails.id'))
+    member_id = db.Column(UUID(as_uuid=True), db.ForeignKey('members.id'))
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    status_code = db.Column(db.Integer)
+
+
 class Email(db.Model):
     __tablename__ = 'emails'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -98,6 +109,11 @@ class Email(db.Model):
     send_starts_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     expires = db.Column(db.DateTime)
     task_id = db.Column(db.String)
+    members_sent_to = db.relationship(
+        'Member',
+        secondary='email_to_member',
+        backref=db.backref('email_to_member', lazy='dynamic'),
+    )
 
     def get_subject(self):
         if self.email_type == EVENT:

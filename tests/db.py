@@ -241,7 +241,7 @@ def create_email(
 
 
 def create_marketing(
-    old_id=1,
+    old_id=None,
     description='Poster',
     order_number=0,
     active=True,
@@ -267,8 +267,17 @@ def create_member(
     active=True,
     old_marketing_id=1,
     is_course_member=False,
-    last_updated=None
+    last_updated=None,
+    marketing_id=None
 ):
+    if not marketing_id:
+        search_marketing = Marketing.query.filter_by(description='Search').first()
+        if not search_marketing:
+            marketing = create_marketing(description='Search')
+            marketing_id = str(marketing.id)
+        else:
+            marketing_id = str(search_marketing.id)
+
     data = {
         'old_id': old_id,
         'name': name,
@@ -276,7 +285,8 @@ def create_member(
         'active': active,
         'old_marketing_id': old_marketing_id,
         'is_course_member': is_course_member,
-        'last_updated': last_updated
+        'last_updated': last_updated,
+        'marketing_id': marketing_id
     }
 
     member = Member(**data)

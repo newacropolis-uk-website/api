@@ -3,7 +3,8 @@ from sqlalchemy import and_
 
 from app import db
 from app.dao.decorators import transactional
-from app.models import Email
+from app.dao.members_dao import dao_get_member_by_id
+from app.models import Email, EmailToMember
 
 
 @transactional
@@ -13,9 +14,30 @@ def dao_create_email(email):
 
 @transactional
 def dao_update_email(email_id, **kwargs):
-    return Email.query.filter_by(id=email_id).update(
-        kwargs
-    )
+    if 'members_sent_to' in kwargs.keys():
+        members_sent_to = kwargs.pop('members_sent_to')
+    else:
+        members_sent_to = None
+
+    email_query = Email.query.filter_by(id=email_id)
+
+    res = email_query.update(kwargs) if kwargs else None
+
+    if members_sent_to is not None:
+        email_query.one().members_sent_to = members_sent_to
+
+    return res
+
+
+@transactional
+def dao_add_member_sent_to_email(email, member, created_at=None):
+    if email.members_sent_to:
+        email.members_sent_to.append(member)
+    else:
+        email.members_sent_to = [member]
+
+    email_to_member = EmailToMember.query.filter_by(email_id=email.id, member_id=member.id).first()
+    email_to_member.created_at = created_at
 
 
 def dao_get_emails_for_year_starting_on(date_starting=None):
