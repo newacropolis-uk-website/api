@@ -11,7 +11,7 @@ from flask import json, url_for
 
 from app.models import ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, APPROVED, READY, REJECTED, Email
 from tests.conftest import create_authorization_header, request, TEST_ADMIN_USER
-from tests.db import create_email, create_event, create_event_date
+from tests.db import create_email, create_event, create_event_date, create_member
 
 
 @pytest.fixture
@@ -453,3 +453,54 @@ class WhenPostingUpdateEmail:
 
         json_resp = json.loads(response.get_data(as_text=True))
         assert json_resp['message'] == '{} did not update email'.format(sample_email.id)
+
+
+class WhenPostingImportingEmailsMailings:
+    def it_creates_email_to_members_for_imported_emailmailingss(self, client, db_session, sample_email, sample_member):
+        member = create_member(old_id=2, name='Jack Green', email='jack@example.com')
+        data = [
+            {"id": "1", "emailid": "1", "mailinglistid": "1", "timestamp": "2019-06-10 17:30:00"},
+            {"id": "2", "emailid": "1", "mailinglistid": "2", "timestamp": "2019-06-11 17:30:00"},
+        ]
+
+        response = client.post(
+            url_for('emails.import_emails_members_sent_to'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 201
+        assert response.json['emails_members_sent_to'][0]['email_id'] == str(sample_email.id)
+        assert response.json['emails_members_sent_to'][0]['member_id'] == str(sample_member.id)
+        assert response.json['emails_members_sent_to'][0]['created_at'] == data[0]['timestamp']
+        assert response.json['emails_members_sent_to'][1]['email_id'] == str(sample_email.id)
+        assert response.json['emails_members_sent_to'][1]['member_id'] == str(member.id)
+        assert response.json['emails_members_sent_to'][1]['created_at'] == data[1]['timestamp']
+
+    def it_doesnt_create_email_to_member_if_email_not_found(self, client, db_session, sample_member):
+        data = [
+            {"id": "1", "emailid": "1", "mailinglistid": "1", "timestamp": "2019-06-10 17:30:00"},
+        ]
+
+        response = client.post(
+            url_for('emails.import_emails_members_sent_to'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+        assert response.json['errors'] == ['Email not found: 1']
+
+    def it_doesnt_create_email_to_member_if_member_not_found(self, client, db_session, sample_email):
+        data = [
+            {"id": "1", "emailid": "1", "mailinglistid": "1", "timestamp": "2019-06-10 17:30:00"},
+        ]
+
+        response = client.post(
+            url_for('emails.import_emails_members_sent_to'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+        assert response.json['errors'] == ['Member not found: 1']

@@ -88,3 +88,30 @@ post_import_emails_schema = {
         "email": post_import_email_schema
     }
 }
+
+
+post_import_email_member_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for importing emails",
+    "type": "object",
+    "properties": {
+        "id": {"format": "number", "type": "string"},
+        "mailinglistid": {"format": "number", "type": "string"},
+        "timestamp": datetime
+    },
+    "required": ["id", "mailinglistid", "timestamp"]
+}
+
+
+post_import_email_members_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "POST schema for importing emails members",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "$ref": "#/definitions/email_member"
+    },
+    "definitions": {
+        "email_member": post_import_email_member_schema
+    }
+}
