@@ -40,6 +40,11 @@ def dao_add_member_sent_to_email(email, member, created_at=None):
     email_to_member.created_at = created_at
 
 
+@transactional
+def dao_create_email_to_member(email_to_member):
+    db.session.add(email_to_member)
+
+
 def dao_get_emails_for_year_starting_on(date_starting=None):
     if not date_starting:
         date_starting = (datetime.today() - timedelta(weeks=52)).strftime("%Y-%m-%d")

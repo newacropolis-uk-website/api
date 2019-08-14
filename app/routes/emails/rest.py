@@ -18,7 +18,9 @@ from app.na_celery import email_tasks
 from app.comms.email import get_email_html, send_email
 from app.dao.emails_dao import (
     dao_create_email,
+    dao_create_email_to_member,
     dao_get_future_emails,
+    dao_add_member_sent_to_email,
     dao_get_email_by_id,
     dao_get_emails_for_year_starting_on,
     dao_update_email,
@@ -30,9 +32,13 @@ from app.dao.events_dao import dao_get_event_by_old_id, dao_get_event_by_id
 from app.comms.email import get_nice_event_dates
 from app.errors import register_errors, InvalidRequest
 
-from app.models import Email, ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, READY, APPROVED, REJECTED
+from app.models import (
+    Email, EmailToMember, Member,
+    ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, READY, APPROVED, REJECTED
+)
 from app.routes.emails.schemas import (
-    post_create_email_schema, post_update_email_schema, post_import_emails_schema, post_preview_email_schema
+    post_create_email_schema, post_update_email_schema, post_import_emails_schema, post_preview_email_schema,
+    post_import_email_members_schema
 )
 from app.schema_validation import validate
 
@@ -209,3 +215,46 @@ def import_emails():
         res['errors'] = errors
 
     return jsonify(res), 201 if emails else 400 if errors else 200
+
+
+@emails_blueprint.route('/emails/members/import', methods=['POST'])
+@jwt_required
+def import_emails_members_sent_to():
+    data = request.get_json(force=True)
+
+    validate(data, post_import_email_members_schema)
+
+    errors = []
+    emails_to_members = []
+    for item in data:
+        email = Email.query.filter_by(old_id=item['emailid']).first()
+        member = Member.query.filter_by(old_id=item['mailinglistid']).first()
+
+        if not email:
+            error = 'Email not found: {}'.format(item['emailid'])
+            errors.append(error)
+            current_app.logger.error(error)
+
+        if not member:
+            error = 'Member not found: {}'.format(item['emailid'])
+            errors.append(error)
+            current_app.logger.error(error)
+
+        if email and member:
+            email_to_member = EmailToMember(
+                email_id=email.id,
+                member_id=member.id,
+                created_at=item['timestamp']
+            )
+            # dao_add_member_sent_to_email(email, member, created_at=item['timestamp'])
+            dao_create_email_to_member(email_to_member)
+            emails_to_members.append(email_to_member)
+
+    res = {
+        "emails_members_sent_to": [e.serialize() for e in emails_to_members]
+    }
+
+    if errors:
+        res['errors'] = errors
+
+    return jsonify(res), 201 if emails_to_members else 400 if errors else 200

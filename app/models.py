@@ -81,6 +81,13 @@ class EmailToMember(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     status_code = db.Column(db.Integer)
 
+    def serialize(self):
+        return {
+            'email_id': str(self.email_id),
+            'member_id': str(self.member_id),
+            'created_at': str(self.created_at),
+        }
+
 
 class Email(db.Model):
     __tablename__ = 'emails'
