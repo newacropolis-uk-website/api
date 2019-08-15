@@ -30,7 +30,10 @@ def dao_update_email(email_id, **kwargs):
 
 
 @transactional
-def dao_add_member_sent_to_email(email, member, created_at=None):
+def dao_add_member_sent_to_email(email_id, member_id, created_at=None):
+    email = dao_get_email_by_id(email_id)
+    member = dao_get_member_by_id(member_id)
+
     if email.members_sent_to:
         email.members_sent_to.append(member)
     else:

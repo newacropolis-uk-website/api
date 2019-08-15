@@ -40,7 +40,7 @@ class WhenUsingEmailsDAO(object):
         assert email_from_db.members_sent_to == members
 
     def it_adds_a_member_sent_to_email_for_first_member(self, db, db_session, sample_email, sample_member):
-        dao_add_member_sent_to_email(sample_email, sample_member, created_at='2019-08-1 12:00:00')
+        dao_add_member_sent_to_email(sample_email.id, sample_member.id, created_at='2019-08-1 12:00:00')
         email_from_db = Email.query.filter(Email.id == sample_email.id).first()
 
         assert email_from_db.members_sent_to == [sample_member]
@@ -53,7 +53,7 @@ class WhenUsingEmailsDAO(object):
 
         member = create_member(name='New member', email='new_member@example.com')
 
-        dao_add_member_sent_to_email(sample_email, member)
+        dao_add_member_sent_to_email(sample_email.id, member.id)
         email_from_db = Email.query.filter(Email.id == sample_email.id).first()
 
         assert email_from_db.members_sent_to == [sample_member, member]
@@ -63,7 +63,7 @@ class WhenUsingEmailsDAO(object):
         dao_update_email(sample_email.id, members_sent_to=members)
 
         with pytest.raises(expected_exception=IntegrityError):
-            dao_add_member_sent_to_email(sample_email, sample_member)
+            dao_add_member_sent_to_email(sample_email.id, sample_member.id)
 
         email_from_db = Email.query.filter(Email.id == sample_email.id).first()
 
