@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from flask import json, url_for
 
 from app.models import ANNOUNCEMENT, EVENT, MAGAZINE, MANAGED_EMAIL_TYPES, APPROVED, READY, REJECTED, Email
+from app.dao.emails_dao import dao_add_member_sent_to_email
 from tests.conftest import create_authorization_header, request, TEST_ADMIN_USER
 from tests.db import create_email, create_event, create_event_date, create_member
 
@@ -339,6 +340,8 @@ class WhenPostingUpdateEmail:
         self, mocker, client, db, db_session, sample_admin_user, sample_email
     ):
         mock_send_email = mocker.patch('app.routes.emails.rest.send_email', return_value=200)
+        mock_revoke_task = mocker.patch('app.routes.emails.rest.revoke_task')
+
         data = {
             "event_id": str(sample_email.event_id),
             "details": sample_email.details,
@@ -346,7 +349,8 @@ class WhenPostingUpdateEmail:
             "replace_all": sample_email.replace_all,
             "email_type": EVENT,
             "email_state": REJECTED,
-            "reject_reason": 'test reason'
+            "reject_reason": 'test reason',
+            "task_id": 'task_id'
         }
 
         response = client.post(
@@ -361,6 +365,7 @@ class WhenPostingUpdateEmail:
         assert len(emails) == 1
         assert emails[0].extra_txt == data['extra_txt']
 
+        assert mock_revoke_task.call_args[0][0] == 'task_id'
         assert mock_send_email.call_args[0][0] == [TEST_ADMIN_USER]
         assert mock_send_email.call_args[0][1] == "test title email needs to be corrected"
         assert mock_send_email.call_args[0][2] == (
@@ -385,6 +390,7 @@ class WhenPostingUpdateEmail:
             "replace_all": sample_email.replace_all,
             "email_type": EVENT,
             "email_state": APPROVED,
+            "send_starts_at": "2019-08-08",
             "reject_reason": 'test reason'
         }
 
@@ -396,6 +402,41 @@ class WhenPostingUpdateEmail:
 
         assert mock_send_emails_task.call_args[0][0] == (str(sample_email.id),)
         assert mock_send_emails_task.call_args[1] == {'eta': FakeDatetime(2019, 8, 8, 10, 1)}
+        assert response.json['extra_txt'] == data['extra_txt']
+        assert response.json['task_id'] == mock_result.id
+        emails = Email.query.all()
+        assert len(emails) == 1
+        assert emails[0].email_state == data['email_state']
+        assert emails[0].extra_txt == data['extra_txt']
+
+    @freeze_time("2019-07-01 10:00:00")
+    def it_updates_an_event_email_to_approved_starting_email_starts_at_date(
+        self, mocker, client, db, db_session, sample_admin_user, sample_email
+    ):
+        mock_result = Mock()
+        mock_result.id = 'test task_id'
+        mock_send_emails_task = mocker.patch(
+            'app.routes.emails.rest.email_tasks.send_emails.apply_async', return_value=mock_result)
+
+        data = {
+            "event_id": str(sample_email.event_id),
+            "details": sample_email.details,
+            "extra_txt": '<div>New extra text</div>',
+            "replace_all": sample_email.replace_all,
+            "email_type": EVENT,
+            "email_state": APPROVED,
+            "send_starts_at": "2019-08-08",
+            "reject_reason": 'test reason'
+        }
+
+        response = client.post(
+            url_for('emails.update_email', email_id=str(sample_email.id)),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert mock_send_emails_task.call_args[0][0] == (str(sample_email.id),)
+        assert mock_send_emails_task.call_args[1] == {'eta': FakeDatetime(2019, 8, 8, 9)}
         assert response.json['extra_txt'] == data['extra_txt']
         assert response.json['task_id'] == mock_result.id
         emails = Email.query.all()
@@ -489,7 +530,7 @@ class WhenPostingImportingEmailsMailings:
         )
 
         assert response.status_code == 400
-        assert response.json['errors'] == ['Email not found: 1']
+        assert response.json['errors'] == ['0: Email not found: 1']
 
     def it_doesnt_create_email_to_member_if_member_not_found(self, client, db_session, sample_email):
         data = [
@@ -503,4 +544,20 @@ class WhenPostingImportingEmailsMailings:
         )
 
         assert response.status_code == 400
-        assert response.json['errors'] == ['Member not found: 1']
+        assert response.json['errors'] == ['0: Member not found: 1']
+
+    def it_doesnt_create_email_to_member_if_already_imported(self, client, db_session, sample_email, sample_member):
+        dao_add_member_sent_to_email(sample_email.id, sample_member.id)
+        data = [
+            {"id": "1", "emailid": "1", "mailinglistid": "1", "timestamp": "2019-06-10 17:30:00"},
+        ]
+
+        response = client.post(
+            url_for('emails.import_emails_members_sent_to'),
+            data=json.dumps(data),
+            headers=[('Content-Type', 'application/json'), create_authorization_header()]
+        )
+
+        assert response.status_code == 400
+        assert response.json['errors'] == [
+            '0: Already exists email_to_member {}, {}'.format(str(sample_email.id), str(sample_member.id))]
