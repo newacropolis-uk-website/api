@@ -277,6 +277,22 @@ function ImportEmails {
     -d @data/emails.json
 }
 
+function ImportEmailToMembers {
+    echo "*** Import Email to Members ***"
+    if [ -z $1 ]; then
+        json_file=emailmailings.json
+    else
+        json_file=$1
+    fi
+
+    echo "Importing "$json_file
+
+    curl -X POST $api_server'/emails/members/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d @data/$json_file
+}
+
 event=$(cat  << EOF
     {
         "event_dates": [{"event_date": "2019-04-01 19:00:00"}],
@@ -626,6 +642,10 @@ case "$arg" in
 
         -ime)
             ImportMembers
+        ;;
+
+        -ie2m)
+            ImportEmailToMembers $3
         ;;
 
         -ga)
