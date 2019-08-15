@@ -14,7 +14,7 @@ from flask_jwt_extended import jwt_required
 from sqlalchemy.orm.exc import NoResultFound
 from HTMLParser import HTMLParser
 
-from app.na_celery import email_tasks
+from app.na_celery import email_tasks, revoke_task
 from app.comms.email import get_email_html, send_email
 from app.dao.emails_dao import (
     dao_create_email,
@@ -97,6 +97,7 @@ def update_email(email_id):
     if res:
         email = dao_get_email_by_id(email_id)
         response = None
+        emails_to = [user.email for user in dao_get_users()]
 
         if data.get('email_state') == READY:
             subject = None
@@ -104,15 +105,14 @@ def update_email(email_id):
                 event = dao_get_event_by_id(data.get('event_id'))
                 subject = 'Please review {}'.format(event.title)
 
-            emails_to = [admin.email for admin in dao_get_admin_users()]
-
             # send email to admin users and ask them to log in in order to approve the email
             review_part = '<div>Please review this email: {}/emails/{}</div>'.format(
                 current_app.config['FRONTEND_ADMIN_URL'], str(email.id))
             event_html = get_email_html(**data)
             response = send_email(emails_to, subject, review_part + event_html)
         elif data.get('email_state') == REJECTED:
-            emails_to = [user.email for user in dao_get_users()]
+            if email.task_id:
+                revoke_task(email.task_id)
 
             message = '<div>Please correct this email <a href="{}">{}</a></div>'.format(
                 '{}/emails/{}'.format(current_app.config['FRONTEND_ADMIN_URL'], str(email.id)),
@@ -124,10 +124,19 @@ def update_email(email_id):
         elif data.get('email_state') == APPROVED:
             # send the email later in order to allow it to be rejected
             later = datetime.utcnow() + timedelta(seconds=current_app.config['EMAIL_DELAY'])
+            if later < email.send_starts_at:
+                later = email.send_starts_at + timedelta(hours=9)
+
             result = email_tasks.send_emails.apply_async(((str(email_id)),), eta=later)
 
             dao_update_email(email_id, task_id=result.id)
-            current_app.logger.info('Task: send_email: %d, %r', email_id, result.id)
+            current_app.logger.info('Task: send_email: %d, %r at %r', email_id, result.id, later)
+
+            review_part = '<div>Email will be sent at {}, log in to reject: {}/emails/{}</div>'.format(
+                later, current_app.config['FRONTEND_ADMIN_URL'], str(email.id))
+            event_html = get_email_html(**data)
+            response = send_email(
+                emails_to, "{} has been approved".format(email.get_subject()), review_part + event_html)
 
         email_json = email.serialize()
         if response:
@@ -226,29 +235,37 @@ def import_emails_members_sent_to():
 
     errors = []
     emails_to_members = []
-    for item in data:
+    for i, item in enumerate(data):
         email = Email.query.filter_by(old_id=item['emailid']).first()
         member = Member.query.filter_by(old_id=item['mailinglistid']).first()
 
         if not email:
-            error = 'Email not found: {}'.format(item['emailid'])
+            error = '{}: Email not found: {}'.format(i, item['emailid'])
             errors.append(error)
             current_app.logger.error(error)
 
         if not member:
-            error = 'Member not found: {}'.format(item['emailid'])
+            error = '{}: Member not found: {}'.format(i, item['emailid'])
             errors.append(error)
             current_app.logger.error(error)
 
         if email and member:
+            email_to_member_found = EmailToMember.query.filter_by(email_id=email.id, member_id=member.id).first()
+
+            if email_to_member_found:
+                error = '{}: Already exists email_to_member {}, {}'.format(i, str(email.id), str(member.id))
+                current_app.logger.error(error)
+                errors.append(error)
+                continue
+
             email_to_member = EmailToMember(
                 email_id=email.id,
                 member_id=member.id,
                 created_at=item['timestamp']
             )
-            # dao_add_member_sent_to_email(email, member, created_at=item['timestamp'])
             dao_create_email_to_member(email_to_member)
             emails_to_members.append(email_to_member)
+            current_app.logger.info('%s: Adding email_to_member %s, %s', i, str(email.id), str(member.id))
 
     res = {
         "emails_members_sent_to": [e.serialize() for e in emails_to_members]
