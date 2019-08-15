@@ -30,7 +30,10 @@ def dao_update_email(email_id, **kwargs):
 
 
 @transactional
-def dao_add_member_sent_to_email(email_id, member_id, created_at=None):
+def dao_add_member_sent_to_email(email_id, member_id, status_code=200, created_at=None):
+    if not created_at:
+        created_at = datetime.strftime(datetime.now(), "%Y-%m-%d")
+
     email = dao_get_email_by_id(email_id)
     member = dao_get_member_by_id(member_id)
 
@@ -41,6 +44,7 @@ def dao_add_member_sent_to_email(email_id, member_id, created_at=None):
 
     email_to_member = EmailToMember.query.filter_by(email_id=email.id, member_id=member.id).first()
     email_to_member.created_at = created_at
+    email_to_member.status_code = status_code
 
 
 @transactional
