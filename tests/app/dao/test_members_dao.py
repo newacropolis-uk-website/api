@@ -1,10 +1,11 @@
 from sqlalchemy.exc import IntegrityError
 import pytest
 
+from app.dao.emails_dao import dao_create_email_to_member
 from app.dao.members_dao import (
-    dao_update_member, dao_get_member_by_id
+    dao_update_member, dao_get_member_by_id, dao_get_members_not_sent_to
 )
-from app.models import Member
+from app.models import EmailToMember, Member
 
 from tests.db import create_member
 
@@ -44,5 +45,25 @@ class WhenUsingMembersDAO(object):
         with pytest.raises(expected_exception=IntegrityError):
             dao_update_member(str(member.id), email=sample_member.email)
 
-        found_member = Member.query.filter(Member.id == member.id).one()
-        assert found_member.email == 'another@example.com'
+        members = Member.query.all()
+        assert len(members) == 2
+        assert members[0].email == sample_member.email
+        assert members[1].email == member.email
+
+    def it_gets_only_members_not_sent_to(self, db_session, sample_member, sample_email):
+        member = create_member(email='another@example.com')
+        create_member(email='inactive@example.com', active=False)
+        email_to_member = EmailToMember(
+            email_id=sample_email.id,
+            member_id=sample_member.id,
+            created_at='2019-08-01 12:00:00'
+        )
+        dao_create_email_to_member(email_to_member)
+
+        unsent_members = dao_get_members_not_sent_to(sample_email.id)
+
+        member_id, email = unsent_members[0]
+
+        assert len(unsent_members) == 1
+        assert str(member_id) == str(member.id)
+        assert email == member.email
