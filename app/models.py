@@ -3,7 +3,7 @@ import uuid
 import re
 
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import PrimaryKeyConstraint, UniqueConstraint
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from app import db
@@ -71,6 +71,24 @@ class Article(db.Model):
         }
 
 
+class EmailToMember(db.Model):
+    __tablename__ = 'email_to_member'
+    __table_args__ = (
+        PrimaryKeyConstraint('email_id', 'member_id'),
+    )
+    email_id = db.Column(UUID(as_uuid=True), db.ForeignKey('emails.id'))
+    member_id = db.Column(UUID(as_uuid=True), db.ForeignKey('members.id'))
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    status_code = db.Column(db.Integer)
+
+    def serialize(self):
+        return {
+            'email_id': str(self.email_id),
+            'member_id': str(self.member_id),
+            'created_at': str(self.created_at),
+        }
+
+
 class Email(db.Model):
     __tablename__ = 'emails'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -98,6 +116,11 @@ class Email(db.Model):
     send_starts_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     expires = db.Column(db.DateTime)
     task_id = db.Column(db.String)
+    members_sent_to = db.relationship(
+        'Member',
+        secondary='email_to_member',
+        backref=db.backref('email_to_member', lazy='dynamic'),
+    )
 
     def get_subject(self):
         if self.email_type == EVENT:
@@ -130,6 +153,52 @@ class Email(db.Model):
             'send_starts_at': self.send_starts_at.strftime('%Y-%m-%d'),
             'expires': self.expires.strftime('%Y-%m-%d') if self.expires else self.get_expired_date(),
             'task_id': self.task_id
+        }
+
+
+class Marketing(db.Model):
+    __tablename__ = 'marketings'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    old_id = db.Column(db.Integer, unique=True)
+    description = db.Column(db.String, unique=True)  # marketingtext
+    order_number = db.Column(db.Integer)
+    active = db.Column(db.Boolean)  # visible
+
+    def serialize(self):
+        return {
+            "id": str(self.id),
+            "old_id": self.old_id,
+            "description": self.description,
+            "order_number": self.order_number,
+            "acive": self.active
+        }
+
+
+class Member(db.Model):
+    __tablename__ = 'members'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    old_id = db.Column(db.Integer)
+    name = db.Column(db.String)
+    email = db.Column(db.String, unique=True)
+    active = db.Column(db.Boolean)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    marketing_id = db.Column(UUID(as_uuid=True), db.ForeignKey('marketings.id'), nullable=False)
+    old_marketing_id = db.Column(db.Integer)
+    is_course_member = db.Column(db.Boolean)
+    last_updated = db.Column(db.DateTime)
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'old_id': self.old_id,
+            'name': self.name,
+            'email': self.email,
+            'active': self.active,
+            'created_at': self.created_at,
+            'marketing_id': self.marketing_id,
+            'old_marketing_id': self.old_marketing_id,
+            'is_course_member': self.is_course_member,
+            'last_updated': self.last_updated
         }
 
 

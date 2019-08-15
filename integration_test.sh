@@ -277,6 +277,22 @@ function ImportEmails {
     -d @data/emails.json
 }
 
+function ImportEmailToMembers {
+    echo "*** Import Email to Members ***"
+    if [ -z $1 ]; then
+        json_file=emailmailings.json
+    else
+        json_file=$1
+    fi
+
+    echo "Importing "$json_file
+
+    curl -X POST $api_server'/emails/members/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d @data/$json_file
+}
+
 event=$(cat  << EOF
     {
         "event_dates": [{"event_date": "2019-04-01 19:00:00"}],
@@ -481,6 +497,32 @@ function GetFutureEmails {
     -H "Authorization: Bearer $TKN"
 }
 
+function ImportMarketings {
+    echo "*** Import marketings ***"
+
+    curl -X POST $api_server'/marketings/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d @data/marketings.json
+}
+
+function GetMarketings {
+    echo "*** Get marketings ***"
+
+    curl -X GET $api_server'/marketings' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN"
+}
+
+function ImportMembers {
+    echo "*** Import members ***"
+
+    curl -X POST $api_server'/members/import' \
+    -H "Accept: application/json" \
+    -H "Authorization: Bearer $TKN" \
+    -d @data/members.json
+}
+
 function TestPaypal {
     echo "*** Test paypal ***"
 
@@ -594,12 +636,28 @@ case "$arg" in
             ImportArticles
         ;;
 
+        -ima)
+            ImportMarketings
+        ;;
+
+        -ime)
+            ImportMembers
+        ;;
+
+        -ie2m)
+            ImportEmailToMembers $3
+        ;;
+
         -ga)
             GetArticles
         ;;
 
         -gfe)
             GetFutureEmails
+        ;;
+
+        -gm)
+            GetMarketings
         ;;
 
         -gas)

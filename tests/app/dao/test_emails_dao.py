@@ -1,11 +1,17 @@
+import pytest
 from freezegun import freeze_time
+from sqlalchemy.exc import IntegrityError
 
 from app.dao.emails_dao import (
-    dao_update_email, dao_get_emails_for_year_starting_on, dao_get_email_by_id, dao_get_future_emails
+    dao_add_member_sent_to_email,
+    dao_get_emails_for_year_starting_on,
+    dao_get_email_by_id,
+    dao_get_future_emails,
+    dao_update_email,
 )
-from app.models import Email, EVENT, MAGAZINE
+from app.models import Email, EmailToMember
 
-from tests.db import create_email
+from tests.db import create_email, create_member
 
 
 class WhenUsingEmailsDAO(object):
@@ -24,6 +30,44 @@ class WhenUsingEmailsDAO(object):
         email_from_db = Email.query.filter(Email.id == sample_email.id).first()
 
         assert email_from_db.extra_txt == 'test update'
+
+    def it_updates_an_email_with_members_sent_to_dao(self, db, db_session, sample_email, sample_member):
+        members = [sample_member]
+        dao_update_email(sample_email.id, members_sent_to=members)
+
+        email_from_db = Email.query.filter(Email.id == sample_email.id).first()
+
+        assert email_from_db.members_sent_to == members
+
+    def it_adds_a_member_sent_to_email_for_first_member(self, db, db_session, sample_email, sample_member):
+        dao_add_member_sent_to_email(sample_email.id, sample_member.id, created_at='2019-08-1 12:00:00')
+        email_from_db = Email.query.filter(Email.id == sample_email.id).first()
+
+        assert email_from_db.members_sent_to == [sample_member]
+        email_to_member = EmailToMember.query.filter_by(email_id=sample_email.id, member_id=sample_member.id).first()
+        assert str(email_to_member.created_at) == '2019-08-01 12:00:00'
+
+    def it_adds_a_member_sent_to_email(self, db, db_session, sample_email, sample_member):
+        members = [sample_member]
+        dao_update_email(sample_email.id, members_sent_to=members)
+
+        member = create_member(name='New member', email='new_member@example.com')
+
+        dao_add_member_sent_to_email(sample_email.id, member.id)
+        email_from_db = Email.query.filter(Email.id == sample_email.id).first()
+
+        assert email_from_db.members_sent_to == [sample_member, member]
+
+    def it_does_not_add_an_existing_member_sent_to_email(self, db, db_session, sample_email, sample_member):
+        members = [sample_member]
+        dao_update_email(sample_email.id, members_sent_to=members)
+
+        with pytest.raises(expected_exception=IntegrityError):
+            dao_add_member_sent_to_email(sample_email.id, sample_member.id)
+
+        email_from_db = Email.query.filter(Email.id == sample_email.id).first()
+
+        assert email_from_db.members_sent_to == [sample_member]
 
     @freeze_time("2019-06-10T10:00:00")
     def it_gets_emails_from_starting_date_from_last_year(self, db, db_session, sample_email):

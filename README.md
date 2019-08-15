@@ -42,6 +42,7 @@ export PAYPAL_PASSWORD=<paypal password>
 export PAYPAL_SIG=<paypal signature>
 export EMAIL_PROVIDER_URL=<email provider url>
 export EMAIL_PROVIDER_APIKEY=<email provider api key>
+export CELERY_BROKER_URL=<celery broker URL, normally redis>
 ```
 
 Run `source environment.sh` to make the parameters available
@@ -96,6 +97,12 @@ Imports can be run via `integration_test.sh`
 ./integration.sh -ie
 # import articles
 ./integration.sh -ia
+# import marketing
+./integration.sh -ima
+# import members
+./integration.sh -ime
+# import emails
+./integration.sh -iem
 ```
 
 ### Importing images
