@@ -39,6 +39,7 @@ if [ $port != 'No environment' ]; then
     eval "FRONTEND_URL=\$FRONTEND_URL_$environment"
     eval "IMAGES_URL=\$IMAGES_URL_$environment"
     eval "CELERY_BROKER_URL=\$CELERY_BROKER_URL_$environment"
+    eval "PROJECT=\$PROJECT_$environment"
     
     echo starting app $environment on port $port
     ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
