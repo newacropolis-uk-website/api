@@ -42,7 +42,7 @@ if [ $port != 'No environment' ]; then
     eval "FRONTEND_URL=\$FRONTEND_URL_$environment"
     eval "IMAGES_URL=\$IMAGES_URL_$environment"
     eval "CELERY_BROKER_URL=\$CELERY_BROKER_URL_$environment"
-    eval "PROJECT=\$CELERY_BROKER_URL_$environment"
+    eval "PROJECT=\$PROJECT_$environment"
     eval "GOOGLE_AUTH_USER=\$GOOGLE_AUTH_USER_$environment"
     eval "JWT_SECRET=\$JWT_SECRET_$environment"
     
