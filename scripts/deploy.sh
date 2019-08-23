@@ -10,6 +10,9 @@ if [ -z "$environment" ]; then
     fi
 fi 
 
+# debug test live settings
+environment=live
+
 if [ -z $TRAVIS_BUILD_DIR ]; then
     source $environment-environment.sh
     src=.
@@ -39,6 +42,9 @@ if [ $port != 'No environment' ]; then
     eval "FRONTEND_URL=\$FRONTEND_URL_$environment"
     eval "IMAGES_URL=\$IMAGES_URL_$environment"
     eval "CELERY_BROKER_URL=\$CELERY_BROKER_URL_$environment"
+    eval "PROJECT=\$PROJECT_$environment"
+    eval "GOOGLE_AUTH_USER=\$GOOGLE_AUTH_USER_$environment"
+    eval "JWT_SECRET=\$JWT_SECRET_$environment"
     
     echo starting app $environment on port $port
     ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$deploy_host """
@@ -65,13 +71,17 @@ if [ $port != 'No environment' ]; then
     export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
     export TRAVIS_COMMIT=$TRAVIS_COMMIT
     export CELERY_BROKER_URL=$CELERY_BROKER_URL
+    export JWT_SECRET=$JWT_SECRET
+
+    # if [ -z $GOOGLE_AUTH_USER ]; then
+        gcloud auth activate-service-account $GOOGLE_AUTH_USER --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+    # fi
 
     sudo ./scripts/bootstrap.sh
     ./scripts/run_celery.sh
     ./scripts/run_app.sh $environment gunicorn $output_params"""
 
-    eval "API_ENV=\${API_$environment}"
-    ./scripts/check_site.sh $API_ENV
+    ./scripts/check_site.sh $deploy_host:$port
 else
     echo "$port"
     exit 1
