@@ -4,8 +4,6 @@ python:
 cache: pip
 services:
 - postgresql
-addons:
-  postgresql: "9.3"
 install:
 - ./scripts/bootstrap.sh
 - pip install coveralls
