@@ -13,11 +13,11 @@ script:
 after_success:
 - coveralls
 before_deploy:
-- echo $TRAVIS_KEY | base64 --decode > travis_rsa
-# - [[ -z "${TRAVIS_TAG}" ]] && echo $TRAVIS_KEY | base64 --decode > travis_rsa || echo 'no'
-- eval "$(ssh-agent -s)"
-- chmod 600 travis_rsa
-- ssh-add travis_rsa
+# - echo $TRAVIS_KEY | base64 --decode > travis_rsa
+# - eval "$(ssh-agent -s)"
+# - chmod 600 travis_rsa
+# - ssh-add travis_rsa
+- ./scripts/login_vm.sh
 deploy:
   - provider: script
     skip_cleanup: true
