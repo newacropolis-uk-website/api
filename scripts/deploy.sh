@@ -10,14 +10,20 @@ if [ -z "$environment" ]; then
     fi
 fi 
 
-# debug test live settings
-environment=live
-
 if [ -z $TRAVIS_BUILD_DIR ]; then
     source $environment-environment.sh
     src=.
 else 
     src="$TRAVIS_BUILD_DIR"
+
+    if [ $environment = 'live' ]; then
+        echo $TRAVIS_KEY_live | base64 --decode > travis_rsa
+    else
+        echo $TRAVIS_KEY_preview | base64 --decode > travis_rsa
+    fi
+    eval "$(ssh-agent) -s"
+    chmod 600 travis_rsa
+    ssh-add travis_rsa
 fi
 
 if [ -z $debug ]; then
