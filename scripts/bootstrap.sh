@@ -1,5 +1,5 @@
 #!/bin/bash
-pip install virtualenv --upgrade
+sudo pip install virtualenv --upgrade
 pip install -U setuptools
 
 if [ ! -d "venv" ]; then

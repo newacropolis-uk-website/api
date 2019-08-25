@@ -23,7 +23,7 @@ else
     else
         echo $TRAVIS_KEY_preview | base64 --decode > travis_rsa
     fi
-    eval "$(ssh-agent) -s"
+    eval "$(ssh-agent)"
     chmod 600 travis_rsa
     ssh-add travis_rsa
 fi
