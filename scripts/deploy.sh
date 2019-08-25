@@ -1,6 +1,8 @@
 #!/bin/bash
 set +x
 
+environment=live
+
 if [ -z "$environment" ]; then
     if [ ! -z "$1" ]; then
         environment=$1
